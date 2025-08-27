@@ -32,7 +32,7 @@ pipeline {
         stage('Deploy to Test Environment') {
             steps {
                 bat ''' echo "Deploying to Railway..." 
-                npx railway up --service datadrip --detach '''
+                npx railway up --detach '''
             }
         }
 
