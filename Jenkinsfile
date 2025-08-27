@@ -5,7 +5,7 @@ pipeline {
         RAILWAY_TOKEN = credentials('railway_api_token')
         DOCKER_REGISTRY = "docker.io/jorenzo"
         APP_NAME = "DataDrip"
-        RAILWAY_SERVICE = "DataDrip"  // Make service name configurable
+        RAILWAY_SERVICE = "DataDrip CICD act"  // Make service name configurable
     }
 
     stages {
