@@ -4,8 +4,7 @@ pipeline {
     environment {
         RAILWAY_TOKEN = credentials('railway_api_token')
         DOCKER_REGISTRY = "docker.io/jorenzo"
-        APP_NAME = "DataDrip"
-        RAILWAY_SERVICE = "DataDrip CICD act"  // Make service name configurable
+        APP_NAME = "datadrip"
     }
 
     stages {
@@ -32,16 +31,8 @@ pipeline {
 
         stage('Deploy to Test Environment') {
             steps {
-                script {
-                    try {
-                        bat 'echo "Deploying to Railway..."'
-                        bat 'npx railway up --service %RAILWAY_SERVICE% --detach'
-                    } catch (Exception e) {
-                        echo "Deployment failed: ${e.getMessage()}"
-                        currentBuild.result = 'FAILURE'
-                        error "Deployment to Railway failed"
-                    }
-                }
+                bat ''' echo "Deploying to Railway..." 
+                npx railway up --service datadrip --detach '''
             }
         }
 
