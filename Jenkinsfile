@@ -39,9 +39,6 @@ pipeline {
         }
 
         stage('Integration Test') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
             steps {
                 bat 'echo "Running integration tests..."'
                 bat 'npm run test:integration'
@@ -49,9 +46,6 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     bat '''
