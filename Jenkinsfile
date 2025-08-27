@@ -5,6 +5,8 @@ pipeline {
         RAILWAY_TOKEN = credentials('railway_api_token')
         DOCKER_REGISTRY = "docker.io/jorenzo"
         APP_NAME = "datadrip"
+        PROJECT_NAME = "DataDrip"
+        SERVICE_NAME = "CICDact"
     }
 
     stages {
@@ -32,7 +34,7 @@ pipeline {
         stage('Deploy to Test Environment') {
             steps {
                 bat ''' echo "Deploying to Railway..." 
-                npx railway up --detach '''
+                npx railway up --service %SERVICE_NAME% --project %PROJECT_NAME% --detach '''
             }
         }
 
