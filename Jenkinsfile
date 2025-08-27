@@ -4,8 +4,8 @@ pipeline {
     environment {
         RAILWAY_TOKEN = credentials('railway_api_token')
         DOCKER_REGISTRY = "docker.io/jorenzo"
-        APP_NAME = "datadrip"
-        RAILWAY_SERVICE = "datadrip"  // Make service name configurable
+        APP_NAME = "DataDrip"
+        RAILWAY_SERVICE = "DataDrip"  // Make service name configurable
     }
 
     stages {
@@ -27,30 +27,6 @@ pipeline {
         stage('Unit Test') {
             steps {
                 bat 'npm test'
-            }
-        }
-
-        stage('Railway Setup') {
-            steps {
-                script {
-                    try {
-                        // Login to Railway using token
-                        bat '''
-                            echo %RAILWAY_TOKEN% | npx railway login
-                        '''
-                        
-                        // Check if service exists, create if it doesn't
-                        bat '''
-                            npx railway service list | findstr %RAILWAY_SERVICE% || (
-                                echo "Service %RAILWAY_SERVICE% not found, creating..."
-                                npx railway service create %RAILWAY_SERVICE%
-                            )
-                        '''
-                    } catch (Exception e) {
-                        echo "Railway setup failed: ${e.getMessage()}"
-                        currentBuild.result = 'UNSTABLE'
-                    }
-                }
             }
         }
 
