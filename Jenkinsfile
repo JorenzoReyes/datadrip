@@ -2,15 +2,13 @@ pipeline {
     agent any
 
     environment {
-        RAILWAY_TOKEN = credentials('railway_api_token')  // Store in Jenkins Credentials
+        RAILWAY_TOKEN = credentials('railway_api_token')
         DOCKER_REGISTRY = "docker.io/jorenzo"
         APP_NAME = "datadrip"
+        RAILWAY_SERVICE = "datadrip"  // Make service name configurable
     }
-    
-    
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'CICD-act',
@@ -23,39 +21,46 @@ pipeline {
                 bat 'npm install'
                 bat 'npm run build'
                 bat 'npm install -g @railway/cli'
-                    
             }
         }
-
 
         stage('Unit Test') {
             steps {
                 bat 'npm test'
             }
-            // post {
-            //     always {
-            //         junit 'reports/junit/**/*.xml'  // if you export test reports
-            //     }
-            // }
         }
 
         stage('Deploy to Test Environment') {
             steps {
-                bat '''
-                    echo "Deploying to Railway..."
-                    npx railway up --service datadrip --detach
-                '''
+                script {
+                    try {
+                        bat '''
+                            echo "Deploying to Railway..."
+                            railway up --service %RAILWAY_SERVICE% --detach
+                        '''
+                    } catch (Exception e) {
+                        echo "Deployment failed: ${e.getMessage()}"
+                        currentBuild.result = 'FAILURE'
+                        error "Deployment to Railway failed"
+                    }
+                }
             }
         }
 
         stage('Integration Test') {
+            when {
+                expression { currentBuild.result == 'SUCCESS' }
+            }
             steps {
-                bat 'echo "Running integration tests..." '
-                bat 'npm run test:integration' 
+                bat 'echo "Running integration tests..."'
+                bat 'npm run test:integration'
             }
         }
 
         stage('Build Docker Image') {
+            when {
+                expression { currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     bat '''
@@ -66,7 +71,6 @@ pipeline {
                 }
             }
         }
-
     }
 
     post {
@@ -75,6 +79,10 @@ pipeline {
         }
         failure {
             echo "❌ Pipeline failed!"
+        }
+        always {
+            // Cleanup if needed
+            echo "Pipeline completed with result: ${currentBuild.result}"
         }
     }
 }
