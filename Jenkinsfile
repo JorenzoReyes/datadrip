@@ -30,14 +30,36 @@ pipeline {
             }
         }
 
+        stage('Railway Setup') {
+            steps {
+                script {
+                    try {
+                        // Login to Railway using token
+                        bat '''
+                            echo %RAILWAY_TOKEN% | npx railway login
+                        '''
+                        
+                        // Check if service exists, create if it doesn't
+                        bat '''
+                            npx railway service list | findstr %RAILWAY_SERVICE% || (
+                                echo "Service %RAILWAY_SERVICE% not found, creating..."
+                                npx railway service create %RAILWAY_SERVICE%
+                            )
+                        '''
+                    } catch (Exception e) {
+                        echo "Railway setup failed: ${e.getMessage()}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
+            }
+        }
+
         stage('Deploy to Test Environment') {
             steps {
                 script {
                     try {
-                        bat '''
-                            echo "Deploying to Railway..."
-                            railway up --service %RAILWAY_SERVICE% --detach
-                        '''
+                        bat 'echo "Deploying to Railway..."'
+                        bat 'npx railway up --service %RAILWAY_SERVICE% --detach'
                     } catch (Exception e) {
                         echo "Deployment failed: ${e.getMessage()}"
                         currentBuild.result = 'FAILURE'
