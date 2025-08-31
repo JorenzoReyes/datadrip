@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         RAILWAY_TOKEN = credentials('railway_api_token')
-        DOCKER_REGISTRY = "docker.io/jorenzo"
+        DOCKER_REGISTRY = "docker.io/kppantino"
         APP_NAME = "datadrip"
         ENVIRONMENT_NAME = "CICD-act"
         SERVICE_NAME = "CICDact"
