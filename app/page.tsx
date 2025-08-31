@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './contexts/AuthContext';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function LoginPage() {
       } else {
         setError('Invalid email or password');
       }
-    } catch {
+    } catch (error) {
       setError('An error occurred during login');
     } finally {
       setIsLoading(false);
@@ -105,10 +106,10 @@ export default function LoginPage() {
 
           {/* Sign up link */}
           <p className="text-center text-sm text-gray-400">
-            Don&apos;t have an account yet?{" "}
-            <a href="#" className="font-medium text-purple-400 hover:text-purple-300">
+            Don't have an account yet?{" "}
+            <Link href="/register" className="font-medium text-purple-400 hover:text-purple-300">
               Sign up.
-            </a>
+            </Link>
           </p>
         </form>
       </div>

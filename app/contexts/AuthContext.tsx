@@ -48,16 +48,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const userCreds = DUMMY_CREDENTIALS[email as keyof typeof DUMMY_CREDENTIALS];
-    
-    if (userCreds && userCreds.password === password) {
+    // First check dummy credentials
+    const dummyUser = DUMMY_CREDENTIALS[email as keyof typeof DUMMY_CREDENTIALS];
+    if (dummyUser && dummyUser.password === password) {
       const userInfo: User = {
         email,
-        role: userCreds.role,
+        role: dummyUser.role,
         isAuthenticated: true
       };
 
-      // Store in localStorage (in real app, this would be a JWT token)
+      localStorage.setItem('user', JSON.stringify(userInfo));
+      setUser(userInfo);
+      return true;
+    }
+
+    // Then check registered users
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const registeredUser = registeredUsers.find((u: any) => u.email === email && u.password === password);
+    
+    if (registeredUser) {
+      const userInfo: User = {
+        email,
+        role: registeredUser.role,
+        isAuthenticated: true
+      };
+
       localStorage.setItem('user', JSON.stringify(userInfo));
       setUser(userInfo);
       return true;
