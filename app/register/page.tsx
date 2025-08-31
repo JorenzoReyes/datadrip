@@ -14,6 +14,16 @@ interface RegistrationData {
   acceptTerms: boolean;
 }
 
+interface RegisteredUser {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: 'user' | 'admin';
+  acceptTerms: boolean;
+  createdAt: string;
+}
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState<RegistrationData>({
     firstName: '',
@@ -105,7 +115,7 @@ export default function RegisterPage() {
       const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
       
       // Check if email already exists
-      if (existingUsers.find((user: any) => user.email === formData.email)) {
+      if (existingUsers.find((user: RegisteredUser) => user.email === formData.email)) {
         setError('User with this email already exists');
         setIsLoading(false);
         return;
@@ -134,7 +144,7 @@ export default function RegisterPage() {
         router.push('/');
       }, 2000);
 
-    } catch (error) {
+    } catch (err) {
       setError('An error occurred during registration');
     } finally {
       setIsLoading(false);

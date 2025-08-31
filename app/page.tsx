@@ -2,33 +2,40 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from './contexts/AuthContext';
 import Link from 'next/link';
+import { useAuth } from './contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
+  const [loginError, setLoginError] = useState('');
   const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setLoginError('');
 
     try {
       const success = await login(email, password);
-      
       if (success) {
-        // Redirect based on role (this will be handled by the dashboard pages)
-        router.push('/dashboard');
+        // Redirect based on user role
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          if (user.role === 'admin') {
+            router.push('/admin/dashboard');
+          } else {
+            router.push('/dashboard');
+          }
+        }
       } else {
-        setError('Invalid email or password');
+        setLoginError('Invalid email or password');
       }
-    } catch (error) {
-      setError('An error occurred during login');
+    } catch (err) {
+      setLoginError('An error occurred during login');
     } finally {
       setIsLoading(false);
     }
@@ -89,9 +96,9 @@ export default function LoginPage() {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {loginError && (
             <div className="rounded-lg bg-red-900/30 border border-red-500/30 p-3">
-              <p className="text-sm text-red-200">{error}</p>
+              <p className="text-sm text-red-200">{loginError}</p>
             </div>
           )}
 
@@ -106,7 +113,7 @@ export default function LoginPage() {
 
           {/* Sign up link */}
           <p className="text-center text-sm text-gray-400">
-            Don't have an account yet?{" "}
+            Don&apos;t have an account yet?{" "}
             <Link href="/register" className="font-medium text-purple-400 hover:text-purple-300">
               Sign up.
             </Link>

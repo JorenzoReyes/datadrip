@@ -8,6 +8,13 @@ interface User {
   isAuthenticated: boolean;
 }
 
+interface RegisteredUser {
+  email: string;
+  password: string;
+  role: string;
+  createdAt: string;
+}
+
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -64,8 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Then check registered users
     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const registeredUser = registeredUsers.find((u: any) => u.email === email && u.password === password);
-    
+    const registeredUser = registeredUsers.find((u: RegisteredUser) => u.email === email && u.password === password);
+
     if (registeredUser) {
       const userInfo: User = {
         email,

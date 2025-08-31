@@ -113,7 +113,7 @@ export default function TermsConditionsPage() {
             <section>
               <h2 className="text-xl font-semibold text-white mb-3">9. Disclaimers</h2>
               <p>
-                The service is provided on an "AS IS" and "AS AVAILABLE" basis. DataDrip makes no 
+                The service is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis. DataDrip makes no 
                 warranties, expressed or implied, and hereby disclaims all warranties, including without 
                 limitation, implied warranties of merchantability and fitness for a particular purpose.
               </p>
