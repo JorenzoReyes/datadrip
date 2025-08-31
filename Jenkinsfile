@@ -67,7 +67,7 @@ pipeline {
         }
         always {
             // Cleanup if needed
-            echo "Pipeline completed with result: ${currentBuild.result}"
+            echo "Pipeline completed result: ${currentBuild.result}"
         }
     }
 }
