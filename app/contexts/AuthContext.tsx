@@ -6,6 +6,9 @@ interface User {
   email: string;
   role: string;
   isAuthenticated: boolean;
+  firstName?: string;
+  lastName?: string;
+  companyName?: string;
 }
 
 interface RegisteredUser {
@@ -19,6 +22,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -61,7 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userInfo: User = {
         email,
         role: dummyUser.role,
-        isAuthenticated: true
+        isAuthenticated: true,
+        firstName: dummyUser.role === 'admin' ? 'Admin' : 'User',
+        lastName: 'Demo',
+        companyName: 'DataDrip'
       };
 
       localStorage.setItem('user', JSON.stringify(userInfo));
@@ -77,7 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userInfo: User = {
         email,
         role: registeredUser.role,
-        isAuthenticated: true
+        isAuthenticated: true,
+        firstName: registeredUser.firstName,
+        lastName: registeredUser.lastName,
+        companyName: ''
       };
 
       localStorage.setItem('user', JSON.stringify(userInfo));
@@ -93,10 +103,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = async (userData: Partial<User>): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update user data
+      const updatedUser = { ...user, ...userData };
+      
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Update state
+      setUser(updatedUser);
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return false;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     login,
     logout,
+    updateUser,
     isLoading
   };
 

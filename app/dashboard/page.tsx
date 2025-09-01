@@ -52,6 +52,13 @@ export default function DashboardPage() {
             <div className="flex items-center space-x-4">
               <span className="text-gray-300">Welcome, {user.email}</span>
               <button
+                onClick={() => router.push('/settings')}
+                className="px-3 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition"
+                title="Settings"
+              >
+                ⚙️
+              </button>
+              <button
                 onClick={handleLogout}
                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition"
               >
