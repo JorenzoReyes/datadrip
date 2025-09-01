@@ -71,7 +71,7 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Welcome Card */}
           <div className="col-span-full bg-black/40 rounded-xl p-4 border border-purple-500/30">
             <h2 className="text-xl font-bold text-white mb-2">Welcome to DataDrip!</h2>
@@ -119,21 +119,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
-            <h3 className="text-lg font-semibold text-white mb-3">Quick Actions</h3>
-            <div className="space-y-2">
-              <button className="w-full text-left p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition text-sm">
-                📊 Generate Report
-              </button>
-              <button className="w-full text-left p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition text-sm">
-                📥 Export Data
-              </button>
-              <button className="w-full text-left p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition text-sm">
-                🔍 Search Records
-              </button>
-            </div>
-          </div>
+
         </div>
       </main>
     </div>
