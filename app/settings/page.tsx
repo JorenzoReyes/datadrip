@@ -431,9 +431,49 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <div className="flex">
-                          {/* Main Content */}
-                  <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-4xl">
+                           <div className="flex justify-center">
+          <div className="flex max-w-7xl w-full">
+            {/* Left Sidebar */}
+            <aside className="w-80 bg-black/40 border-r border-purple-500/30 p-6 rounded-r-2xl">
+              <div className="sticky top-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Settings</h3>
+                
+                <nav className="space-y-2">
+                  <button
+                    onClick={() => setActiveSection('details')}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition ${
+                      activeSection === 'details'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+                    }`}
+                  >
+                    👤 User Details
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveSection('platforms')}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition ${
+                      activeSection === 'platforms'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+                    }`}
+                  >
+                    🔗 Connect Platforms
+                  </button>
+                </nav>
+
+                {/* Additional Info */}
+                <div className="mt-8 p-4 bg-gray-800/30 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-200 mb-2">Need Help?</h4>
+                  <p className="text-xs text-gray-400">
+                    Contact support if you need assistance with your account settings.
+                  </p>
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-4xl">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-white">User Settings</h2>
             <p className="text-gray-400 mt-2">Manage your account settings and preferences</p>
@@ -598,47 +638,11 @@ export default function SettingsPage() {
           {activeSection === 'platforms' && (
             <ConnectPlatformsSection />
           )}
-        </main>
+                   </main>
 
-        {/* Right Sidebar */}
-        <aside className="w-80 bg-black/40 border-l border-purple-500/30 p-6">
-          <div className="sticky top-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Settings</h3>
-            
-            <nav className="space-y-2">
-              <button
-                onClick={() => setActiveSection('details')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                  activeSection === 'details'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
-                }`}
-              >
-                👤 User Details
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('platforms')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                  activeSection === 'platforms'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
-                }`}
-              >
-                🔗 Connect Platforms
-              </button>
-            </nav>
-
-            {/* Additional Info */}
-            <div className="mt-8 p-4 bg-gray-800/30 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-200 mb-2">Need Help?</h4>
-              <p className="text-xs text-gray-400">
-                Contact support if you need assistance with your account settings.
-              </p>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
-  );
-}
+           
+       </div>
+     </div>
+   </div>
+ );
+ }
