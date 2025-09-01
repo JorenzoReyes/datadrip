@@ -130,8 +130,4 @@ export const clearDemoData = () => {
   console.log('Demo data cleared successfully!');
 };
 
-// Make functions available globally for console access
-if (typeof window !== 'undefined') {
-  (window as any).seedDemoUsers = seedDemoUsers;
-  (window as any).clearDemoData = clearDemoData;
-}
+// Functions are available for import and use in components

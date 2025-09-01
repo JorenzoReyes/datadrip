@@ -60,10 +60,7 @@ export default function ManageUsersPage() {
     setFilters({ [key]: value });
   };
 
-  const handleSortChange = (sortBy: UserFilters['sortBy']) => {
-    const newOrder = filters.sortBy === sortBy && filters.sortOrder === 'asc' ? 'desc' : 'asc';
-    setFilters({ sortBy, sortOrder: newOrder });
-  };
+  // Removed unused handleSortChange function
 
   const handleUserAction = async (action: 'activate' | 'deactivate', userId: string) => {
     if (!user) return;
@@ -77,7 +74,7 @@ export default function ManageUsersPage() {
       if (!result.success) {
         alert(result.error || `Failed to ${action} user`);
       }
-    } catch (err) {
+    } catch {
       alert(`Failed to ${action} user`);
     } finally {
       setActionLoading(null);

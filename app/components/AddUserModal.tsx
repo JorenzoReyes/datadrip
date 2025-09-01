@@ -79,7 +79,7 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
       } else {
         setError(result.error || 'Failed to create user');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

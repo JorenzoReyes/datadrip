@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserManagement } from '../contexts/UserManagementContext';
 import { User, UpdateUserData } from '../types/user';
@@ -81,7 +81,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
       } else {
         setError(result.error || 'Failed to update user');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

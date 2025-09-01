@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User, CreateUserData, UpdateUserData, UserFilters, AuditLog } from '../types/user';
 
 interface UserManagementContextType {
@@ -51,12 +51,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
+  const loadData = useCallback(() => {
     try {
       // Load managed users
       const storedUsers = localStorage.getItem(STORAGE_KEYS.USERS);
@@ -70,7 +65,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
       if (registeredUsers) {
         try {
           const existingUsers = JSON.parse(registeredUsers);
-          const convertedUsers: User[] = existingUsers.map((user: any) => ({
+          const convertedUsers: User[] = existingUsers.map((user: { email: string; firstName?: string; lastName?: string; role?: string; createdAt?: string }) => ({
             id: `converted_${user.email}_${Date.now()}`,
             firstName: user.firstName || 'Unknown',
             lastName: user.lastName || 'User',
@@ -116,11 +111,16 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
       }
 
       setIsLoading(false);
-    } catch (err) {
+    } catch {
       setError('Failed to load user data');
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const saveUsers = (newUsers: User[]) => {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(newUsers));
@@ -189,7 +189,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
       });
 
       return { success: true };
-    } catch (err) {
+    } catch {
       return { success: false, error: 'Failed to create user' };
     }
   };
@@ -243,7 +243,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
       });
 
       return { success: true };
-    } catch (err) {
+    } catch {
       return { success: false, error: 'Failed to update user' };
     }
   };
@@ -285,7 +285,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
       });
 
       return { success: true };
-    } catch (err) {
+    } catch {
       return { success: false, error: 'Failed to deactivate user' };
     }
   };
@@ -322,7 +322,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
       });
 
       return { success: true };
-    } catch (err) {
+    } catch {
       return { success: false, error: 'Failed to activate user' };
     }
   };

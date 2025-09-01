@@ -144,7 +144,7 @@ export default function RegisterPage() {
         router.push('/');
       }, 2000);
 
-    } catch (err) {
+    } catch {
       setError('An error occurred during registration');
     } finally {
       setIsLoading(false);
