@@ -100,17 +100,17 @@ export default function AdminDashboardPage() {
           <div className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
             <h3 className="text-lg font-semibold text-white mb-3">User Management</h3>
             <div className="space-y-2">
-              <button className="w-full text-left p-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition text-sm">
-                👥 View All Users
+              <button 
+                onClick={() => router.push('/admin/manage-users')}
+                className="w-full text-left p-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition text-sm"
+              >
+                👥 Manage Users
               </button>
-              <button className="w-full text-left p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition text-sm">
+              <button 
+                onClick={() => router.push('/admin/manage-users?action=create')}
+                className="w-full text-left p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition text-sm"
+              >
                 ➕ Create User
-              </button>
-              <button className="w-full text-left p-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white transition text-sm">
-                🔒 Manage Permissions
-              </button>
-              <button className="w-full text-left p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition text-sm">
-                🗑️ Delete User
               </button>
             </div>
           </div>
