@@ -6,7 +6,14 @@ import { useAuth } from '../contexts/AuthContext';
 
 // Connect Platforms Component
 function ConnectPlatformsSection() {
-  const [platforms, setPlatforms] = useState([
+  const [platforms, setPlatforms] = useState<Array<{
+    id: string;
+    name: string;
+    icon: string;
+    status: 'connected' | 'not_connected' | 'pending';
+    lastSync: string | null;
+    description: string;
+  }>>([
     {
       id: 'shopee',
       name: 'Shopee',
@@ -19,8 +26,8 @@ function ConnectPlatformsSection() {
       id: 'lazada',
       name: 'Lazada',
       icon: '📦',
-      status: 'connected',
-      lastSync: '2024-01-15T10:30:00Z',
+      status: 'not_connected',
+      lastSync: null,
       description: 'Alibaba Group\'s flagship e-commerce platform'
     },
     {
