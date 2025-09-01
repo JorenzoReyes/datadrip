@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
+import { useSidechat } from '../contexts/SidechatContext';
+import ReactMarkdown from 'react-markdown';
 
 interface Insight {
   id: string;
@@ -28,13 +30,39 @@ interface ChatMessage {
 export default function InsightsChat() {
   const { user, isLoading } = useAuth();
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(true);
+  const { isOpen, setIsOpen } = useSidechat();
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [userInput, setUserInput] = useState('');
+  const [selectedInsight, setSelectedInsight] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [insights, setInsights] = useState<Insight[]>([]);
+  const [chatHeight, setChatHeight] = useState(256); // Default height (max-h-64 = 256px)
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Dropdown options for insights
+  const insightOptions = [
+    {
+      value: 'customer-segment',
+      label: 'Customer Segment: Sentiment analysis on customer reviews and comments',
+      shortLabel: 'Customer Segment'
+    },
+    {
+      value: 'sale-trends',
+      label: 'Sale Trends: Predictive analytics for sales trends',
+      shortLabel: 'Sale Trends'
+    },
+    {
+      value: 'inventory-forecasting',
+      label: 'Inventory Forecasting: Identifies whether current stock needs restocking',
+      shortLabel: 'Inventory Forecasting'
+    },
+    {
+      value: 'product-performance',
+      label: 'Product Performance: Provide a summarized information on the top selling product',
+      shortLabel: 'Product Performance'
+    }
+  ];
 
   // Sample insights data - moved inside useEffect to avoid dependency issues
   const getSampleInsights = (): Insight[] => [
@@ -109,22 +137,25 @@ export default function InsightsChat() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userInput.trim()) return;
+    if (!selectedInsight) return;
+
+    const selectedOption = insightOptions.find(option => option.value === selectedInsight);
+    if (!selectedOption) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
-      content: userInput,
+      content: `Requested: ${selectedOption.shortLabel}`,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setUserInput('');
+    setSelectedInsight('');
     setIsTyping(true);
 
     // Simulate AI response
     setTimeout(() => {
-      const aiResponse = generateAIResponse(userInput);
+      const aiResponse = generateAIResponse(selectedInsight);
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
@@ -137,21 +168,97 @@ export default function InsightsChat() {
     }, 1500);
   };
 
-  const generateAIResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('promotion') || input.includes('discount')) {
-      return "Based on your sales data, I recommend running promotions during weekends and holidays when customer engagement is highest. Consider offering 15-20% discounts on your top-performing products.";
-    } else if (input.includes('inventory') || input.includes('stock')) {
-      return "Your inventory analysis shows that 3 products are running low. I recommend restocking these items within the next week to maintain sales momentum.";
-    } else if (input.includes('trend') || input.includes('analysis')) {
-      return "Current trends show increasing mobile shopping (up 28% this month) and higher conversion rates during evening hours. Consider optimizing your mobile experience and scheduling promotions accordingly.";
-    } else if (input.includes('customer') || input.includes('feedback')) {
-      return "Customer feedback analysis reveals concerns about delivery times and product quality. Consider improving your shipping options and product descriptions to address these issues.";
-    } else {
-      return "I can help you with business insights, promotion strategies, inventory management, trend analysis, and customer feedback. What specific area would you like to explore?";
-    }
-  };
+         const generateAIResponse = (selectedInsight: string): string => {
+       switch (selectedInsight) {
+         case 'customer-segment':
+           return `## 📊 Customer Happiness Report
+
+🎉 **8 out of 10 customers love your products!**
+
+### Top 3 Customer Insights:
+- **Age Group 25-34** → 85% positive reviews (happiest customers)
+- **Mobile App Users** → 23% higher satisfaction than website
+- **Delivery Times** → Top concern in negative feedback
+
+### Quick Actions:
+- ✅ Add express shipping options
+- ✅ Optimize mobile experience
+- ✅ Use positive feedback in marketing
+
+📌 **Bottom Line:** You're doing great! Fix delivery speed for even happier customers.`;
+        
+         case 'sale-trends':
+           return `## 📈 Sales Success Story
+
+**This Month:** $45,678 (+$7,000 vs last month)  
+**Orders:** 1,234 (+200 vs last month)  
+**Average:** $37 per order
+
+### Top 3 Peak Shopping Times:
+- **7-9 PM** → 32% of daily sales (dinner time)
+- **Tuesday & Thursday** → 28% higher than weekend
+- **Mobile Orders** → 7 out of 10 orders
+
+### Quick Wins:
+- ✅ Run evening promotions (7-9 PM)
+- ✅ Optimize mobile checkout
+- ✅ Stock up for holiday season
+
+📌 **Bottom Line:** Sales growing nicely! Focus on evening promotions.`;
+        
+         case 'inventory-forecasting':
+           return `## 📦 Stock Alert - Action Required
+
+### Current Status:
+- 5 products running low on stock
+- 2 products completely sold out
+- 3 products overstocked
+
+### Top 3 Critical Items:
+- **Wireless Earbuds** → Only 12 left (usually 60)
+- **Fitness Watch** → Only 8 left (usually 50)
+- **Portable Charger** → Only 15 left (usually 60)
+
+### Action Plan:
+- ✅ **Today:** Restock 5 critical items
+- ✅ **This Week:** Order 8 fast-moving products
+- ✅ **This Month:** Stop ordering overstocked items
+
+📌 **Bottom Line:** Restock popular items quickly or lose sales!`;
+        
+         case 'product-performance':
+           return `## 🏆 Your Top 3 Money Makers
+
+### 🥇 Wireless Earbuds
+- 💰 **Revenue:** $18,240 (28% of total)
+- 📦 **Sales:** 456 units (+34%)
+- ⭐ **Rating:** 4.8/5 stars
+- 💵 **Profit:** 42% margin
+
+### 🥈 Fitness Watch
+- 💰 **Revenue:** $15,560 (24% of total)
+- 📦 **Sales:** 389 units (+21%)
+- ⭐ **Rating:** 4.6/5 stars
+- 💵 **Profit:** 38% margin
+
+### 🥉 Portable Charger
+- 💰 **Revenue:** $9,360 (14% of total)
+- 📦 **Sales:** 312 units (+18%)
+- ⭐ **Rating:** 4.7/5 stars
+- 💵 **Profit:** 35% margin
+
+### Smart Moves:
+- ✅ Increase marketing for top 3
+- ✅ Create bundle deals
+- ✅ Expand product line
+
+📌 **Bottom Line:** These 3 bring in 66% of your money!`;
+        
+         default:
+           return "I can help you understand your customers, sales patterns, inventory needs, and product performance in simple terms. Just pick what you'd like to know from the dropdown!";
+       }
+     };
+  
 
   const dismissInsight = (insightId: string) => {
     setInsights(prev => prev.map(insight => 
@@ -181,6 +288,41 @@ export default function InsightsChat() {
     }
   };
 
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const container = document.querySelector('[data-insights-chat]') as HTMLElement;
+    if (!container) return;
+    
+    const rect = container.getBoundingClientRect();
+    const newHeight = e.clientY - rect.top;
+    
+    // Constrain height between 256px (min) and 512px (2x max)
+    const constrainedHeight = Math.max(256, Math.min(512, newHeight));
+    setChatHeight(constrainedHeight);
+  }, [isResizing]);
+
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isResizing, handleResizeMove, handleResizeEnd]);
+
   // Don't render if user is not logged in, still loading, or on restricted pages
   if (isLoading || !user) {
     return null;
@@ -206,10 +348,15 @@ export default function InsightsChat() {
     );
   }
 
+
+
   return (
-    <div className={`fixed right-0 top-0 h-full bg-gray-900/95 backdrop-blur-md border-l border-purple-500/30 transition-all duration-300 ${
-      isOpen ? 'w-96' : 'w-0'
-    } z-40`}>
+    <div 
+      data-insights-chat
+      className={`fixed right-0 top-0 h-full bg-gray-900/95 backdrop-blur-md border-l border-purple-500/30 transition-all duration-300 ${
+        isOpen ? 'w-[28rem] lg:w-[28rem] md:w-80 sm:w-72' : 'w-0'
+      } z-40`}
+    >
       {isOpen && (
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -243,79 +390,92 @@ export default function InsightsChat() {
             </div>
           </div>
 
-          {/* Insights Section */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <div className="bg-black/40 rounded-lg p-4 border border-purple-500/30">
-              <h4 className="text-white font-medium mb-3 flex items-center">
-                💡 Business Insights
-                <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-1 rounded-full">
-                  {insights.filter(i => !i.dismissed).length}
-                </span>
-              </h4>
-              
-              <div className="space-y-3">
-                {insights.filter(insight => !insight.dismissed).map((insight) => (
-                  <div key={insight.id} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">{getTypeIcon(insight.type)}</span>
-                        <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(insight.priority)}`}>
-                          {insight.priority}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => dismissInsight(insight.id)}
-                        className="text-gray-400 hover:text-white text-sm"
-                        title="Dismiss"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    
-                    <h5 className="text-white font-medium text-sm mb-1">{insight.title}</h5>
-                    <p className="text-gray-300 text-xs mb-2">{insight.description}</p>
-                    
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Action:</span>
-                        <span className="text-white">{insight.suggestedAction}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Timeline:</span>
-                        <span className="text-white">{insight.timeline}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Confidence:</span>
-                        <span className="text-white">{insight.confidence}%</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                       {/* Insights Section */}
+             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+               <div className="bg-black/40 rounded-lg p-4 border border-purple-500/30">
+                 <h4 className="text-white font-medium mb-3 flex items-center">
+                   💡 Business Insights
+                   <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-1 rounded-full">
+                     {insights.filter(i => !i.dismissed).length}
+                   </span>
+                 </h4>
+                 
+                 <div className="space-y-3">
+                   {insights.filter(insight => !insight.dismissed).map((insight) => (
+                     <div key={insight.id} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                       <div className="flex items-start justify-between mb-2">
+                         <div className="flex items-center space-x-2">
+                           <span className="text-lg">{getTypeIcon(insight.type)}</span>
+                           <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(insight.priority)}`}>
+                             {insight.priority}
+                           </span>
+                         </div>
+                         <button
+                           onClick={() => dismissInsight(insight.id)}
+                           className="text-gray-400 hover:text-white text-sm"
+                           title="Dismiss"
+                         >
+                           ✕
+                         </button>
+                       </div>
+                       
+                       <h5 className="text-white font-medium text-sm mb-1">{insight.title}</h5>
+                       <p className="text-gray-300 text-xs mb-2">{insight.description}</p>
+                       
+                       {/* Visual Action Items */}
+                       <div className="mt-3 space-y-2">
+                         <div className="flex items-center space-x-2 text-xs">
+                           <span className="text-purple-400">🎯</span>
+                           <span className="text-white">{insight.suggestedAction}</span>
+                         </div>
+                         <div className="flex items-center space-x-2 text-xs">
+                           <span className="text-yellow-400">⏰</span>
+                           <span className="text-white">{insight.timeline}</span>
+                         </div>
+                         <div className="flex items-center space-x-2 text-xs">
+                           <span className="text-green-400">📊</span>
+                           <span className="text-white">{insight.confidence}% confidence</span>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
 
-            {/* Chat Messages */}
-            <div className="bg-black/40 rounded-lg p-4 border border-purple-500/30">
-              <h4 className="text-white font-medium mb-3">💬 Chat with AI</h4>
-              
-              <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                         {/* Chat Messages */}
+             <div className="bg-black/40 rounded-lg p-4 border border-purple-500/30">
+               <div className="flex items-center justify-between mb-3">
+                 <h4 className="text-white font-medium">💬 Chat with AI</h4>
+                 <div className="text-xs text-gray-400">Resizable</div>
+               </div>
+               
+               <div 
+                 className="space-y-3 mb-4 overflow-y-auto"
+                 style={{ height: `${chatHeight}px` }}
+               >
                 {messages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div
-                      className={`max-w-xs p-3 rounded-lg ${
-                        message.type === 'user'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-700 text-gray-200'
-                      }`}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {message.timestamp.toLocaleTimeString()}
-                      </p>
-                    </div>
+                                         <div
+                       className={`max-w-xs p-3 rounded-lg ${
+                         message.type === 'user'
+                           ? 'bg-purple-600 text-white'
+                           : 'bg-gray-700 text-gray-200'
+                       }`}
+                     >
+                       {message.type === 'ai' ? (
+                         <div className="prose prose-sm max-w-none prose-headings:text-gray-200 prose-p:text-gray-200 prose-strong:text-white prose-ul:text-gray-200 prose-li:text-gray-200">
+                           <ReactMarkdown>{message.content}</ReactMarkdown>
+                         </div>
+                       ) : (
+                         <p className="text-sm">{message.content}</p>
+                       )}
+                       <p className="text-xs opacity-70 mt-1">
+                         {message.timestamp.toLocaleTimeString()}
+                       </p>
+                     </div>
                   </div>
                 ))}
                 
@@ -331,24 +491,36 @@ export default function InsightsChat() {
                   </div>
                 )}
                 
-                <div ref={messagesEndRef} />
-              </div>
+                                 <div ref={messagesEndRef} />
+               </div>
+               
+               {/* Resize Handle */}
+               <div 
+                 className="h-1 bg-purple-500/30 hover:bg-purple-500/50 cursor-ns-resize rounded-full mt-2 transition-colors"
+                 onMouseDown={handleResizeStart}
+                 title="Drag to resize chat height"
+               />
 
               {/* Input Form */}
               <form onSubmit={handleSendMessage} className="flex space-x-2">
-                <input
-                  type="text"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  placeholder="Ask about your business..."
+                <select
+                  value={selectedInsight}
+                  onChange={(e) => setSelectedInsight(e.target.value)}
                   className="flex-1 bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:border-purple-500 focus:outline-none"
-                />
+                >
+                  <option value="">Select an insight type...</option>
+                  {insightOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.shortLabel}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="submit"
-                  disabled={!userInput.trim()}
+                  disabled={!selectedInsight}
                   className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition disabled:cursor-not-allowed"
                 >
-                  Send
+                  Generate
                 </button>
               </form>
             </div>

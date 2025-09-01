@@ -432,8 +432,8 @@ export default function SettingsPage() {
       </header>
 
       <div className="flex">
-        {/* Main Content */}
-        <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                          {/* Main Content */}
+                  <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-4xl">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-white">User Settings</h2>
             <p className="text-gray-400 mt-2">Manage your account settings and preferences</p>

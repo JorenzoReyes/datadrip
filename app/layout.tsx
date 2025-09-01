@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserManagementProvider } from "./contexts/UserManagementContext";
+import { SidechatProvider } from "./contexts/SidechatContext";
 import InsightsChat from "./components/InsightsChat";
 
 const geistSans = Geist({
@@ -32,8 +33,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UserManagementProvider>
-            {children}
-            <InsightsChat />
+            <SidechatProvider>
+              {children}
+              <InsightsChat />
+            </SidechatProvider>
           </UserManagementProvider>
         </AuthProvider>
       </body>
