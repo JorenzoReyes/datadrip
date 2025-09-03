@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-900 via-black to-purple-900">
+    <div className="min-h-screen bg-[#020D0D]">
       {/* Header */}
       <header className="bg-black/40 backdrop-blur-md border-b border-purple-500/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

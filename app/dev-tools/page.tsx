@@ -28,14 +28,14 @@ export default function DevToolsPage() {
   // Only show to admins
   if (!user || user.role !== 'admin') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-purple-900 via-black to-purple-900">
+      <div className="flex min-h-screen items-center justify-center bg-[#020D0D]">
         <div className="text-white text-xl">Access denied. Admin privileges required.</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-900 via-black to-purple-900">
+    <div className="min-h-screen bg-[#020D0D]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-black/40 rounded-xl p-6 border border-purple-500/30">
           <h1 className="text-2xl font-bold text-white mb-6">Development Tools</h1>

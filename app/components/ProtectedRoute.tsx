@@ -41,7 +41,7 @@ export default function ProtectedRoute({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-purple-900 via-black to-purple-900">
+      <div className="flex min-h-screen items-center justify-center bg-[#020D0D]">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );

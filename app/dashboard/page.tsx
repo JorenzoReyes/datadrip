@@ -29,7 +29,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-purple-900 via-black to-purple-900">
+      <div className="flex min-h-screen items-center justify-center bg-[#020D0D]">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
@@ -40,7 +40,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-900 via-black to-purple-900">
+    <div className="min-h-screen bg-[#020D0D]">
       {/* Header */}
       <header className="bg-black/40 backdrop-blur-md border-b border-purple-500/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
