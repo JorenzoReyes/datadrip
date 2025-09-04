@@ -224,7 +224,7 @@ export default function RegisterPage() {
           {/* First Name */}
           <div>
             <label htmlFor="firstName" className="block text-sm font-medium text-gray-200">
-              First Name
+              First Name *
             </label>
             <input
               type="text"
@@ -241,7 +241,7 @@ export default function RegisterPage() {
           {/* Last Name */}
           <div>
             <label htmlFor="lastName" className="block text-sm font-medium text-gray-200">
-              Last Name
+              Last Name *
             </label>
             <input
               type="text"
@@ -258,7 +258,7 @@ export default function RegisterPage() {
           {/* Username */}
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-200">
-              Username
+              Username *
             </label>
             <input
               type="text"
@@ -278,7 +278,7 @@ export default function RegisterPage() {
           {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-200">
-              Email
+              Email *
             </label>
             <input
               type="email"
@@ -295,7 +295,7 @@ export default function RegisterPage() {
           {/* Password */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-200">
-              Password
+              Password *
             </label>
             <input
               type="password"
@@ -315,7 +315,7 @@ export default function RegisterPage() {
           {/* Confirm Password */}
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200">
-              Confirm Password
+              Confirm Password *
             </label>
             <input
               type="password"
@@ -332,7 +332,7 @@ export default function RegisterPage() {
           {/* Role Selection */}
           <div>
             <label htmlFor="role" className="block text-sm font-medium text-gray-200">
-              Account Type
+              Account Type *            
             </label>
             <select
               id="role"

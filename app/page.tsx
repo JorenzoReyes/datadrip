@@ -61,7 +61,7 @@ export default function LoginPage() {
           {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-200">
-              Email
+              Email *
             </label>
             <input
               type="email"
@@ -77,7 +77,7 @@ export default function LoginPage() {
           {/* Password */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-200">
-              Password
+              Password *        
             </label>
             <input
               type="password"
