@@ -30,9 +30,9 @@ export default function ManageUsersPage() {
   const [showAuditModal, setShowAuditModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Redirect if not admin
+  // Redirect if not admin or system_admin
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
+    if (!authLoading && (!user || (user.role !== 'admin' && user.role !== 'system_admin'))) {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
@@ -91,7 +91,7 @@ export default function ManageUsersPage() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user || (user.role !== 'admin' && user.role !== 'system_admin')) {
     return null;
   }
 
@@ -278,7 +278,7 @@ export default function ManageUsersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.role === 'admin' 
+                          (user.role === 'admin' || user.role === 'system_admin')
                             ? 'bg-red-900/30 text-red-300 border border-red-500/30' 
                             : 'bg-blue-900/30 text-blue-300 border border-blue-500/30'
                         }`}>

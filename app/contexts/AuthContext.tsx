@@ -15,6 +15,10 @@ interface RegisteredUser {
   email: string;
   password: string;
   role: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  companyName?: string;
   createdAt: string;
 }
 
@@ -31,7 +35,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Dummy credentials (in real app, these would come from database)
 const DUMMY_CREDENTIALS = {
   'user@example.com': { password: 'password123', role: 'user' },
-  'admin@example.com': { password: 'admin123', role: 'admin' }
+  'admin@example.com': { password: 'admin123', role: 'admin' },
+  'system.admin@example.com': { password: 'system123', role: 'system_admin' }
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -66,8 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         role: dummyUser.role,
         isAuthenticated: true,
-        firstName: dummyUser.role === 'admin' ? 'Admin' : 'User',
-        lastName: 'Demo',
+        firstName: dummyUser.role === 'admin' ? 'Admin' : dummyUser.role === 'system_admin' ? 'System' : 'User',
+        lastName: dummyUser.role === 'system_admin' ? 'Administrator' : 'Demo',
         companyName: 'DataDrip'
       };
 

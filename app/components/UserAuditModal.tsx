@@ -106,7 +106,7 @@ export default function UserAuditModal({ user, onClose }: UserAuditModalProps) {
               <div>
                 <div className="text-sm text-gray-400">Role</div>
                 <div className={`font-medium ${
-                  user.role === 'admin' ? 'text-red-400' : 'text-blue-400'
+                  (user.role === 'admin' || user.role === 'system_admin') ? 'text-red-400' : 'text-blue-400'
                 }`}>
                   {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                 </div>

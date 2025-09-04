@@ -414,7 +414,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push(user.role === 'admin' ? '/admin/dashboard' : '/dashboard')}
+                onClick={() => router.push((user.role === 'admin' || user.role === 'system_admin') ? '/admin/dashboard' : '/dashboard')}
                 className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
               >
                 ← Back to Dashboard

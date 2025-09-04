@@ -4,7 +4,7 @@ export interface User {
   lastName: string;
   email: string;
   companyName?: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'system_admin';
   status: 'active' | 'inactive' | 'pending';
   createdAt: string;
   updatedAt: string;
@@ -17,7 +17,7 @@ export interface CreateUserData {
   lastName: string;
   email: string;
   companyName?: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'system_admin';
 }
 
 export interface UpdateUserData {
@@ -25,13 +25,13 @@ export interface UpdateUserData {
   lastName?: string;
   email?: string;
   companyName?: string;
-  role?: 'user' | 'admin';
+  role?: 'user' | 'admin' | 'system_admin';
   status?: 'active' | 'inactive' | 'pending';
 }
 
 export interface UserFilters {
   search: string;
-  role: 'all' | 'user' | 'admin';
+  role: 'all' | 'user' | 'admin' | 'system_admin';
   status: 'all' | 'active' | 'inactive' | 'pending';
   sortBy: 'name' | 'email' | 'createdAt' | 'lastLoginAt';
   sortOrder: 'asc' | 'desc';

@@ -184,9 +184,10 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
               >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
+                <option value="system_admin">System Administrator</option>
               </select>
               <p className="mt-1 text-xs text-gray-400">
-                Admin users have full system access and can manage other users
+                Admin and System Administrator users have full system access and can manage other users
               </p>
             </div>
 

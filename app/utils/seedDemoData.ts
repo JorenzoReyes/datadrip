@@ -68,6 +68,19 @@ export const seedDemoUsers = () => {
       updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
       lastLoginAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
       createdBy: 'admin@example.com'
+    },
+    {
+      id: 'demo_user_6',
+      firstName: 'System',
+      lastName: 'Administrator',
+      email: 'system.admin@example.com',
+      companyName: 'DataDrip',
+      role: 'system_admin',
+      status: 'active',
+      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      lastLoginAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
+      createdBy: 'system'
     }
   ];
 
@@ -108,6 +121,16 @@ export const seedDemoUsers = () => {
       performedByEmail: 'admin@example.com',
       timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       details: 'User account deactivated'
+    },
+    {
+      id: 'demo_log_4',
+      action: 'create' as const,
+      targetUserId: 'demo_user_6',
+      targetUserEmail: 'system.admin@example.com',
+      performedBy: 'system',
+      performedByEmail: 'system',
+      timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      details: 'System administrator account created with role: system_admin'
     }
   ];
 

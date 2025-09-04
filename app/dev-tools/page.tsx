@@ -25,8 +25,8 @@ export default function DevToolsPage() {
     }
   };
 
-  // Only show to admins
-  if (!user || user.role !== 'admin') {
+  // Only show to admins and system admins
+  if (!user || (user.role !== 'admin' && user.role !== 'system_admin')) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#020D0D]">
         <div className="text-white text-xl">Access denied. Admin privileges required.</div>

@@ -15,8 +15,8 @@ export default function DashboardPage() {
       return;
     }
 
-    // Redirect admin users to admin dashboard
-    if (!isLoading && user && user.role === 'admin') {
+    // Redirect admin and system_admin users to admin dashboard
+    if (!isLoading && user && (user.role === 'admin' || user.role === 'system_admin')) {
       router.push('/admin/dashboard');
       return;
     }
@@ -35,7 +35,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user || user.role === 'admin') {
+  if (!user || user.role === 'admin' || user.role === 'system_admin') {
     return null;
   }
 

@@ -129,13 +129,6 @@ export default function RegisterPage() {
       return 'You must accept the Privacy Policy and Terms & Conditions';
     }
 
-    if (formData.role === 'admin') {
-      // Simple admin code validation (you can change this)
-      const adminCode = prompt('Enter admin registration code:');
-      if (adminCode !== 'ADMIN2024') {
-        return 'Invalid admin registration code';
-      }
-    }
 
     return null;
   };
@@ -350,10 +343,8 @@ export default function RegisterPage() {
             >
               <option value="user">User Account</option>
               <option value="admin">Admin Account</option>
+              <option value="system_admin">System Administrator Account</option>
             </select>
-            <p className="mt-1 text-xs text-gray-400">
-              Admin accounts require a registration code
-            </p>
           </div>
 
           {/* Terms and Conditions Checkbox */}

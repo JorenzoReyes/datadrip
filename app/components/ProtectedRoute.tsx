@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'user' | 'admin';
+  requiredRole?: 'user' | 'admin' | 'system_admin';
   redirectTo?: string;
 }
 
@@ -27,12 +27,17 @@ export default function ProtectedRoute({
       }
 
       // Check if user has required role
-      if (requiredRole === 'admin' && user.role !== 'admin') {
+      if (requiredRole === 'admin' && user.role !== 'admin' && user.role !== 'system_admin') {
         router.push('/dashboard');
         return;
       }
 
-      if (requiredRole === 'user' && user.role === 'admin') {
+      if (requiredRole === 'system_admin' && user.role !== 'system_admin') {
+        router.push('/dashboard');
+        return;
+      }
+
+      if (requiredRole === 'user' && (user.role === 'admin' || user.role === 'system_admin')) {
         router.push('/admin/dashboard');
         return;
       }
@@ -49,8 +54,9 @@ export default function ProtectedRoute({
 
   // Don't render children if user doesn't meet requirements
   if (!user || 
-      (requiredRole === 'admin' && user.role !== 'admin') ||
-      (requiredRole === 'user' && user.role === 'admin')) {
+      (requiredRole === 'admin' && user.role !== 'admin' && user.role !== 'system_admin') ||
+      (requiredRole === 'system_admin' && user.role !== 'system_admin') ||
+      (requiredRole === 'user' && (user.role === 'admin' || user.role === 'system_admin'))) {
     return null;
   }
 

@@ -25,7 +25,7 @@ export default function LoginPage() {
         const userData = localStorage.getItem('user');
         if (userData) {
           const user = JSON.parse(userData);
-          if (user.role === 'admin') {
+          if (user.role === 'admin' || user.role === 'system_admin') {
             router.push('/admin/dashboard');
           } else {
             router.push('/dashboard');
@@ -53,6 +53,7 @@ export default function LoginPage() {
           <div className="text-xs text-purple-300 space-y-1">
             <div><strong>User:</strong> user@example.com / password123</div>
             <div><strong>Admin:</strong> admin@example.com / admin123</div>
+            <div><strong>System Admin:</strong> system.admin@example.com / system123</div>
           </div>
         </div>
 

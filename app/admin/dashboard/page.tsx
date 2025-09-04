@@ -15,7 +15,7 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    if (!isLoading && user && user.role !== 'admin') {
+    if (!isLoading && user && user.role !== 'admin' && user.role !== 'system_admin') {
       router.push('/dashboard');
       return;
     }
@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user || (user.role !== 'admin' && user.role !== 'system_admin')) {
     return null;
   }
 
@@ -46,10 +46,9 @@ export default function AdminDashboardPage() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-white">DataDrip</h1>
-              <span className="text-red-400 font-bold">ADMIN DASHBOARD</span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-300">Admin: {user.email}</span>
+              <span className="text-gray-300">{user.email}</span>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition"
@@ -66,9 +65,13 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Admin Welcome Card */}
           <div className="col-span-full bg-gradient-to-r from-red-900/40 to-purple-900/40 rounded-xl p-4 border border-red-500/30">
-            <h2 className="text-xl font-bold text-white mb-2">🚨 Admin Control Panel</h2>
+            <h2 className="text-xl font-bold text-white mb-2">
+              {user.role === 'system_admin' ? '🔧 System Administrator Control Panel' : '🚨 Admin Control Panel'}
+            </h2>
             <p className="text-gray-300 text-sm">
-              You have <span className="text-red-400 font-bold">administrator privileges</span>.
+              You have <span className="text-red-400 font-bold">
+                {user.role === 'system_admin' ? 'system administrator privileges' : 'administrator privileges'}
+              </span>.
               Manage users, system settings, and monitor all activities.
             </p>
           </div>
