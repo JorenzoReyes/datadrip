@@ -87,12 +87,12 @@ export default function LoginPage() {
               required
               className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-purple-500"
             />
-            <a
-              href="#"
+            <Link
+              href="/forgot-password"
               className="mt-2 inline-block text-sm text-center text-gray-400 hover:text-purple-400"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
 
           {/* Error Message */}

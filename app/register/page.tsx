@@ -7,6 +7,7 @@ import Link from 'next/link';
 interface RegistrationData {
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -17,6 +18,7 @@ interface RegistrationData {
 interface RegisteredUser {
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   password: string;
   role: 'user' | 'admin';
@@ -28,6 +30,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState<RegistrationData>({
     firstName: '',
     lastName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -56,7 +59,7 @@ export default function RegisterPage() {
   };
 
   const validateForm = (): string | null => {
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
       return 'All fields are required';
     }
 
@@ -68,12 +71,54 @@ export default function RegisterPage() {
       return 'Last name must be at least 2 characters long';
     }
 
+    // Username validation
+    if (formData.username.length < 3) {
+      return 'Username must be at least 3 characters long';
+    }
+
+    if (formData.username.length > 30) {
+      return 'Username must be no more than 30 characters long';
+    }
+
+
+    // Check for allowed characters (letters, numbers, underscores, dots, hyphens)
+    if (!/^[a-zA-Z0-9._-]+$/.test(formData.username)) {
+      return 'Username can only contain letters, numbers, underscores, dots, and hyphens';
+    }
+
+    // Check for reserved words
+    const reservedWords = ['admin', 'root', 'support', 'system', 'user', 'guest', 'test', 'demo', 'api', 'www', 'mail', 'ftp', 'localhost'];
+    if (reservedWords.includes(formData.username.toLowerCase())) {
+      return 'This username is reserved and cannot be used';
+    }
+
+    // Check for offensive patterns (basic check)
+    const offensivePatterns = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'hell'];
+    if (offensivePatterns.some(pattern => formData.username.toLowerCase().includes(pattern))) {
+      return 'Username contains inappropriate content';
+    }
+
     if (!formData.email.includes('@')) {
       return 'Please enter a valid email address';
     }
 
-    if (formData.password.length < 6) {
-      return 'Password must be at least 6 characters long';
+    if (formData.password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(formData.password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+
+    // Check for lowercase letter
+    if (!/[a-z]/.test(formData.password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+
+    // Check for special character
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
+      return 'Password must contain at least one special character';
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -121,10 +166,18 @@ export default function RegisterPage() {
         return;
       }
 
+      // Check if username already exists (case-insensitive)
+      if (existingUsers.find((user: RegisteredUser) => user.username.toLowerCase() === formData.username.toLowerCase())) {
+        setError('Username is already taken');
+        setIsLoading(false);
+        return;
+      }
+
       // Create new user
       const newUser = {
         firstName: formData.firstName,
         lastName: formData.lastName,
+        username: formData.username,
         email: formData.email,
         password: formData.password, // In real app, this would be hashed
         role: formData.role,
@@ -209,6 +262,26 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-200">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              placeholder="Choose a username"
+              required
+              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Must have 3-30 characters 
+            </p>
+          </div>
+
           {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-200">
@@ -241,7 +314,9 @@ export default function RegisterPage() {
               required
               className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
             />
-            <p className="mt-1 text-xs text-gray-400">Must be at least 6 characters</p>
+            <p className="mt-1 text-xs text-gray-400">
+              Must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 special character
+            </p>
           </div>
 
           {/* Confirm Password */}
