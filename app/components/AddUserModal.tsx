@@ -154,22 +154,6 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
               />
             </div>
 
-            {/* Company Name */}
-            <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-200 mb-1">
-                Company Name
-              </label>
-              <input
-                type="text"
-                id="companyName"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleInputChange}
-                placeholder="Enter company name (optional)"
-                className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-
             {/* Role */}
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-200 mb-1">
