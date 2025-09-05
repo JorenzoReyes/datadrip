@@ -199,31 +199,31 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#020D0D]">
-        <div className="w-full max-w-lg rounded-2xl bg-black/40 p-6 shadow-xl backdrop-blur-md text-center">
-          <div className="text-green-400 text-6xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold text-white mb-2">Registration Successful!</h1>
-          <p className="text-gray-300 mb-4">
-            Your account has been created successfully. You will be redirected to the login page shortly.
-          </p>
-          <div className="text-sm text-gray-400">
-            Redirecting to login in 2 seconds...
-          </div>
+          <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl border border-gray-200 text-center">
+        <div className="text-primary-500 text-6xl mb-4">✅</div>
+        <h1 className="text-2xl font-bold font-title text-header mb-2">Registration Successful!</h1>
+        <p className="text-subheader mb-4">
+          Your account has been created successfully. You will be redirected to the login page shortly.
+        </p>
+        <div className="text-sm text-gray-500">
+          Redirecting to login in 2 seconds...
+        </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#020D0D]">
-      <div className="w-full max-w-lg rounded-2xl bg-black/40 p-6 shadow-xl backdrop-blur-md">
-        <h1 className="text-center text-4xl font-extrabold text-white">DataDrip</h1>
-        <p className="mt-2 text-center text-gray-400">Create your account</p>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl border border-gray-200">
+        <h1 className="text-center text-4xl font-extrabold font-title text-header">DataDrip</h1>
+        <p className="mt-2 text-center text-subheader">Create your account</p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           {/* First Name */}
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="firstName" className="block text-sm font-medium text-subheader">
               First Name *
             </label>
             <input
@@ -234,13 +234,13 @@ export default function RegisterPage() {
               onChange={handleInputChange}
               placeholder="Enter your first name"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
           </div>
 
           {/* Last Name */}
           <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="lastName" className="block text-sm font-medium text-subheader">
               Last Name *
             </label>
             <input
@@ -251,13 +251,13 @@ export default function RegisterPage() {
               onChange={handleInputChange}
               placeholder="Enter your last name"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
           </div>
 
           {/* Username */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="username" className="block text-sm font-medium text-subheader">
               Username *
             </label>
             <input
@@ -268,7 +268,7 @@ export default function RegisterPage() {
               onChange={handleInputChange}
               placeholder="Choose a username"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
             <p className="mt-1 text-xs text-gray-400">
               Must have 3-30 characters 
@@ -277,7 +277,7 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="email" className="block text-sm font-medium text-subheader">
               Email *
             </label>
             <input
@@ -288,13 +288,13 @@ export default function RegisterPage() {
               onChange={handleInputChange}
               placeholder="Enter your email"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
           </div>
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="password" className="block text-sm font-medium text-subheader">
               Password *
             </label>
             <input
@@ -305,7 +305,7 @@ export default function RegisterPage() {
               onChange={handleInputChange}
               placeholder="Enter your password"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
             <p className="mt-1 text-xs text-gray-400">
               Must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 special character
@@ -314,7 +314,7 @@ export default function RegisterPage() {
 
           {/* Confirm Password */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-subheader">
               Confirm Password *
             </label>
             <input
@@ -325,13 +325,13 @@ export default function RegisterPage() {
               onChange={handleInputChange}
               placeholder="Confirm your password"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
           </div>
 
           {/* Role Selection */}
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="role" className="block text-sm font-medium text-subheader">
               Account Type *            
             </label>
             <select
@@ -339,7 +339,7 @@ export default function RegisterPage() {
               name="role"
               value={formData.role}
               onChange={handleInputChange}
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 focus:border-[#018440] focus:ring-2 focus:ring-[#018440]"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             >
               <option value="user">User Account</option>
               <option value="admin">Admin Account</option>
@@ -355,15 +355,15 @@ export default function RegisterPage() {
               name="acceptTerms"
               checked={formData.acceptTerms}
               onChange={handleInputChange}
-              className="mt-1 h-4 w-4 rounded border-gray-700 bg-black/40 text-[#018440] focus:ring-[#018440] focus:ring-2"
+              className="mt-1 h-4 w-4 rounded border-gray-300 bg-white text-primary-500 focus:ring-primary-200 focus:ring-2"
             />
-            <label htmlFor="acceptTerms" className="text-sm text-gray-300">
+            <label htmlFor="acceptTerms" className="text-sm text-subheader">
               I agree to the{' '}
-                             <Link href="/privacy-policy" className="text-[#018440] hover:text-[#01A04A] underline">
+                             <Link href="/privacy-policy" className="text-primary-600 hover:text-primary-700 underline">
                 Privacy Policy
               </Link>{' '}
               and{' '}
-                             <Link href="/terms-conditions" className="text-[#018440] hover:text-[#01A04A] underline">
+                             <Link href="/terms-conditions" className="text-primary-600 hover:text-primary-700 underline">
                 Terms & Conditions
               </Link>
             </label>
@@ -371,8 +371,8 @@ export default function RegisterPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="rounded-lg bg-red-900/30 border border-red-500/30 p-3">
-              <p className="text-sm text-red-200">{error}</p>
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
@@ -380,15 +380,15 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading}
-                          className="w-full rounded-lg bg-[#018440] px-4 py-2 font-medium text-white transition hover:bg-[#016B33] focus:outline-none focus:ring-2 focus:ring-[#018440] disabled:opacity-50 disabled:cursor-not-allowed"
+                           className="w-full rounded-lg bg-primary-500 px-4 py-2 font-medium text-white transition hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
 
           {/* Login link */}
-          <p className="text-center text-sm text-gray-400">
+          <p className="text-center text-sm text-subheader">
             Already have an account?{" "}
-                         <Link href="/" className="font-medium text-[#018440] hover:text-[#01A04A]">
+                         <Link href="/" className="font-medium text-primary-600 hover:text-primary-700">
               Log in.
             </Link>
           </p>

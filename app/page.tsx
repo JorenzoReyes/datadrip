@@ -42,15 +42,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-purple-900 via-black to-purple-900">
-      <div className="w-full max-w-lg rounded-2xl bg-black/40 p-6 shadow-xl backdrop-blur-md">
-        <h1 className="text-center text-4xl font-extrabold text-white">DataDrip</h1>
-        <p className="mt-2 text-center text-gray-400">Log in to your account</p>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl border border-gray-200">
+        <h1 className="text-center text-4xl font-extrabold font-title text-header">DataDrip</h1>
+        <p className="mt-2 text-center text-subheader">Log in to your account</p>
 
         {/* Demo Credentials Info */}
-        <div className="mt-4 rounded-lg bg-purple-900/30 p-4 border border-purple-500/30">
-          <p className="text-sm text-purple-200 font-medium mb-2">Demo Credentials:</p>
-          <div className="text-xs text-purple-300 space-y-1">
+        <div className="mt-4 rounded-lg bg-primary-50 p-4 border border-primary-200">
+          <p className="text-sm text-primary-700 font-medium mb-2">Demo Credentials:</p>
+          <div className="text-xs text-primary-600 space-y-1">
             <div><strong>User:</strong> user@example.com / password123</div>
             <div><strong>Admin:</strong> admin@example.com / admin123</div>
             <div><strong>System Admin:</strong> system.admin@example.com / system123</div>
@@ -60,7 +60,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="email" className="block text-sm font-medium text-subheader">
               Email *
             </label>
             <input
@@ -70,13 +70,13 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
           </div>
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+            <label htmlFor="password" className="block text-sm font-medium text-subheader">
               Password *        
             </label>
             <input
@@ -86,11 +86,11 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
-              className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-purple-500"
+              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />
             <Link
               href="/forgot-password"
-              className="mt-2 inline-block text-sm text-center text-gray-400 hover:text-purple-400"
+              className="mt-2 inline-block text-sm text-center text-subheader hover:text-primary-600"
             >
               Forgot password?
             </Link>
@@ -98,8 +98,8 @@ export default function LoginPage() {
 
           {/* Error Message */}
           {loginError && (
-            <div className="rounded-lg bg-red-900/30 border border-red-500/30 p-3">
-              <p className="text-sm text-red-200">{loginError}</p>
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+              <p className="text-sm text-red-700">{loginError}</p>
             </div>
           )}
 
@@ -107,15 +107,15 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-lg bg-purple-700 px-4 py-2 font-medium text-white transition hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-primary-500 px-4 py-2 font-medium text-white transition hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
 
           {/* Sign up link */}
-          <p className="text-center text-sm text-gray-400">
+          <p className="text-center text-sm text-subheader">
             Don&apos;t have an account yet?{" "}
-            <Link href="/register" className="font-medium text-purple-400 hover:text-purple-300">
+            <Link href="/register" className="font-medium text-primary-600 hover:text-primary-700">
               Sign up.
             </Link>
           </p>

@@ -396,33 +396,38 @@ export default function SettingsPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#020D0D]">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020D0D]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-black/40 backdrop-blur-md border-b border-purple-500/30">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-white">DataDrip</h1>
-              <span className="text-blue-400 font-bold">SETTINGS</span>
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold font-title text-header">DataDrip</h1>
+              <nav className="hidden md:flex space-x-6">
+                <a href={user.role === 'admin' || user.role === 'system_admin' ? '/admin/dashboard' : '/dashboard'} className="text-subheader hover:text-header transition">Dashboard</a>
+                <a href="/sales-inventory" className="text-subheader hover:text-header transition">Sales and Inventory</a>
+                <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
+              </nav>
+              <span className="text-primary-500 font-bold">SETTINGS</span>
             </div>
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push((user.role === 'admin' || user.role === 'system_admin') ? '/admin/dashboard' : '/dashboard')}
-                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
+                className="px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white transition"
               >
                 ← Back to Dashboard
               </button>
-              <span className="text-gray-300">{user.email}</span>
+              <span className="text-subheader">{user.email}</span>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition"
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition"
               >
                 Logout
               </button>
@@ -434,17 +439,17 @@ export default function SettingsPage() {
                            <div className="flex justify-center">
           <div className="flex max-w-7xl w-full">
             {/* Left Sidebar */}
-            <aside className="w-80 bg-black/40 border-r border-purple-500/30 p-6 rounded-r-2xl">
+            <aside className="w-80 bg-white border-r border-gray-200 p-6 rounded-r-2xl">
               <div className="sticky top-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Settings</h3>
+                <h3 className="text-lg font-semibold font-title text-header mb-4">Settings</h3>
                 
                 <nav className="space-y-2">
                   <button
                     onClick={() => setActiveSection('details')}
                     className={`w-full text-left px-4 py-3 rounded-lg transition ${
                       activeSection === 'details'
-                        ? 'bg-purple-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-subheader hover:bg-gray-100 hover:text-header'
                     }`}
                   >
                     👤 User Details
@@ -454,8 +459,8 @@ export default function SettingsPage() {
                     onClick={() => setActiveSection('platforms')}
                     className={`w-full text-left px-4 py-3 rounded-lg transition ${
                       activeSection === 'platforms'
-                        ? 'bg-purple-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-subheader hover:bg-gray-100 hover:text-header'
                     }`}
                   >
                     🔗 Connect Platforms
@@ -463,9 +468,9 @@ export default function SettingsPage() {
                 </nav>
 
                 {/* Additional Info */}
-                <div className="mt-8 p-4 bg-gray-800/30 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-200 mb-2">Need Help?</h4>
-                  <p className="text-xs text-gray-400">
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-medium text-header mb-2">Need Help?</h4>
+                  <p className="text-xs text-subheader">
                     Contact support if you need assistance with your account settings.
                   </p>
                 </div>
@@ -475,20 +480,20 @@ export default function SettingsPage() {
             {/* Main Content */}
             <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-4xl">
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-white">User Settings</h2>
-            <p className="text-gray-400 mt-2">Manage your account settings and preferences</p>
+            <h2 className="text-3xl font-bold font-title text-header">User Settings</h2>
+            <p className="text-subheader mt-2">Manage your account settings and preferences</p>
           </div>
 
           {/* Content based on active section */}
           {activeSection === 'details' && (
-            <div className="bg-black/40 rounded-xl border border-purple-500/30 p-6">
-              <h3 className="text-xl font-semibold text-white mb-6">User Details</h3>
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold font-title text-header mb-6">User Details</h3>
               
               {message && (
                 <div className={`mb-4 rounded-lg p-3 ${
                   message.type === 'success' 
-                    ? 'bg-green-900/30 border border-green-500/30 text-green-200'
-                    : 'bg-red-900/30 border border-red-500/30 text-red-200'
+                    ? 'bg-green-50 border border-green-200 text-green-700'
+                    : 'bg-red-50 border border-red-200 text-red-700'
                 }`}>
                   <p className="text-sm">{message.text}</p>
                 </div>

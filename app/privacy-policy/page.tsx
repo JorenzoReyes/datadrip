@@ -4,20 +4,20 @@ import Link from 'next/link';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-[#020D0D]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-black/40 backdrop-blur-md border-b border-purple-500/30">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <Link href="/" className="text-2xl font-bold text-white hover:text-purple-300 transition">
+              <Link href="/" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition">
                 DataDrip
               </Link>
-              <span className="text-purple-300">Privacy Policy</span>
+              <span className="text-subheader">Privacy Policy</span>
             </div>
             <Link
               href="/register"
-              className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
+              className="px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white transition"
             >
               Back to Registration
             </Link>
@@ -27,13 +27,13 @@ export default function PrivacyPolicyPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-black/40 rounded-2xl p-8 border border-purple-500/30">
-          <h1 className="text-3xl font-bold text-white mb-6">Privacy Policy</h1>
-          <p className="text-gray-300 mb-6">Last updated: {new Date().toLocaleDateString()}</p>
+        <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+          <h1 className="text-3xl font-bold font-title text-header mb-6">Privacy Policy</h1>
+          <p className="text-subheader mb-6">Last updated: {new Date().toLocaleDateString()}</p>
 
-          <div className="space-y-6 text-gray-300">
+          <div className="space-y-6 text-subheader">
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">1. Information We Collect</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">1. Information We Collect</h2>
               <p className="mb-3">
                 We collect information you provide directly to us, such as when you create an account, 
                 including your name, email address, and account preferences.
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">2. How We Use Your Information</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">2. How We Use Your Information</h2>
               <p className="mb-3">We use the information we collect to:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Provide, maintain, and improve our services</li>
@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">3. Information Sharing</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">3. Information Sharing</h2>
               <p>
                 We do not sell, trade, or otherwise transfer your personal information to third parties 
                 without your consent, except as described in this policy or as required by law.
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">4. Data Security</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">4. Data Security</h2>
               <p>
                 We implement appropriate security measures to protect your personal information 
                 against unauthorized access, alteration, disclosure, or destruction.
@@ -73,7 +73,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">5. Your Rights</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">5. Your Rights</h2>
               <p className="mb-3">You have the right to:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Access and update your personal information</li>
@@ -84,7 +84,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">6. Cookies and Tracking</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">6. Cookies and Tracking</h2>
               <p>
                 We use cookies and similar tracking technologies to enhance your experience 
                 and collect information about how you use our services.
@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">7. Changes to This Policy</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">7. Changes to This Policy</h2>
               <p>
                 We may update this privacy policy from time to time. We will notify you of any changes 
                 by posting the new policy on this page and updating the &quot;Last updated&quot; date.
@@ -100,7 +100,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-3">8. Contact Us</h2>
+              <h2 className="text-xl font-semibold font-title text-header mb-3">8. Contact Us</h2>
               <p>
                 If you have any questions about this privacy policy, please contact us at:{' '}
                 <a href="mailto:privacy@datadrip.com" className="text-purple-400 hover:text-purple-300">
