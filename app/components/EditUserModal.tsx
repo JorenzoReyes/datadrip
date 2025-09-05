@@ -18,7 +18,6 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    companyName: user.companyName || '',
     role: user.role,
     status: user.status
   });
@@ -93,7 +92,6 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
       formData.firstName !== user.firstName ||
       formData.lastName !== user.lastName ||
       formData.email !== user.email ||
-      formData.companyName !== (user.companyName || '') ||
       formData.role !== user.role ||
       formData.status !== user.status
     );
@@ -101,13 +99,13 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl border border-purple-500/30 w-full max-w-md">
+      <div className="bg-white rounded-xl border border-border w-full max-w-md shadow-xl">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-white">Edit User</h3>
+            <h3 className="text-xl font-bold font-title text-header">Edit User</h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition"
+              className="text-subheader hover:text-header transition"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -116,16 +114,16 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
           </div>
 
           {/* User Info */}
-          <div className="mb-4 p-3 bg-gray-800/50 rounded-lg">
-            <div className="text-sm text-gray-400">Editing user:</div>
-            <div className="text-white font-medium">{user.firstName} {user.lastName}</div>
-            <div className="text-sm text-gray-300">{user.email}</div>
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-border">
+            <div className="text-sm text-subheader">Editing user:</div>
+            <div className="text-header font-medium">{user.firstName} {user.lastName}</div>
+            <div className="text-sm text-subheader">{user.email}</div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* First Name */}
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1">
+              <label htmlFor="firstName" className="block text-sm font-medium text-subheader mb-1">
                 First Name *
               </label>
               <input
@@ -136,13 +134,13 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 onChange={handleInputChange}
                 placeholder="Enter first name"
                 required
-                className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               />
             </div>
 
             {/* Last Name */}
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1">
+              <label htmlFor="lastName" className="block text-sm font-medium text-subheader mb-1">
                 Last Name *
               </label>
               <input
@@ -153,13 +151,13 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 onChange={handleInputChange}
                 placeholder="Enter last name"
                 required
-                className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               />
             </div>
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-subheader mb-1">
                 Email Address *
               </label>
               <input
@@ -170,29 +168,13 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 onChange={handleInputChange}
                 placeholder="Enter email address"
                 required
-                className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-
-            {/* Company Name */}
-            <div>
-              <label htmlFor="companyName" className="block text-sm font-medium text-gray-200 mb-1">
-                Company Name
-              </label>
-              <input
-                type="text"
-                id="companyName"
-                name="companyName"
-                value={formData.companyName || ''}
-                onChange={handleInputChange}
-                placeholder="Enter company name (optional)"
-                className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               />
             </div>
 
             {/* Role */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-200 mb-1">
+              <label htmlFor="role" className="block text-sm font-medium text-subheader mb-1">
                 Role *
               </label>
               <select
@@ -200,16 +182,17 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 name="role"
                 value={formData.role || 'user'}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
+                <option value="system_admin">System Administrator</option>
               </select>
             </div>
 
             {/* Status */}
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-200 mb-1">
+              <label htmlFor="status" className="block text-sm font-medium text-subheader mb-1">
                 Status *
               </label>
               <select
@@ -217,7 +200,7 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
                 name="status"
                 value={formData.status || 'active'}
                 onChange={handleInputChange}
-                className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
@@ -227,8 +210,8 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-lg bg-red-900/30 border border-red-500/30 p-3">
-                <p className="text-sm text-red-200">{error}</p>
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
@@ -237,14 +220,14 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 transition"
+                className="flex-1 px-4 py-2 rounded-lg border border-border text-subheader hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !hasChanges()}
-                className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Updating...' : 'Update User'}
               </button>

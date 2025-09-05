@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
           {/* Greeting */}
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-header">Hi Admin!</h2>
-          </div>
+            </div>
           
           {/* Navigation */}
           <nav className="space-y-2">
@@ -140,15 +140,15 @@ export default function AdminDashboardPage() {
               <span>System Health</span>
             </a>
             
-            <button 
-              onClick={handleLogout}
+              <button
+                onClick={handleLogout}
               className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition w-full text-left"
-            >
+              >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
               </svg>
               <span>Log Out</span>
-            </button>
+              </button>
           </nav>
         </div>
       </aside>
@@ -175,13 +175,13 @@ export default function AdminDashboardPage() {
               </svg>
             </button>
           </div>
-        </div>
+              </div>
 
         {/* Error Message */}
         {error && (
           <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-3">
             <p className="text-sm text-red-700">{error}</p>
-          </div>
+              </div>
         )}
 
         {/* Search and Filter Section */}
@@ -196,7 +196,7 @@ export default function AdminDashboardPage() {
                 placeholder="Search by name, email, or company..."
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               />
-            </div>
+              </div>
             <div>
               <label className="block text-sm font-medium text-subheader mb-2">Role</label>
               <select
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
               </select>
             </div>
           </div>
-        </div>
+              </div>
 
         {/* User Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -258,7 +258,7 @@ export default function AdminDashboardPage() {
               <div>Actions</div>
             </div>
           </div>
-          
+
           {/* Table Content */}
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -304,9 +304,6 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
-                        {user.companyName || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
@@ -322,7 +319,7 @@ export default function AdminDashboardPage() {
                             className="text-blue-400 hover:text-blue-300 transition"
                           >
                             Edit
-                          </button>
+              </button>
                           <button
                             onClick={() => {
                               setSelectedUser(user);
@@ -331,7 +328,7 @@ export default function AdminDashboardPage() {
                             className="text-purple-400 hover:text-purple-300 transition"
                           >
                             Audit
-                          </button>
+              </button>
                           {user.status === 'active' ? (
                             <button
                               onClick={() => handleUserAction('deactivate', user.id)}
@@ -339,7 +336,7 @@ export default function AdminDashboardPage() {
                               className="text-red-400 hover:text-red-300 transition disabled:opacity-50"
                             >
                               {actionLoading === user.id ? 'Deactivating...' : 'Deactivate'}
-                            </button>
+              </button>
                           ) : (
                             <button
                               onClick={() => handleUserAction('activate', user.id)}
@@ -347,7 +344,7 @@ export default function AdminDashboardPage() {
                               className="text-green-400 hover:text-green-300 transition disabled:opacity-50"
                             >
                               {actionLoading === user.id ? 'Activating...' : 'Activate'}
-                            </button>
+              </button>
                           )}
                         </div>
                       </td>
@@ -374,9 +371,9 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-lg p-6 shadow-sm text-center">
             <div className="text-3xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'pending').length}
-            </div>
+              </div>
             <div className="text-subheader">Pending Users</div>
-          </div>
+              </div>
           <div className="bg-white rounded-lg p-6 shadow-sm text-center">
             <div className="text-3xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'inactive').length}
