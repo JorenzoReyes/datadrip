@@ -3,6 +3,7 @@ import { Space_Grotesk, Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserManagementProvider } from "./contexts/UserManagementContext";
+import { IntegrationManagementProvider } from "./contexts/IntegrationManagementContext";
 import { SidechatProvider } from "./contexts/SidechatContext";
 import InsightsChat from "./components/InsightsChat";
 
@@ -35,10 +36,12 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UserManagementProvider>
-            <SidechatProvider>
-              {children}
-              <InsightsChat />
-            </SidechatProvider>
+            <IntegrationManagementProvider>
+              <SidechatProvider>
+                {children}
+                <InsightsChat />
+              </SidechatProvider>
+            </IntegrationManagementProvider>
           </UserManagementProvider>
         </AuthProvider>
       </body>

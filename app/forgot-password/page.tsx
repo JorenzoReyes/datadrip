@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
 
       // Check if email exists in registered users
       const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const userExists = existingUsers.find((user: any) => user.email === email);
+      const userExists = existingUsers.find((user: { email: string }) => user.email === email);
 
       if (userExists) {
         setSuccess(true);
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
           <div className="text-green-500 text-6xl mb-4">✅</div>
           <h1 className="text-2xl font-bold font-title text-header mb-2">Reset Link Sent!</h1>
           <p className="text-subheader mb-4">
-            We've sent a password reset link to <strong className="text-primary-600">{email}</strong>
+            We&apos;ve sent a password reset link to <strong className="text-primary-600">{email}</strong>
           </p>
           <p className="text-sm text-subheader mb-6">
             Please check your email and follow the instructions to reset your password.

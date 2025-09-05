@@ -339,7 +339,7 @@ export default function InsightsChat() {
       <div className="fixed right-4 bottom-4 z-50">
         <button
           onClick={() => setIsMinimized(false)}
-          className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+          className="bg-primary-500 hover:bg-primary-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
           title="Open AI Insights"
         >
           🤖
@@ -353,35 +353,35 @@ export default function InsightsChat() {
   return (
     <div 
       data-insights-chat
-      className={`fixed right-0 top-0 h-full bg-gray-900/95 backdrop-blur-md border-l border-purple-500/30 transition-all duration-300 ${
+      className={`fixed right-0 top-0 h-full bg-white/95 backdrop-blur-md border-l border-primary-500/30 shadow-xl transition-all duration-300 ${
         isOpen ? 'w-[28rem] lg:w-[28rem] md:w-80 sm:w-72' : 'w-0'
       } z-40`}
     >
       {isOpen && (
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-purple-600/20 p-4 border-b border-purple-500/30">
+          <div className="bg-primary-50 p-4 border-b border-primary-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
                   🤖
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">AI Business Assistant</h3>
-                  <p className="text-purple-200 text-sm">Powered by DataDrip</p>
+                  <h3 className="text-header font-semibold">AI Business Assistant</h3>
+                  <p className="text-subheader text-sm">Powered by DataDrip</p>
                 </div>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setIsMinimized(true)}
-                  className="text-purple-200 hover:text-white transition"
+                  className="text-subheader hover:text-header transition"
                   title="Minimize"
                 >
                   ➖
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="text-purple-200 hover:text-white transition"
+                  className="text-subheader hover:text-header transition"
                   title="Close"
                 >
                   ✕
@@ -392,17 +392,17 @@ export default function InsightsChat() {
 
                        {/* Insights Section */}
              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-               <div className="bg-black/40 rounded-lg p-4 border border-purple-500/30">
-                 <h4 className="text-white font-medium mb-3 flex items-center">
+               <div className="bg-white rounded-lg p-4 border border-primary-200 shadow-sm">
+                 <h4 className="text-header font-medium mb-3 flex items-center">
                    💡 Business Insights
-                   <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-1 rounded-full">
+                   <span className="ml-2 text-xs bg-primary-500 text-white px-2 py-1 rounded-full">
                      {insights.filter(i => !i.dismissed).length}
                    </span>
                  </h4>
                  
                  <div className="space-y-3">
                    {insights.filter(insight => !insight.dismissed).map((insight) => (
-                     <div key={insight.id} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                     <div key={insight.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                        <div className="flex items-start justify-between mb-2">
                          <div className="flex items-center space-x-2">
                            <span className="text-lg">{getTypeIcon(insight.type)}</span>
@@ -412,29 +412,29 @@ export default function InsightsChat() {
                          </div>
                          <button
                            onClick={() => dismissInsight(insight.id)}
-                           className="text-gray-400 hover:text-white text-sm"
+                           className="text-subheader hover:text-header text-sm"
                            title="Dismiss"
                          >
                            ✕
                          </button>
                        </div>
                        
-                       <h5 className="text-white font-medium text-sm mb-1">{insight.title}</h5>
-                       <p className="text-gray-300 text-xs mb-2">{insight.description}</p>
+                       <h5 className="text-header font-medium text-sm mb-1">{insight.title}</h5>
+                       <p className="text-subheader text-xs mb-2">{insight.description}</p>
                        
                        {/* Visual Action Items */}
                        <div className="mt-3 space-y-2">
                          <div className="flex items-center space-x-2 text-xs">
-                           <span className="text-purple-400">🎯</span>
-                           <span className="text-white">{insight.suggestedAction}</span>
+                           <span className="text-primary-500">🎯</span>
+                           <span className="text-header">{insight.suggestedAction}</span>
                          </div>
                          <div className="flex items-center space-x-2 text-xs">
-                           <span className="text-yellow-400">⏰</span>
-                           <span className="text-white">{insight.timeline}</span>
+                           <span className="text-yellow-500">⏰</span>
+                           <span className="text-header">{insight.timeline}</span>
                          </div>
                          <div className="flex items-center space-x-2 text-xs">
-                           <span className="text-green-400">📊</span>
-                           <span className="text-white">{insight.confidence}% confidence</span>
+                           <span className="text-green-500">📊</span>
+                           <span className="text-header">{insight.confidence}% confidence</span>
                          </div>
                        </div>
                      </div>
@@ -443,10 +443,10 @@ export default function InsightsChat() {
                </div>
 
                          {/* Chat Messages */}
-             <div className="bg-black/40 rounded-lg p-4 border border-purple-500/30">
+             <div className="bg-white rounded-lg p-4 border border-primary-200 shadow-sm">
                <div className="flex items-center justify-between mb-3">
-                 <h4 className="text-white font-medium">💬 Chat with AI</h4>
-                 <div className="text-xs text-gray-400">Resizable</div>
+                 <h4 className="text-header font-medium">💬 Chat with AI</h4>
+                 <div className="text-xs text-subheader">Resizable</div>
                </div>
                
                <div 
@@ -461,12 +461,12 @@ export default function InsightsChat() {
                                          <div
                        className={`max-w-xs p-3 rounded-lg ${
                          message.type === 'user'
-                           ? 'bg-purple-600 text-white'
-                           : 'bg-gray-700 text-gray-200'
+                           ? 'bg-primary-500 text-white'
+                           : 'bg-gray-100 text-header border border-gray-200'
                        }`}
                      >
                        {message.type === 'ai' ? (
-                         <div className="prose prose-sm max-w-none prose-headings:text-gray-200 prose-p:text-gray-200 prose-strong:text-white prose-ul:text-gray-200 prose-li:text-gray-200">
+                         <div className="prose prose-sm max-w-none prose-headings:text-header prose-p:text-header prose-strong:text-header prose-ul:text-header prose-li:text-header">
                            <ReactMarkdown>{message.content}</ReactMarkdown>
                          </div>
                        ) : (
@@ -481,11 +481,11 @@ export default function InsightsChat() {
                 
                 {isTyping && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-700 text-gray-200 p-3 rounded-lg">
+                    <div className="bg-gray-100 text-header border border-gray-200 p-3 rounded-lg">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
                     </div>
                   </div>
@@ -496,7 +496,7 @@ export default function InsightsChat() {
                
                {/* Resize Handle */}
                <div 
-                 className="h-1 bg-purple-500/30 hover:bg-purple-500/50 cursor-ns-resize rounded-full mt-2 transition-colors"
+                 className="h-1 bg-primary-200 hover:bg-primary-300 cursor-ns-resize rounded-full mt-2 transition-colors"
                  onMouseDown={handleResizeStart}
                  title="Drag to resize chat height"
                />
@@ -506,7 +506,7 @@ export default function InsightsChat() {
                 <select
                   value={selectedInsight}
                   onChange={(e) => setSelectedInsight(e.target.value)}
-                  className="flex-1 bg-gray-800 text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:border-purple-500 focus:outline-none"
+                  className="flex-1 bg-white text-header text-sm rounded-lg px-3 py-2 border border-gray-300 focus:border-primary-500 focus:outline-none"
                 >
                   <option value="">Select an insight type...</option>
                   {insightOptions.map((option) => (
@@ -518,7 +518,7 @@ export default function InsightsChat() {
                 <button
                   type="submit"
                   disabled={!selectedInsight}
-                  className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm transition disabled:cursor-not-allowed"
+                  className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm transition disabled:cursor-not-allowed"
                 >
                   Generate
                 </button>
@@ -532,7 +532,7 @@ export default function InsightsChat() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed right-4 top-4 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+          className="fixed right-4 top-4 bg-primary-500 hover:bg-primary-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
           title="Open AI Insights"
         >
           🤖

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function SystemHealthPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,6 +19,11 @@ export default function SystemHealthPage() {
       return;
     }
   }, [user, isLoading, router]);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   if (isLoading) {
     return (
@@ -78,7 +83,7 @@ export default function SystemHealthPage() {
             </a>
             
             <button 
-              onClick={() => router.push('/')}
+              onClick={handleLogout}
               className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition w-full text-left"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

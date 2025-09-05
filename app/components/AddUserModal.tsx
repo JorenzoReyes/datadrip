@@ -17,6 +17,7 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
     firstName: '',
     lastName: '',
     email: '',
+    username: '',
     companyName: '',
     role: 'user'
   });
@@ -39,6 +40,9 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
     if (!formData.lastName.trim()) {
       return 'Last name is required';
     }
+    if (!formData.username.trim()) {
+      return 'Username is required';
+    }
     if (!formData.email.trim()) {
       return 'Email is required';
     }
@@ -47,6 +51,15 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
     }
     if (formData.firstName.length < 2) {
       return 'First name must be at least 2 characters long';
+    }
+    if (formData.username.length < 3) {
+      return 'Username must be at least 3 characters long';
+    }
+    if (formData.username.length > 30) {
+      return 'Username must be no more than 30 characters long';
+    }
+    if (!/^[a-zA-Z0-9._-]+$/.test(formData.username)) {
+      return 'Username can only contain letters, numbers, underscores, dots, and hyphens';
     }
     if (formData.lastName.length < 2) {
       return 'Last name must be at least 2 characters long';
@@ -135,6 +148,26 @@ export default function AddUserModal({ onClose, onSuccess }: AddUserModalProps) 
                 required
                 className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               />
+            </div>
+
+            {/* Username */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-subheader mb-1">
+                Username *
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                placeholder="Enter username"
+                required
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+              />
+              <p className="mt-1 text-xs text-subheader">
+                Must be 3-30 characters, letters, numbers, underscores, dots, and hyphens only
+              </p>
             </div>
 
             {/* Email */}

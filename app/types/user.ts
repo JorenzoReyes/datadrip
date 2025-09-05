@@ -3,6 +3,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  username: string;
   companyName?: string;
   role: 'user' | 'admin' | 'system_admin';
   status: 'active' | 'inactive' | 'pending';
@@ -16,6 +17,7 @@ export interface CreateUserData {
   firstName: string;
   lastName: string;
   email: string;
+  username: string;
   companyName?: string;
   role: 'user' | 'admin' | 'system_admin';
 }
@@ -24,6 +26,7 @@ export interface UpdateUserData {
   firstName?: string;
   lastName?: string;
   email?: string;
+  username?: string;
   companyName?: string;
   role?: 'user' | 'admin' | 'system_admin';
   status?: 'active' | 'inactive' | 'pending';

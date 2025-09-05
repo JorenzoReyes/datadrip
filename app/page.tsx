@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from './contexts/AuthContext';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -19,7 +19,7 @@ export default function LoginPage() {
     setLoginError('');
 
     try {
-      const success = await login(email, password);
+      const success = await login(emailOrUsername, password);
       if (success) {
         // Redirect based on user role
         const userData = localStorage.getItem('user');
@@ -32,7 +32,7 @@ export default function LoginPage() {
           }
         }
       } else {
-        setLoginError('Invalid email or password');
+        setLoginError('Invalid email/username or password');
       }
     } catch {
       setLoginError('An error occurred during login');
@@ -51,24 +51,24 @@ export default function LoginPage() {
         <div className="mt-4 rounded-lg bg-primary-50 p-4 border border-primary-200">
           <p className="text-sm text-primary-700 font-medium mb-2">Demo Credentials:</p>
           <div className="text-xs text-primary-600 space-y-1">
-            <div><strong>User:</strong> user@example.com / password123</div>
-            <div><strong>Admin:</strong> admin@example.com / admin123</div>
-            <div><strong>System Admin:</strong> system.admin@example.com / system123</div>
+            <div><strong>User:</strong> user@example.com or demo_user / password123</div>
+            <div><strong>Admin:</strong> admin@example.com or demo_admin / admin123</div>
+            <div><strong>System Admin:</strong> system.admin@example.com or demo_system_admin / system123</div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          {/* Email */}
+          {/* Email or Username */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-subheader">
-              Email *
+            <label htmlFor="emailOrUsername" className="block text-sm font-medium text-subheader">
+              Email or Username *
             </label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              type="text"
+              id="emailOrUsername"
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
+              placeholder="Enter your email or username"
               required
               className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
             />

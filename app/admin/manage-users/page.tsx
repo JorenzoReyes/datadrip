@@ -96,39 +96,65 @@ export default function ManageUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold font-title text-header">DataDrip</h1>
-              <nav className="hidden md:flex space-x-6">
-                <a href="/admin/dashboard" className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/sales-inventory" className="text-subheader hover:text-header transition">Sales and Inventory</a>
-                <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
-              </nav>
-              <span className="text-primary-500 font-bold">USER MANAGEMENT</span>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Left Sidebar */}
+      <aside className="w-64 bg-white shadow-lg">
+        <div className="p-6">
+          {/* Brand */}
+          <h1 className="text-2xl font-bold font-title text-header mb-8">DataDrip</h1>
+          
+          {/* Greeting */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-header">Hi Admin!</h2>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/admin/dashboard')}
-                className="px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white transition"
-              >
-                ← Back to Dashboard
-              </button>
-              <span className="text-subheader">Admin: {user.email}</span>
+          
+          {/* Navigation */}
+          <nav className="space-y-2">
+            <a 
+              href="/admin/manage-users" 
+              className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary-500 text-white font-medium"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+              </svg>
+              <span>Manage Users</span>
+            </a>
+            
+            <a 
+              href="/admin/integrations" 
+              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+              </svg>
+              <span>Integrations</span>
+            </a>
+            
+            <a 
+              href="/admin/system-health" 
+              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+              <span>System Health</span>
+            </a>
+            
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition"
+              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition w-full text-left"
               >
-                Logout
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+              </svg>
+              <span>Log Out</span>
               </button>
-            </div>
-          </div>
+          </nav>
         </div>
-      </header>
+      </aside>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Main Content */}
+      <main className="flex-1 p-8">
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
@@ -168,7 +194,7 @@ export default function ManageUsersPage() {
                 type="text"
                 value={filters.search}
                 onChange={handleSearchChange}
-                placeholder="Search by name, email, or company..."
+                placeholder="Search by name, email, username, or company..."
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
               />
             </div>
@@ -186,6 +212,7 @@ export default function ManageUsersPage() {
                 <option value="all">All Roles</option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
+                <option value="system_admin">System Admin</option>
               </select>
             </div>
 
@@ -231,36 +258,27 @@ export default function ManageUsersPage() {
           </div>
         </div>
 
-        {/* Users Table */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {/* User Table */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          {/* Table Header */}
+          <div className="bg-primary-500 px-6 py-4">
+            <div className="grid grid-cols-6 gap-4 text-white font-medium">
+              <div>User</div>
+              <div>Role</div>
+              <div>Status</div>
+              <div>Created</div>
+              <div>Last Login</div>
+              <div>Actions</div>
+            </div>
+          </div>
+
+          {/* Table Content */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-subheader uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-subheader uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-subheader uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-subheader uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-subheader uppercase tracking-wider">
-                    Last Login
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-subheader uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-subheader">
+                    <td colSpan={6} className="px-6 py-12 text-center text-subheader">
                       {filters.search || filters.role !== 'all' || filters.status !== 'all' 
                         ? 'No users match your search criteria'
                         : 'No users found. Add your first user to get started.'
@@ -299,9 +317,6 @@ export default function ManageUsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
-                        {user.companyName || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
@@ -317,7 +332,7 @@ export default function ManageUsersPage() {
                             className="text-blue-400 hover:text-blue-300 transition"
                           >
                             Edit
-                          </button>
+              </button>
                           <button
                             onClick={() => {
                               setSelectedUser(user);
@@ -326,7 +341,7 @@ export default function ManageUsersPage() {
                             className="text-purple-400 hover:text-purple-300 transition"
                           >
                             Audit
-                          </button>
+              </button>
                           {user.status === 'active' ? (
                             <button
                               onClick={() => handleUserAction('deactivate', user.id)}
@@ -334,7 +349,7 @@ export default function ManageUsersPage() {
                               className="text-red-400 hover:text-red-300 transition disabled:opacity-50"
                             >
                               {actionLoading === user.id ? 'Deactivating...' : 'Deactivate'}
-                            </button>
+              </button>
                           ) : (
                             <button
                               onClick={() => handleUserAction('activate', user.id)}
@@ -342,7 +357,7 @@ export default function ManageUsersPage() {
                               className="text-green-400 hover:text-green-300 transition disabled:opacity-50"
                             >
                               {actionLoading === user.id ? 'Activating...' : 'Activate'}
-                            </button>
+              </button>
                           )}
                         </div>
                       </td>
@@ -354,29 +369,29 @@ export default function ManageUsersPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
-            <div className="text-2xl font-bold text-white">{users.length}</div>
-            <div className="text-sm text-gray-400">Total Users</div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
+            <div className="text-3xl font-bold text-header mb-2">{users.length}</div>
+            <div className="text-subheader">Total Users</div>
           </div>
-          <div className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
-            <div className="text-2xl font-bold text-green-400">
+          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
+            <div className="text-3xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'active').length}
             </div>
-            <div className="text-sm text-gray-400">Active Users</div>
+            <div className="text-subheader">Active Users</div>
           </div>
-          <div className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
-            <div className="text-2xl font-bold text-yellow-400">
+          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
+            <div className="text-3xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'pending').length}
-            </div>
-            <div className="text-sm text-gray-400">Pending Users</div>
-          </div>
-          <div className="bg-black/40 rounded-xl p-4 border border-purple-500/30">
-            <div className="text-2xl font-bold text-red-400">
+              </div>
+            <div className="text-subheader">Pending Users</div>
+              </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
+            <div className="text-3xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'inactive').length}
             </div>
-            <div className="text-sm text-gray-400">Inactive Users</div>
+            <div className="text-subheader">Inactive Users</div>
           </div>
         </div>
       </main>

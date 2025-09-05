@@ -3,9 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { useIntegrationManagement } from '../contexts/IntegrationManagementContext';
 
 // Connect Platforms Component
 function ConnectPlatformsSection() {
+  const { user } = useAuth();
+  const { integrations, createIntegration, deleteIntegrationByUser, platformTemplates } = useIntegrationManagement();
+  
   const [platforms, setPlatforms] = useState<Array<{
     id: string;
     name: string;
@@ -38,14 +42,39 @@ function ConnectPlatformsSection() {
       lastSync: null,
       description: 'Social commerce platform with integrated shopping'
     },
-
   ]);
 
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
   const [showDisconnectModal, setShowDisconnectModal] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Sync platform status with existing integrations
+  useEffect(() => {
+    if (integrations.length > 0) {
+      setPlatforms(prev => prev.map(platform => {
+        const existingIntegration = integrations.find(integration => 
+          integration.platform === platform.id && integration.createdBy === user?.email
+        );
+        
+        if (existingIntegration) {
+          return {
+            ...platform,
+            status: existingIntegration.status === 'active' ? 'connected' : 'pending',
+            lastSync: existingIntegration.lastSyncAt || null
+          };
+        }
+        
+        return platform;
+      }));
+    }
+  }, [integrations, user?.email]);
+
   const handleConnect = async (platformId: string) => {
+    if (!user) return;
+    
+    // Type assertion since we've checked user is not null
+    const currentUser = user;
+    
     setIsConnecting(platformId);
     setMessage(null);
 
@@ -53,16 +82,41 @@ function ConnectPlatformsSection() {
       // Simulate OAuth flow
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate successful connection
-      setPlatforms(prev => prev.map(p => 
-        p.id === platformId 
-          ? { ...p, status: 'connected', lastSync: new Date().toISOString() }
-          : p
-      ));
+      // Find the platform template
+      const template = platformTemplates.find(t => t.platform === platformId);
+      if (!template) {
+        throw new Error('Platform template not found');
+      }
+
+      // Create integration in admin system
+      const userId = currentUser.email.replace('@', '_').replace('.', '_');
+      const integrationData = {
+        platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
+        name: `${template.name} Integration - ${currentUser.firstName || 'User'} ${currentUser.lastName || ''}`,
+        apiKey: `user_${userId}_${platformId}_${Date.now()}`, // Simulated API key
+        apiSecret: `secret_${userId}_${platformId}_${Date.now()}`, // Simulated API secret
+        webhookUrl: '',
+        syncFrequency: 'daily' as const,
+        configuration: { ...template.defaultConfiguration }
+      };
+
+      const result = await createIntegration(integrationData, currentUser.email);
       
-      setMessage({ type: 'success', text: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}!` });
-      setTimeout(() => setMessage(null), 3000);
-    } catch {
+      if (result.success) {
+        // Update local platform status
+        setPlatforms(prev => prev.map(p => 
+          p.id === platformId 
+            ? { ...p, status: 'connected', lastSync: new Date().toISOString() }
+            : p
+        ));
+        
+        setMessage({ type: 'success', text: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}! Integration has been added to admin management.` });
+        setTimeout(() => setMessage(null), 5000);
+      } else {
+        throw new Error(result.error || 'Failed to create integration');
+      }
+    } catch (err) {
+      console.error('Connection error:', err);
       setMessage({ type: 'error', text: 'Connection failed. Please try again.' });
     } finally {
       setIsConnecting(null);
@@ -70,7 +124,17 @@ function ConnectPlatformsSection() {
   };
 
   const handleDisconnect = async (platformId: string) => {
+    if (!user) return;
+    
     try {
+      // Remove integration from admin system
+      const result = await deleteIntegrationByUser(platformId, user.email, user.email);
+      
+      if (!result.success) {
+        console.warn('Failed to delete integration from admin system:', result.error);
+        // Continue with local disconnection even if admin deletion fails
+      }
+      
       // Simulate disconnection
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -80,8 +144,8 @@ function ConnectPlatformsSection() {
           : p
       ));
       
-      setMessage({ type: 'success', text: `Successfully disconnected from ${platforms.find(p => p.id === platformId)?.name}!` });
-      setTimeout(() => setMessage(null), 3000);
+      setMessage({ type: 'success', text: `Successfully disconnected from ${platforms.find(p => p.id === platformId)?.name}! Integration has been removed from admin management.` });
+      setTimeout(() => setMessage(null), 5000);
     } catch {
       setMessage({ type: 'error', text: 'Disconnection failed. Please try again.' });
     } finally {
@@ -427,7 +491,8 @@ export default function SettingsPage() {
               <span className="text-subheader">{user.email}</span>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition"
+                className="px-4 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium"
+                title="Logout"
               >
                 Logout
               </button>
