@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
       <aside className="w-64 bg-white shadow-lg">
         <div className="p-6">
@@ -155,19 +155,20 @@ export default function AdminDashboardPage() {
 
       {/* Main Content */}
       <main className="flex-1 p-8">
+        <div className="max-w-5xl mx-auto text-sm">
         {/* Page Header */}
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold font-title text-header">Manage Users</h2>
+          <h2 className="text-2xl font-bold font-title text-header">Manage Users</h2>
           <div className="flex space-x-3">
             <button 
               onClick={syncExistingUsers}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition"
+              className="px-3 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition"
             >
               Sync Existing Users
             </button>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="px-6 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition flex items-center space-x-2"
+              className="px-5 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition flex items-center space-x-2"
             >
               <span>Add User</span>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -357,29 +358,30 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
-            <div className="text-3xl font-bold text-header mb-2">{users.length}</div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+          <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+            <div className="text-2xl font-bold text-header mb-2">{users.length}</div>
             <div className="text-subheader">Total Users</div>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
-            <div className="text-3xl font-bold text-header mb-2">
+          <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+            <div className="text-2xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'active').length}
             </div>
             <div className="text-subheader">Active Users</div>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
-            <div className="text-3xl font-bold text-header mb-2">
+          <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+            <div className="text-2xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'pending').length}
               </div>
             <div className="text-subheader">Pending Users</div>
               </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
-            <div className="text-3xl font-bold text-header mb-2">
+          <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+            <div className="text-2xl font-bold text-header mb-2">
               {users.filter(u => u.status === 'inactive').length}
             </div>
             <div className="text-subheader">Inactive Users</div>
           </div>
+        </div>
         </div>
       </main>
 

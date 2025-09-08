@@ -43,11 +43,11 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold font-title text-header">DataDrip</h1>
-              <nav className="hidden md:flex space-x-6">
+              <h1 className="text-xl font-bold font-title text-header">DataDrip</h1>
+              <nav className="hidden md:flex space-x-6 text-sm">
                 <a href="/dashboard" className="text-header font-medium">Dashboard</a>
                 <a href="/sales-inventory" className="text-gray-600 hover:text-header transition">Sales and Inventory</a>
                 <a href="/insights" className="text-gray-600 hover:text-header transition">Insights</a>
@@ -56,7 +56,7 @@ export default function DashboardPage() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push('/settings')}
-                className="p-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition"
+                className="p-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition text-sm"
                 title="Settings"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +69,7 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium"
+                className="px-3 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium text-sm"
                 title="Logout"
               >
                 Logout
@@ -80,16 +80,16 @@ export default function DashboardPage() {
       </header>
 
                         {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-2 sm:px-6 lg:px-6 py-6 text-sm">
         {/* Greeting Section */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h2 className="text-3xl font-bold font-title text-header mb-2">Hi, User!</h2>
-            <p className="text-gray-600 text-lg">This is what has been happening to your shops.</p>
+            <h2 className="text-2xl font-bold font-title text-header mb-2">Hi, User!</h2>
+            <p className="text-gray-600">This is what has been happening to your shops.</p>
           </div>
           <div className="text-right">
-            <p className="text-gray-600 text-lg mb-2">Friday, September 5, 2025</p>
-            <button className="bg-header text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-gray-700 transition">
+            <p className="text-gray-600 mb-2">Friday, September 5, 2025</p>
+            <button className="bg-header text-white px-3 py-2 rounded-lg flex items-center space-x-2 hover:bg-gray-700 transition text-sm">
               <span>This Month</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -99,33 +99,33 @@ export default function DashboardPage() {
         </div>
 
         {/* Sales Report Title */}
-        <h3 className="text-2xl font-bold font-title text-header mb-6">Sales Report</h3>
+        <h3 className="text-xl font-bold font-title text-header mb-6">Sales Report</h3>
 
         {/* Sales Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h4 className="text-gray-600 text-sm font-medium mb-2">Total Sales</h4>
-            <p className="text-2xl font-bold text-header">₱ 400,000.00</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Total Sales</h4>
+            <p className="text-xl font-bold text-header">₱ 400,000.00</p>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h4 className="text-gray-600 text-sm font-medium mb-2">TikTok Sales</h4>
-            <p className="text-2xl font-bold text-header">₱ 200,000.00</p>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-gray-600 text-xs font-medium mb-2">TikTok Sales</h4>
+            <p className="text-xl font-bold text-header">₱ 200,000.00</p>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h4 className="text-gray-600 text-sm font-medium mb-2">Lazada Sales</h4>
-            <p className="text-2xl font-bold text-header">₱ 100,000.00</p>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Lazada Sales</h4>
+            <p className="text-xl font-bold text-header">₱ 100,000.00</p>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h4 className="text-gray-600 text-sm font-medium mb-2">Shopee Sales</h4>
-            <p className="text-2xl font-bold text-header">₱ 100,000.00</p>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Shopee Sales</h4>
+            <p className="text-xl font-bold text-header">₱ 100,000.00</p>
           </div>
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           {/* Platform Sales Trend Chart */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold font-title text-header mb-4">Platform Sales Trend</h4>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-base font-semibold font-title text-header mb-4">Platform Sales Trend</h4>
             <div className="h-64 relative px-4">
               <svg width="100%" height="100%" viewBox="0 0 400 256" preserveAspectRatio="xMidYMid meet" className="overflow-visible">
                 {/* Grid lines */}
@@ -226,8 +226,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Sales per Month Chart */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold font-title text-header mb-4">Sales per Month by Platform</h4>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-base font-semibold font-title text-header mb-4">Sales per Month by Platform</h4>
             <div className="h-64 flex items-end justify-between space-x-1">
               {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map((month, index) => {
                 // Sample data for each platform per month (in pixels for bar height)
@@ -294,7 +294,7 @@ export default function DashboardPage() {
 
         {/* Export Reports Button */}
         <div className="flex justify-end">
-          <button className="bg-header text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition">
+          <button className="bg-header text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gray-700 transition text-sm">
             Export Reports
           </button>
         </div>
