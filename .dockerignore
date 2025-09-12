@@ -1,23 +1,38 @@
 # Docker build context exclusions
+# Keep essential files for Docker build
+
+# Docker files (exclude from build context)
 Dockerfile
 .dockerignore
+docker-compose*.yml
+docker-compose*.yaml
 
 # Dependencies (will be installed fresh in container)
-node_modules
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Documentation and config files
 README.md
-.git
+CHANGELOG.md
+LICENSE
+CONTRIBUTING.md
+.git/
 .gitignore
+.gitattributes
+
+# Linting and formatting configs
 .eslintrc*
 .prettierrc*
 .editorconfig
+.stylelintrc*
 
-# Environment files
+# Environment files (sensitive data)
 .env*
 .env.local
 .env.development.local
@@ -25,8 +40,8 @@ README.md
 .env.production.local
 
 # Build outputs and caches
-.next
-.vercel
+.next/
+.vercel/
 out/
 build/
 dist/
@@ -34,25 +49,216 @@ dist/
 next-env.d.ts
 
 # Testing and coverage
-coverage
-.nyc_output
+coverage/
+.nyc_output/
 .jest/
+test-results/
+playwright-report/
+test-results.xml
+__tests__/
+**/*.test.*
+**/*.spec.*
 
-# OS and editor files
-.DS_Store
-Thumbs.db
+# Development tools
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Logs and temporary files
+logs/
 *.log
 *.tmp
 *.temp
 *.tgz
 *.tar.gz
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# IDE and editor configs
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Cache directories
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Performance monitoring
+.clinic/
+
+# Railway
+.railway/
+
+# JMeter logs
+jmeter.log
+
+# Security and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Scripts and utilities (keep only essential ones)
+scripts/
+!scripts/init-db.js
+
+# Development database dumps
+*.sql
+*.dump
+
+# Backup files
+*.bak
+*.backup
+
+# Lock files (will be regenerated)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE specific files
 .vscode/
 .idea/
 *.sublime-*
+.project
+.classpath
+.settings/
+*.launch
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Local development overrides
+docker-compose.override.yml
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
