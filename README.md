@@ -106,9 +106,7 @@ docker run -p 3000:3000 datadrip
 ### Database Schema
 The application uses PostgreSQL with the following tables:
 - `users` - User management and authentication
-- `integrations` - Integration configurations
-- `integration_audit_logs` - Integration activity tracking
-- `user_audit_logs` - User activity tracking
+
 
 ### Database Commands
 ```bash
