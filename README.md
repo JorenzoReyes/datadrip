@@ -210,24 +210,37 @@ The Dockerfile uses a multi-stage build process:
 - **postgres**: PostgreSQL database (port 5432)
 - **volumes**: Persistent data storage
 
+### Syncing Code Changes to Docker
+
+Due to Windows Docker limitations with file watching, code changes require manual syncing:
+
+#### Method 1: Restart Container (Recommended)
+```bash
+# Stop and restart to sync all changes
+docker-compose -f docker-compose.dev.yml down
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+#### Method 2: Rebuild Container (For Major Changes)
+```bash
+# Rebuild and restart (takes longer but ensures everything is fresh)
+docker-compose -f docker-compose.dev.yml down
+docker-compose -f docker-compose.dev.yml up --build -d
+```
+
+#### Method 3: Manual Browser Refresh (Quick Changes)
+- Make your code changes
+- Refresh the browser manually
+- Changes will be reflected (volume mounting works)
+
+**Note:** Volume mounting works correctly, but Next.js file watching doesn't detect changes on Windows Docker. Restarting the container ensures all changes are properly synced.
+
 ## Health Check
 The application includes a comprehensive health check endpoint at `/api/health` that reports:
 - Application status
 - Database connectivity
 - Environment information
 - Timestamp and uptime
-
-## Development with Docker
-
-### Development Environment
-```bash
-npm run docker:dev
-```
-
-### Production Environment  
-```bash
-npm run docker:prod
-```
 
 ## Available Scripts
 ```bash
@@ -312,10 +325,8 @@ datadrip/
 ├── scripts/               # Database and utility scripts
 │   └── init-db.js         # Database initialization script
 ├── public/                # Static assets
-├── Dockerfile             # Multi-stage Docker build (production)
-├── Dockerfile.dev         # Development Docker build with hot reloading
-├── docker-compose.yml     # Production Docker Compose setup
-├── docker-compose.dev.yml # Development Docker Compose with hot reloading
+├── Dockerfile             # Multi-stage Docker build
+├── docker-compose.yml     # Local development setup with PostgreSQL
 ├── railway.toml          # Railway deployment config
 ├── env.example           # Environment variables example
 ├── package.json          # Dependencies and scripts
