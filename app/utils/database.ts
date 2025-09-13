@@ -138,69 +138,23 @@ export async function initializeDatabase(): Promise<void> {
 async function createTables(): Promise<void> {
   const createUsersTable = `
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      email VARCHAR(255) UNIQUE NOT NULL,
-      password_hash VARCHAR(255) NOT NULL,
-      first_name VARCHAR(100),
-      last_name VARCHAR(100),
-      role VARCHAR(50) DEFAULT 'user',
-      is_active BOOLEAN DEFAULT true,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
-  const createIntegrationsTable = `
-    CREATE TABLE IF NOT EXISTS integrations (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      platform VARCHAR(100) NOT NULL,
-      name VARCHAR(255) NOT NULL,
-      config JSONB NOT NULL,
-      status VARCHAR(50) DEFAULT 'active',
-      last_sync TIMESTAMP,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
-  const createIntegrationAuditLogsTable = `
-    CREATE TABLE IF NOT EXISTS integration_audit_logs (
-      id SERIAL PRIMARY KEY,
-      integration_id INTEGER REFERENCES integrations(id) ON DELETE CASCADE,
-      action VARCHAR(100) NOT NULL,
-      details JSONB,
-      user_agent TEXT,
-      ip_address INET,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
-  const createUserAuditLogsTable = `
-    CREATE TABLE IF NOT EXISTS user_audit_logs (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      action VARCHAR(100) NOT NULL,
-      details JSONB,
-      user_agent TEXT,
-      ip_address INET,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      user_id SERIAL PRIMARY KEY,
+      username VARCHAR(30) NOT NULL,
+      fname VARCHAR(50) NOT NULL,
+      lname VARCHAR(30) NOT NULL,
+      email VARCHAR(100) NOT NULL,
+      password VARCHAR(20) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `;
 
   // Execute table creation queries
   await query(createUsersTable);
-  await query(createIntegrationsTable);
-  await query(createIntegrationAuditLogsTable);
-  await query(createUserAuditLogsTable);
 
   // Create indexes for better performance
   const createIndexes = [
     'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
-    'CREATE INDEX IF NOT EXISTS idx_integrations_user_id ON integrations(user_id);',
-    'CREATE INDEX IF NOT EXISTS idx_integrations_platform ON integrations(platform);',
-    'CREATE INDEX IF NOT EXISTS idx_integration_audit_logs_integration_id ON integration_audit_logs(integration_id);',
-    'CREATE INDEX IF NOT EXISTS idx_user_audit_logs_user_id ON user_audit_logs(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);',
   ];
 
   for (const indexQuery of createIndexes) {

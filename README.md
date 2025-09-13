@@ -39,13 +39,20 @@ This project is deployed to three environments on Railway:
 
 4. **Initialize the database** (in a new terminal)
    ```bash
-   npm run db:init
+   # Set the correct password for your environment
+   DB_PASSWORD=postgres npm run db:init
    ```
 
 5. **Access the application**
    - Application: `http://localhost:3000`
    - Health check: `http://localhost:3000/api/health`
    - PostgreSQL: `localhost:5432`
+
+6. **Access the database** (optional)
+   ```bash
+   # Connect to database via CLI
+   docker exec -it datadrip-postgres-1 psql -U postgres -d datadrip
+   ```
 
 ### Quick Start without Docker
 
@@ -80,7 +87,8 @@ This project is deployed to three environments on Railway:
 
 4. **Initialize the database**
    ```bash
-   npm run db:init
+   # Set the correct password for your environment
+   DB_PASSWORD=your_password npm run db:init
    ```
 
 5. **Start the development server**
@@ -91,6 +99,12 @@ This project is deployed to three environments on Railway:
 6. **Access the application**
    - Application: `http://localhost:3000`
    - Health check: `http://localhost:3000/api/health`
+
+7. **Access the database** (optional)
+   ```bash
+   # Connect to database via CLI
+   psql -h localhost -p 5432 -U postgres -d datadrip
+   ```
 
 ### Manual Docker Build
 ```bash
@@ -115,6 +129,25 @@ npm run db:init
 
 # Reset database (recreate all tables)
 npm run db:reset
+
+# List all tables
+npm run db:list
+
+# Add new tables
+npm run db:add-table products
+npm run db:add-table orders
+```
+
+### Database Access
+```bash
+# Connect to database via CLI
+docker exec -it datadrip-postgres-1 psql -U postgres -d datadrip
+
+# Once connected, use these commands:
+\dt                    # List all tables
+\d users              # Describe table structure
+SELECT * FROM users;   # View table data
+\q                    # Exit database
 ```
 
 ### Environment Variables
@@ -195,6 +228,8 @@ npm run lint             # Run ESLint
 # Database
 npm run db:init          # Initialize database
 npm run db:reset         # Reset database
+npm run db:list          # List all tables
+npm run db:add-table     # Add new table
 
 # Docker
 docker-compose up --build    # Start with Docker
