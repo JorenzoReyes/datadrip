@@ -217,6 +217,18 @@ The application includes a comprehensive health check endpoint at `/api/health` 
 - Environment information
 - Timestamp and uptime
 
+## Development with Docker
+
+### Development Environment
+```bash
+npm run docker:dev
+```
+
+### Production Environment  
+```bash
+npm run docker:prod
+```
+
 ## Available Scripts
 ```bash
 # Development
@@ -231,7 +243,13 @@ npm run db:reset         # Reset database
 npm run db:list          # List all tables
 npm run db:add-table     # Add new table
 
-# Docker
+# Docker Development
+npm run docker:dev       # Start development environment with hot reloading
+npm run docker:dev:down  # Stop development environment
+npm run docker:prod      # Start production environment
+npm run docker:prod:down # Stop production environment
+
+# Docker (Legacy)
 docker-compose up --build    # Start with Docker
 docker-compose down          # Stop Docker services
 ```
@@ -294,8 +312,10 @@ datadrip/
 ├── scripts/               # Database and utility scripts
 │   └── init-db.js         # Database initialization script
 ├── public/                # Static assets
-├── Dockerfile             # Multi-stage Docker build
-├── docker-compose.yml     # Local development setup with PostgreSQL
+├── Dockerfile             # Multi-stage Docker build (production)
+├── Dockerfile.dev         # Development Docker build with hot reloading
+├── docker-compose.yml     # Production Docker Compose setup
+├── docker-compose.dev.yml # Development Docker Compose with hot reloading
 ├── railway.toml          # Railway deployment config
 ├── env.example           # Environment variables example
 ├── package.json          # Dependencies and scripts

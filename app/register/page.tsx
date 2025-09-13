@@ -11,7 +11,6 @@ interface RegistrationData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'user' | 'admin';
   acceptTerms: boolean;
 }
 
@@ -34,7 +33,6 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user',
     acceptTerms: false
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -173,7 +171,7 @@ export default function RegisterPage() {
         username: formData.username,
         email: formData.email,
         password: formData.password, // In real app, this would be hashed
-        role: formData.role,
+        role: 'user' as const, // All new registrations default to 'user' role
         acceptTerms: formData.acceptTerms,
         createdAt: new Date().toISOString()
       };
@@ -329,23 +327,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Role Selection */}
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-subheader">
-              Account Type *            
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleInputChange}
-              className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-            >
-              <option value="user">User Account</option>
-              <option value="admin">Admin Account</option>
-              <option value="system_admin">System Administrator Account</option>
-            </select>
-          </div>
 
           {/* Terms and Conditions Checkbox */}
           <div className="flex items-start space-x-3">

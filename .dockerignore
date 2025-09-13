@@ -1,123 +1,58 @@
-# Docker build context exclusions
-# Keep essential files for Docker build
-
-# Docker files (exclude from build context)
-Dockerfile
-.dockerignore
-docker-compose*.yml
-docker-compose*.yaml
-
-# Dependencies (will be installed fresh in container)
-node_modules/
+# Dependencies
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-# Note: package-lock.json is needed for npm ci, so we include it
-yarn.lock
-pnpm-lock.yaml
 
-# Documentation and config files
-README.md
-CHANGELOG.md
-LICENSE
-CONTRIBUTING.md
-.git/
-.gitignore
-.gitattributes
+# Next.js
+.next/
+out/
 
-# Linting and formatting configs
-.eslintrc*
-.prettierrc*
-.editorconfig
-.stylelintrc*
+# Production
+build/
+dist/
 
-# Environment files (sensitive data)
-.env*
+# Environment variables
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Build outputs and caches
-.next/
-.vercel/
-out/
-build/
-dist/
-*.tsbuildinfo
-next-env.d.ts
-
-# Testing and coverage
-coverage/
-.nyc_output/
-.jest/
-test-results/
-playwright-report/
-test-results.xml
-__tests__/
-**/*.test.*
-**/*.spec.*
-
-# Development tools
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
-.project
-.classpath
-.settings/
 
-# OS generated files
+# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# Logs and temporary files
-logs/
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Logs
+logs
 *.log
-*.tmp
-*.temp
-*.tgz
-*.tar.gz
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-*.db-journal
-
-# Cache directories
-.cache/
-.parcel-cache/
-.npm/
-.eslintcache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
 
 # Runtime data
-pids/
+pids
 *.pid
 *.seed
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
 coverage/
-*.lcov
 
 # nyc test coverage
-.nyc_output/
+.nyc_output
 
 # Dependency directories
 jspm_packages/
@@ -134,20 +69,21 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache
+# parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
-# Storybook build outputs
-.out
-.storybook-out
+# next.js build output
+.next
 
-# Temporary folders
-tmp/
-temp/
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
 
 # Serverless directories
-.serverless/
+.serverless
 
 # FuseBox cache
 .fusebox/
@@ -157,108 +93,3 @@ temp/
 
 # TernJS port file
 .tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# Performance monitoring
-.clinic/
-
-# Railway
-.railway/
-
-# JMeter logs
-jmeter.log
-
-# Security and certificates
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-
-# Scripts and utilities (keep only essential ones)
-scripts/
-!scripts/init-db.js
-
-# Development database dumps
-*.sql
-*.dump
-
-# Backup files
-*.bak
-*.backup
-
-# Lock files (will be regenerated)
-# Note: package-lock.json is needed for npm ci, so we include it
-yarn.lock
-pnpm-lock.yaml
-
-# IDE specific files
-.vscode/
-.idea/
-*.sublime-*
-.project
-.classpath
-.settings/
-*.launch
-
-# MacOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
-*~
-
-# JetBrains IDEs
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# Visual Studio Code
-.vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history/
-
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
-
-# Vim
-*.swp
-*.swo
-*~
-
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
-
-# Local development overrides
-docker-compose.override.yml
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
