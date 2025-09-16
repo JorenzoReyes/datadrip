@@ -3,6 +3,7 @@
 /**
  * Database Migration Script
  * This script handles database schema changes and new table creation
+ * Works with both local PostgreSQL and Docker containers
  * 
  * Usage:
  *   node scripts/migrate-db.js add-table <table_name>
@@ -11,17 +12,55 @@
  */
 
 const { Pool } = require('pg');
+const { execSync } = require('child_process');
 
-// Database configuration
+// Database configuration with Docker fallback
 function getDatabaseConfig() {
-  return {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME || 'datadrip',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-  };
+  // Check if we're running in Docker or if Docker PostgreSQL is available
+  const isDockerAvailable = checkDockerAvailability();
+  const isDockerPostgresRunning = isDockerAvailable && checkDockerPostgresRunning();
+  
+  if (isDockerPostgresRunning) {
+    console.log('🐳 Using Docker PostgreSQL configuration');
+    return {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'datadrip',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres', // Docker default password
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    };
+  } else {
+    console.log('💻 Using local PostgreSQL configuration');
+    return {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'datadrip',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'password',
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    };
+  }
+}
+
+// Check if Docker is available
+function checkDockerAvailability() {
+  try {
+    execSync('docker --version', { stdio: 'ignore' });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Check if Docker PostgreSQL container is running
+function checkDockerPostgresRunning() {
+  try {
+    const output = execSync('docker ps --filter "name=postgres" --format "{{.Names}}"', { encoding: 'utf8' });
+    return output.includes('postgres') || output.includes('datadrip');
+  } catch (error) {
+    return false;
+  }
 }
 
 // Test database connection
@@ -31,6 +70,35 @@ async function testConnection(pool) {
     return true;
   } catch (error) {
     console.error('Database connection test failed:', error);
+    return false;
+  }
+}
+
+// List all tables in the database using Docker
+async function listTablesWithDocker() {
+  try {
+    console.log('🔄 Listing tables via Docker...');
+    const result = execSync(
+      `docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;"`,
+      { encoding: 'utf8' }
+    );
+    
+    console.log('\n📋 Current Tables:');
+    const lines = result.split('\n').filter(line => line.trim() && !line.includes('table_name') && !line.includes('---') && !line.includes('rows)'));
+    if (lines.length === 0) {
+      console.log('   No tables found');
+    } else {
+      lines.forEach(line => {
+        const tableName = line.trim();
+        if (tableName) {
+          console.log(`   - ${tableName}`);
+        }
+      });
+    }
+    console.log('');
+    return true;
+  } catch (error) {
+    console.error('❌ Docker list tables failed:', error.message);
     return false;
   }
 }
@@ -56,6 +124,91 @@ async function listTables(pool) {
     console.log('');
   } catch (error) {
     console.error('Error listing tables:', error);
+  }
+}
+
+// Add a new table using Docker
+async function addTableWithDocker(tableName) {
+  const tableDefinitions = {
+    'products': `
+      CREATE TABLE IF NOT EXISTS products (
+        product_id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NOT NULL,
+        category VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    'orders': `
+      CREATE TABLE IF NOT EXISTS orders (
+        order_id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+        total_amount DECIMAL(10,2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    'order_items': `
+      CREATE TABLE IF NOT EXISTS order_items (
+        item_id SERIAL PRIMARY KEY,
+        order_id INTEGER REFERENCES orders(order_id) ON DELETE CASCADE,
+        product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+        quantity INTEGER NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    'categories': `
+      CREATE TABLE IF NOT EXISTS categories (
+        category_id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    'user_sessions': `
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        session_id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+        session_token VARCHAR(255) NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `
+  };
+
+  if (!tableDefinitions[tableName]) {
+    console.error(`❌ Table definition not found for: ${tableName}`);
+    console.log('Available tables:', Object.keys(tableDefinitions).join(', '));
+    return false;
+  }
+
+  try {
+    console.log(`🔄 Creating table '${tableName}' via Docker...`);
+    // Clean up the SQL for single-line execution
+    const cleanSQL = tableDefinitions[tableName].replace(/\s+/g, ' ').trim();
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${cleanSQL}"`, { stdio: 'inherit' });
+    console.log(`✅ Table '${tableName}' created successfully`);
+    
+    // Create common indexes
+    if (tableName === 'products') {
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);"`, { stdio: 'inherit' });
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);"`, { stdio: 'inherit' });
+    } else if (tableName === 'orders') {
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);"`, { stdio: 'inherit' });
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);"`, { stdio: 'inherit' });
+    } else if (tableName === 'user_sessions') {
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(session_token);"`, { stdio: 'inherit' });
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id);"`, { stdio: 'inherit' });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`❌ Error creating table '${tableName}':`, error.message);
+    return false;
   }
 }
 
@@ -139,6 +292,43 @@ async function addTable(pool, tableName) {
   }
 }
 
+// Reset database using Docker
+async function resetDatabaseWithDocker() {
+  try {
+    console.log('⚠️  WARNING: This will drop all tables except users!');
+    console.log('This action cannot be undone.');
+    console.log('🔄 Resetting database via Docker...');
+    
+    // Get all tables except users
+    const result = execSync(
+      `docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != 'users';"`,
+      { encoding: 'utf8' }
+    );
+    
+    const lines = result.split('\n').filter(line => line.trim() && !line.includes('table_name') && !line.includes('---') && !line.includes('rows)'));
+    
+    if (lines.length === 0) {
+      console.log('No tables to drop');
+      return true;
+    }
+    
+    // Drop all tables except users
+    for (const line of lines) {
+      const tableName = line.trim();
+      if (tableName) {
+        execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "DROP TABLE IF EXISTS ${tableName} CASCADE;"`, { stdio: 'inherit' });
+        console.log(`🗑️  Dropped table: ${tableName}`);
+      }
+    }
+    
+    console.log('✅ Database reset completed via Docker');
+    return true;
+  } catch (error) {
+    console.error('❌ Docker reset failed:', error.message);
+    return false;
+  }
+}
+
 // Reset database (drop all tables except users)
 async function resetDatabase(pool) {
   try {
@@ -204,7 +394,39 @@ Examples:
     // Test connection
     const isConnected = await testConnection(pool);
     if (!isConnected) {
-      throw new Error('Failed to connect to database');
+      console.log('⚠️  Direct connection failed, trying Docker fallback...');
+      
+      // Try Docker fallback for each command
+      switch (command) {
+        case 'list-tables':
+          const listSuccess = await listTablesWithDocker();
+          if (!listSuccess) {
+            throw new Error('Failed to list tables via both direct connection and Docker');
+          }
+          return;
+          
+        case 'add-table':
+          if (!tableName) {
+            console.error('❌ Table name is required');
+            console.log('Usage: node scripts/migrate-db.js add-table <table_name>');
+            process.exit(1);
+          }
+          const addSuccess = await addTableWithDocker(tableName);
+          if (!addSuccess) {
+            throw new Error('Failed to add table via both direct connection and Docker');
+          }
+          return;
+          
+        case 'reset-db':
+          const resetSuccess = await resetDatabaseWithDocker();
+          if (!resetSuccess) {
+            throw new Error('Failed to reset database via both direct connection and Docker');
+          }
+          return;
+          
+        default:
+          throw new Error(`Unknown command: ${command}`);
+      }
     }
 
     console.log('✅ Database connected successfully');

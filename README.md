@@ -48,7 +48,7 @@ This project is deployed to three environments on Railway:
    - Health check: `http://localhost:3000/api/health`
    - PostgreSQL: `localhost:5432`
 
-6. **Access the database** (optional)
+6. **Access the database thru CLI**
    ```bash
    # Connect to database via CLI
    docker exec -it datadrip-postgres-1 psql -U postgres -d datadrip
@@ -136,6 +136,9 @@ npm run db:list
 # Add new tables
 npm run db:add-table products
 npm run db:add-table orders
+
+# Reset all tables except users (drop and recreate)
+npm run db:reset-tables
 ```
 
 ### Database Access
