@@ -14,9 +14,17 @@
 const { Pool } = require('pg');
 const { execSync } = require('child_process');
 
-// Database configuration with Docker fallback
+// Database configuration preferring DATABASE_URL; Docker/local fallback otherwise
 function getDatabaseConfig() {
-  // Check if we're running in Docker or if Docker PostgreSQL is available
+  if (process.env.DATABASE_URL) {
+    console.log('🔗 Using DATABASE_URL environment variable');
+    return {
+      connectionString: process.env.DATABASE_URL,
+      // For Railway/tunnel, use SSL but do not reject self-signed certs
+      ssl: { rejectUnauthorized: false }
+    };
+  }
+
   const isDockerAvailable = checkDockerAvailability();
   const isDockerPostgresRunning = isDockerAvailable && checkDockerPostgresRunning();
   
@@ -30,17 +38,17 @@ function getDatabaseConfig() {
       password: process.env.DB_PASSWORD || 'postgres', // Docker default password
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
     };
-  } else {
-    console.log('💻 Using local PostgreSQL configuration');
-    return {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'datadrip',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'password',
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    };
   }
+
+  console.log('💻 Using local PostgreSQL configuration');
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'datadrip',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'password',
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  };
 }
 
 // Check if Docker is available
@@ -429,6 +437,10 @@ Examples:
     // Test connection
     const isConnected = await testConnection(pool);
     if (!isConnected) {
+      // If using DATABASE_URL, do not attempt Docker fallback
+      if (config.connectionString) {
+        throw new Error('Failed to connect using DATABASE_URL');
+      }
       console.log('⚠️  Direct connection failed, trying Docker fallback...');
       
       // Try Docker fallback for each command

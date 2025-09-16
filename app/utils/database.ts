@@ -22,11 +22,14 @@ function getDatabaseConfig(): DatabaseConfig {
   };
 
   // Validate required environment variables
-  if (!process.env.DB_HOST && process.env.NODE_ENV === 'production') {
-    throw new Error('DB_HOST environment variable is required in production');
-  }
-  if (!process.env.DB_PASSWORD && process.env.NODE_ENV === 'production') {
-    throw new Error('DB_PASSWORD environment variable is required in production');
+  // If DATABASE_URL is provided (e.g., on Railway), skip individual var checks
+  if (!process.env.DATABASE_URL) {
+    if (!process.env.DB_HOST && process.env.NODE_ENV === 'production') {
+      throw new Error('DB_HOST environment variable is required in production');
+    }
+    if (!process.env.DB_PASSWORD && process.env.NODE_ENV === 'production') {
+      throw new Error('DB_PASSWORD environment variable is required in production');
+    }
   }
 
   return config;
@@ -37,13 +40,25 @@ let pool: Pool | null = null;
 
 export function getPool(): Pool {
   if (!pool) {
-    const config = getDatabaseConfig();
-    pool = new Pool({
-      ...config,
-      max: 20, // Maximum number of clients in the pool
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
-    });
+    // Prefer single DATABASE_URL when available (e.g., Railway)
+    const databaseUrl = process.env.DATABASE_URL;
+    if (databaseUrl) {
+      pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      });
+    } else {
+      const config = getDatabaseConfig();
+      pool = new Pool({
+        ...config,
+        max: 20, // Maximum number of clients in the pool
+        idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+        connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+      });
+    }
 
     // Handle pool errors
     pool.on('error', (err) => {

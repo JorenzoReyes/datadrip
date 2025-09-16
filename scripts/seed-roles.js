@@ -21,6 +21,12 @@ function checkDockerPostgresRunning() {
 }
 
 function getDatabaseConfig() {
+  // Prefer a single DATABASE_URL (Railway/tunnel). Use SSL but allow self-signed.
+  if (process.env.DATABASE_URL) {
+    console.log('🔗 Using DATABASE_URL environment variable');
+    return { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } };
+  }
+  // Otherwise check for Docker
   const isDocker = checkDockerAvailability() && checkDockerPostgresRunning();
   if (isDocker) {
     console.log('🐳 Using Docker PostgreSQL configuration');
@@ -184,6 +190,11 @@ async function main() {
   console.log('Seeding roles and permissions...');
   const ok = await seedDirect();
   if (ok) return;
+  // If DATABASE_URL was intended and failed, do not attempt Docker fallback
+  if (process.env.DATABASE_URL) {
+    process.exitCode = 1;
+    return;
+  }
   const okDocker = seedDocker();
   if (!okDocker) process.exitCode = 1;
 }
