@@ -196,6 +196,7 @@ Notes:
 
 ### Prerequisites
 - Railway account
+- Railway CLI installed (`npm install -g @railway/cli`)
 - PostgreSQL services added to each environment
 
 ### Setup PostgreSQL on Railway
@@ -215,6 +216,188 @@ Each branch automatically deploys to its corresponding environment:
 # Deploy to Railway
 railway up
 ```
+
+## Railway PostgreSQL Database Management
+
+### Prerequisites for Database Operations
+- Railway CLI installed and authenticated (`railway login`)
+- Access to your Railway project
+
+### Setting Up Database Connection
+
+#### Method 1: Using Railway Connect (Recommended)
+```bash
+# Connect to your Railway project
+railway link
+
+# Connect to PostgreSQL service via tunnel
+railway connect
+
+# This will open a psql session - get connection info
+\conninfo
+# Note the host, port, database, user, and password from the output
+```
+
+#### Method 2: Using DATABASE_URL Environment Variable
+```bash
+# Get your DATABASE_URL from Railway dashboard or CLI
+railway variables --service postgres
+
+# Set it in your local environment (Windows PowerShell)
+$env:DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT/railway?sslmode=require"
+
+# Or create a .env.tunnel.local file (gitignored)
+echo "DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT/railway?sslmode=require" > .env.tunnel.local
+```
+
+### Populating Railway Database
+
+#### Step 1: Initialize Database Schema
+```bash
+# Using Railway Connect tunnel (recommended)
+railway connect
+
+# Using DATABASE_URL from local machine
+npm run db:init
+```
+
+#### Step 2: Seed Roles and Permissions
+```bash
+# Using DATABASE_URL from local machine
+npm run db:seed:roles
+```
+
+#### Step 3: Verify Database Population
+```bash
+# List all tables
+npm run db:list
+
+# Connect to database to verify data
+railway connect
+# Then in psql:
+\dt                    # List tables
+SELECT * FROM roles;   # Check roles
+SELECT * FROM permissions; # Check permissions
+SELECT * FROM users;   # Check users
+```
+
+### Database Management Commands
+
+#### Initialize Database (Create Tables)
+```bash
+# Local with DATABASE_URL set
+npm run db:init
+
+# Or using Railway CLI
+railway run --service development npm run db:init
+```
+
+#### Reset Database (Recreate All Tables)
+```bash
+# Local with DATABASE_URL set
+npm run db:reset
+
+# Or using Railway CLI
+railway run --service development npm run db:reset
+```
+
+#### Seed Demo Data
+```bash
+# Local with DATABASE_URL set
+npm run db:seed:roles
+
+# Or using Railway CLI
+railway run --service development npm run db:seed:roles
+```
+
+#### List Tables
+```bash
+# Local with DATABASE_URL set
+npm run db:list
+
+# Or using Railway CLI
+railway run --service development npm run db:list
+```
+
+### Troubleshooting Railway Database Connection
+
+#### Common Issues and Solutions
+
+**1. "getaddrinfo ENOTFOUND postgres.railway.internal"**
+```bash
+# This happens when using railway run locally
+# Solution: Use railway connect instead
+railway connect
+```
+
+**2. "password authentication failed"**
+```bash
+# Check your credentials
+railway variables --service postgres
+
+# Ensure password is URL-encoded if it contains special characters
+# Example: password "abc@123" becomes "abc%40123"
+```
+
+**3. "self-signed certificate in certificate chain"**
+```bash
+# Add sslmode=no-verify to your DATABASE_URL
+$env:DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT/railway?sslmode=no-verify"
+
+# Or set environment variable
+$env:PGSSLMODE="no-verify"
+```
+
+**4. "Failed to connect using DATABASE_URL"**
+```bash
+# Verify your DATABASE_URL format
+echo $env:DATABASE_URL
+
+# Test connection manually
+railway run --service development node -e "const {Client}=require('pg');const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});c.connect().then(()=>c.query('SELECT NOW()').then(r=>{console.log('OK',r.rows[0]);c.end()})).catch(e=>{console.error(e);process.exit(1)})"
+```
+
+### Environment-Specific Database Setup
+
+#### Development Environment
+```bash
+# Switch to development environment
+railway environment development
+
+# Initialize database
+railway run --service development npm run db:init
+
+# Seed demo data
+railway run --service development npm run db:seed:roles
+```
+
+#### Production Environment
+```bash
+# Switch to production environment
+railway environment production
+
+# Initialize database (be careful!)
+railway run --service production npm run db:init
+
+# Seed roles only (no demo users in production)
+railway run --service production npm run db:seed:roles
+```
+
+### Database Schema Overview
+
+The Railway PostgreSQL database includes these tables:
+- `users` - User accounts and authentication
+- `roles` - User roles (business_owner, admin, system_admin)
+- `permissions` - System permissions
+- `role_permissions` - Role-to-permission mappings
+- `user_roles` - User-to-role assignments
+
+### Security Notes
+
+- Never commit `.env.tunnel.local` or actual DATABASE_URL to version control
+- Use Railway's built-in environment variable management for production
+- Regularly rotate database passwords
+- Use least-privilege access for database users
 
 ## Docker Configuration
 
@@ -277,13 +460,20 @@ npm run build            # Build for production
 npm run start            # Start production server
 npm run lint             # Run ESLint
 
-# Database
+# Database (Local/Docker)
 npm run db:init          # Initialize database
 npm run db:reset         # Reset database
 npm run db:list          # List all tables
 npm run db:add-table     # Add new table
 npm run db:reset-tables  # Reset all tables except users
 npm run db:seed:roles    # Seed roles, permissions, demo users, mappings
+
+# Database (Railway)
+railway run --service development npm run db:init     # Initialize Railway database
+railway run --service development npm run db:reset    # Reset Railway database
+railway run --service development npm run db:list     # List Railway tables
+railway run --service development npm run db:seed:roles # Seed Railway database
+railway connect                                        # Connect to Railway PostgreSQL
 
 # Docker Development
 npm run docker:dev       # Start development environment with hot reloading
