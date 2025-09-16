@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useUserManagement } from '../contexts/UserManagementContext';
+import { useUserManagement } from '../contexts/users';
 import { User, AuditLog } from '../types/user';
 
 interface UserAuditModalProps {

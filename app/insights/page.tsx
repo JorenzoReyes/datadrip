@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth';
 import ReactMarkdown from 'react-markdown';
 
 interface Insight {
@@ -111,7 +111,7 @@ export default function InsightsPage() {
     setMessages([{
       id: 'welcome',
       type: 'ai',
-      content: `Hello ${user?.firstName || 'there'}! 👋 I\'m your AI business assistant. I\'ve analyzed your data and found some insights that could help grow your business.`,
+      content: `Hello ${user?.fname || 'there'}! 👋 I\'m your AI business assistant. I\'ve analyzed your data and found some insights that could help grow your business.`,
       timestamp: new Date()
     }]);
   }, [user]);
@@ -233,7 +233,20 @@ export default function InsightsPage() {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl font-medium">Please log in</div>
+      </div>
+    );
+  }
+
+  const canView = (user.permissions || []).includes('view_insights');
+  if (!canView) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl font-medium">Access denied (Insights)</div>
+      </div>
+    );
   }
 
   return (

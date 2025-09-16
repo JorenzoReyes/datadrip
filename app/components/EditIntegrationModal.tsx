@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { PlatformIntegration, UpdateIntegrationData } from '../types/integration';
-import { useIntegrationManagement } from '../contexts/IntegrationManagementContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useIntegrationManagement } from '../contexts/integrations';
+import { useAuth } from '../contexts/auth';
 
 interface EditIntegrationModalProps {
   integration: PlatformIntegration;

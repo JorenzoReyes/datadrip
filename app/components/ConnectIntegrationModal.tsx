@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useIntegrationManagement } from '../contexts/IntegrationManagementContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useIntegrationManagement } from '../contexts/integrations';
+import { useAuth } from '../contexts/auth';
 import { CreateIntegrationData } from '../types/integration';
 
 interface ConnectIntegrationModalProps {

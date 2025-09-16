@@ -139,6 +139,9 @@ npm run db:add-table orders
 
 # Reset all tables except users (drop and recreate)
 npm run db:reset-tables
+
+# Seed roles, permissions, demo users, and role mappings
+npm run db:seed:roles
 ```
 
 ### Database Access
@@ -167,6 +170,27 @@ NODE_ENV=development      # Environment mode
 PORT=3000                # Application port
 NEXT_TELEMETRY_DISABLED=1 # Disable Next.js telemetry
 ```
+
+### Seeding Roles, Permissions, and Demo Users
+
+The project includes a seeding script that populates:
+- Roles: `business_owner`, `admin`, `system_admin`
+- Permissions: `create`, `read`, `update`, `deactivate`, page/view permissions (dashboard, sales & inventory, insights, settings, admin pages)
+- Demo users: `user@example.com`, `admin@example.com`, `system.admin@example.com`
+- Mappings: `user_roles` and `role_permissions`
+
+Run after initializing or resetting the database:
+```bash
+# Docker (containerized Postgres)
+DB_PASSWORD=postgres npm run db:seed:roles
+
+# Local Postgres (adjust password as needed)
+DB_PASSWORD=your_password npm run db:seed:roles
+```
+
+Notes:
+- The script is idempotent: it upserts roles, permissions, and users if they already exist.
+- Ensure the database is reachable via the environment variables in your shell or `.env.local` before running.
 
 ## Railway Deployment
 
@@ -258,6 +282,8 @@ npm run db:init          # Initialize database
 npm run db:reset         # Reset database
 npm run db:list          # List all tables
 npm run db:add-table     # Add new table
+npm run db:reset-tables  # Reset all tables except users
+npm run db:seed:roles    # Seed roles, permissions, demo users, mappings
 
 # Docker Development
 npm run docker:dev       # Start development environment with hot reloading
@@ -326,7 +352,9 @@ datadrip/
 │   ├── utils/             # Utility functions (database, etc.)
 │   └── ...                # Next.js pages and layouts
 ├── scripts/               # Database and utility scripts
-│   └── init-db.js         # Database initialization script
+│   ├── init-db.js         # Database initialization script
+│   ├── migrate-db.js      # Add/list/reset tables utility
+│   └── seed-roles.js      # Seed roles, permissions, demo users
 ├── public/                # Static assets
 ├── Dockerfile             # Multi-stage Docker build
 ├── docker-compose.yml     # Local development setup with PostgreSQL

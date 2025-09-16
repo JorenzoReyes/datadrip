@@ -113,6 +113,212 @@ export async function closePool(): Promise<void> {
   }
 }
 
+// User-related database operations
+export interface User {
+  user_id: number;
+  username: string;
+  fname: string;
+  lname: string;
+  email: string;
+  password: string;
+  created_at: string;
+}
+
+export interface CreateUserData {
+  username: string;
+  fname: string;
+  lname: string;
+  email: string;
+  password: string;
+}
+
+// Create a new user
+export async function createUser(userData: CreateUserData): Promise<User | null> {
+  try {
+    const result = await query<User>(
+      `INSERT INTO users (username, fname, lname, email, password) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING *`,
+      [userData.username, userData.fname, userData.lname, userData.email, userData.password]
+    );
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+}
+
+// Find user by email
+export async function findUserByEmail(email: string): Promise<User | null> {
+  try {
+    const result = await queryOne<User>(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
+    return result;
+  } catch (error) {
+    console.error('Error finding user by email:', error);
+    throw error;
+  }
+}
+
+// Find user by username
+export async function findUserByUsername(username: string): Promise<User | null> {
+  try {
+    const result = await queryOne<User>(
+      'SELECT * FROM users WHERE username = $1',
+      [username]
+    );
+    return result;
+  } catch (error) {
+    console.error('Error finding user by username:', error);
+    throw error;
+  }
+}
+
+// Find user by email or username
+export async function findUserByEmailOrUsername(emailOrUsername: string): Promise<User | null> {
+  try {
+    const result = await queryOne<User>(
+      'SELECT * FROM users WHERE email = $1 OR username = $1',
+      [emailOrUsername]
+    );
+    return result;
+  } catch (error) {
+    console.error('Error finding user by email or username:', error);
+    throw error;
+  }
+}
+
+// Check if email exists
+export async function emailExists(email: string): Promise<boolean> {
+  try {
+    const result = await queryOne<{ count: string }>(
+      'SELECT COUNT(*) as count FROM users WHERE email = $1',
+      [email]
+    );
+    return result ? parseInt(result.count) > 0 : false;
+  } catch (error) {
+    console.error('Error checking if email exists:', error);
+    throw error;
+  }
+}
+
+// Check if username exists
+export async function usernameExists(username: string): Promise<boolean> {
+  try {
+    const result = await queryOne<{ count: string }>(
+      'SELECT COUNT(*) as count FROM users WHERE username = $1',
+      [username]
+    );
+    return result ? parseInt(result.count) > 0 : false;
+  } catch (error) {
+    console.error('Error checking if username exists:', error);
+    throw error;
+  }
+}
+
+// Update user
+export async function updateUser(userId: number, userData: Partial<CreateUserData>): Promise<User | null> {
+  try {
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (userData.username) {
+      fields.push(`username = $${paramCount++}`);
+      values.push(userData.username);
+    }
+    if (userData.fname) {
+      fields.push(`fname = $${paramCount++}`);
+      values.push(userData.fname);
+    }
+    if (userData.lname) {
+      fields.push(`lname = $${paramCount++}`);
+      values.push(userData.lname);
+    }
+    if (userData.email) {
+      fields.push(`email = $${paramCount++}`);
+      values.push(userData.email);
+    }
+    if (userData.password) {
+      fields.push(`password = $${paramCount++}`);
+      values.push(userData.password);
+    }
+
+    if (fields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    values.push(userId);
+    const result = await query<User>(
+      `UPDATE users SET ${fields.join(', ')} WHERE user_id = $${paramCount} RETURNING *`,
+      values
+    );
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+}
+
+// Delete user
+export async function deleteUser(userId: number): Promise<boolean> {
+  try {
+    await query('DELETE FROM users WHERE user_id = $1', [userId]);
+    return true;
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+}
+
+// Get all users (for admin purposes)
+export async function getAllUsers(): Promise<User[]> {
+  try {
+    const result = await query<User>('SELECT * FROM users ORDER BY created_at DESC');
+    return result;
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    throw error;
+  }
+}
+
+// RBAC helpers
+export async function getUserRoles(userId: number): Promise<string[]> {
+  try {
+    const rows = await query<{ name: string }>(
+      `SELECT r.name
+       FROM user_roles ur
+       JOIN roles r ON ur.role_id = r.role_id
+       WHERE ur.user_id = $1`,
+      [userId]
+    );
+    return rows.map(r => r.name);
+  } catch (error) {
+    console.error('Error getting user roles:', error);
+    return [];
+  }
+}
+
+export async function getUserPermissions(userId: number): Promise<string[]> {
+  try {
+    const rows = await query<{ name: string }>(
+      `SELECT DISTINCT p.name
+       FROM user_roles ur
+       JOIN roles r ON ur.role_id = r.role_id
+       JOIN role_permissions rp ON rp.role_id = r.role_id
+       JOIN permissions p ON p.permission_id = rp.permission_id
+       WHERE ur.user_id = $1`,
+      [userId]
+    );
+    return rows.map(r => r.name);
+  } catch (error) {
+    console.error('Error getting user permissions:', error);
+    return [];
+  }
+}
+
 // Database initialization function
 export async function initializeDatabase(): Promise<void> {
   try {

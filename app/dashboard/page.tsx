@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
     // Redirect admin and system_admin users to admin dashboard
     if (!isLoading && user && (user.role === 'admin' || user.role === 'system_admin')) {
-      router.push('/admin/dashboard');
+      router.push('/admin/manage-users');
       return;
     }
   }, [user, isLoading, router]);

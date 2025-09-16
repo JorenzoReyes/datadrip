@@ -177,6 +177,41 @@ async function addTableWithDocker(tableName) {
         expires_at TIMESTAMP NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `,
+    'user_roles': `
+      CREATE TABLE IF NOT EXISTS user_roles (
+        user_role_id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+        role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    'roles': `
+      CREATE TABLE IF NOT EXISTS roles (
+        role_id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    'role_permissions': `
+      CREATE TABLE IF NOT EXISTS role_permissions (
+        role_permission_id SERIAL PRIMARY KEY,
+        permission_id INTEGER REFERENCES permissions(permission_id) ON DELETE CASCADE,
+        role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+        permission VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+    'permissions': `
+      CREATE TABLE IF NOT EXISTS permissions (
+        permission_id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `
   };
 

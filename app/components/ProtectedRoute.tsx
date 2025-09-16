@@ -2,17 +2,19 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: 'user' | 'admin' | 'system_admin';
+  requirePermission?: string;
   redirectTo?: string;
 }
 
 export default function ProtectedRoute({ 
   children, 
   requiredRole = 'user',
+  requirePermission,
   redirectTo = '/'
 }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
@@ -38,11 +40,20 @@ export default function ProtectedRoute({
       }
 
       if (requiredRole === 'user' && (user.role === 'admin' || user.role === 'system_admin')) {
-        router.push('/admin/dashboard');
+        router.push('/admin/manage-users');
         return;
       }
+
+      // Permission check
+      if (requirePermission) {
+        const hasPerm = (user.permissions || []).includes(requirePermission);
+        if (!hasPerm) {
+          router.push('/dashboard');
+          return;
+        }
+      }
     }
-  }, [user, isLoading, requiredRole, redirectTo, router]);
+  }, [user, isLoading, requiredRole, requirePermission, redirectTo, router]);
 
   if (isLoading) {
     return (
@@ -56,7 +67,9 @@ export default function ProtectedRoute({
   if (!user || 
       (requiredRole === 'admin' && user.role !== 'admin' && user.role !== 'system_admin') ||
       (requiredRole === 'system_admin' && user.role !== 'system_admin') ||
-      (requiredRole === 'user' && (user.role === 'admin' || user.role === 'system_admin'))) {
+      (requiredRole === 'user' && (user.role === 'admin' || user.role === 'system_admin')) ||
+      (requirePermission && !(user.permissions || []).includes(requirePermission))
+     ) {
     return null;
   }
 

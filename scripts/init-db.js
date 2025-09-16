@@ -83,13 +83,69 @@ async function createTables(pool) {
     );
   `;
 
-  // Execute table creation queries
+  // RBAC tables
+  const createRolesTable = `
+    CREATE TABLE IF NOT EXISTS roles (
+      role_id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const createPermissionsTable = `
+    CREATE TABLE IF NOT EXISTS permissions (
+      permission_id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const createRolePermissionsTable = `
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      role_permission_id SERIAL PRIMARY KEY,
+      permission_id INTEGER REFERENCES permissions(permission_id) ON DELETE CASCADE,
+      role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+      permission VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  const createUserRolesTable = `
+    CREATE TABLE IF NOT EXISTS user_roles (
+      user_role_id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+      role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  // Execute table creation queries (order matters for FKs)
   await pool.query(createUsersTable);
+  await pool.query(createRolesTable);
+  await pool.query(createPermissionsTable);
+  await pool.query(createRolePermissionsTable);
+  await pool.query(createUserRolesTable);
 
   // Create indexes for better performance
   const createIndexes = [
+    // users
     'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
     'CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);',
+    // roles/permissions lookup
+    'CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);',
+    'CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name);',
+    // role_permissions
+    'CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id);',
+    'CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions(permission_id);',
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_role_permissions_role_permission ON role_permissions(role_id, permission_id);',
+    // user_roles
+    'CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id);',
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_user_roles_user_role ON user_roles(user_id, role_id);'
   ];
 
   for (const indexQuery of createIndexes) {
@@ -115,12 +171,64 @@ async function initializeDatabaseWithDocker() {
       );
     `;
     
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createUsersTable}"`, { stdio: 'inherit' });
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createUsersTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+    // RBAC tables
+    const createRolesTable = `
+      CREATE TABLE IF NOT EXISTS roles (
+        role_id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    const createPermissionsTable = `
+      CREATE TABLE IF NOT EXISTS permissions (
+        permission_id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    const createRolePermissionsTable = `
+      CREATE TABLE IF NOT EXISTS role_permissions (
+        role_permission_id SERIAL PRIMARY KEY,
+        permission_id INTEGER REFERENCES permissions(permission_id) ON DELETE CASCADE,
+        role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+        permission VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    const createUserRolesTable = `
+      CREATE TABLE IF NOT EXISTS user_roles (
+        user_role_id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+        role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    for (const stmt of [createRolesTable, createPermissionsTable, createRolePermissionsTable, createUserRolesTable]) {
+      const clean = stmt.replace(/\s+/g, ' ').trim();
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${clean}"`, { stdio: 'inherit' });
+    }
     
     // Create indexes
     const createIndexes = [
+      // users
       'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
       'CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);',
+      // roles/permissions lookup
+      'CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);',
+      'CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name);',
+      // role_permissions
+      'CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id);',
+      'CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions(permission_id);',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_role_permissions_role_permission ON role_permissions(role_id, permission_id);',
+      // user_roles
+      'CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id);',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_user_roles_user_role ON user_roles(user_id, role_id);'
     ];
     
     for (const indexQuery of createIndexes) {

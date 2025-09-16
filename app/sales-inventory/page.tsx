@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth';
 
 export default function SalesInventoryPage() {
   const { user, isLoading, logout } = useAuth();
@@ -29,7 +29,20 @@ export default function SalesInventoryPage() {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl">Please log in</div>
+      </div>
+    );
+  }
+
+  const canView = (user.permissions || []).includes('view_sales_and_inventory');
+  if (!canView) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl">Access denied (Sales & Inventory)</div>
+      </div>
+    );
   }
 
   return (

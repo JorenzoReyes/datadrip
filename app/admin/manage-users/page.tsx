@@ -1,19 +1,17 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
-import { useUserManagement } from '../../contexts/UserManagementContext';
+import { useAuth } from '../../contexts/auth';
+import { useUserManagement } from '../../contexts/users';
 import { User, UserFilters } from '../../types/user';
-import AddUserModal from '../../components/AddUserModal';
-import EditUserModal from '../../components/EditUserModal';
-import UserAuditModal from '../../components/UserAuditModal';
+import { AddUserModal, EditUserModal, UserAuditModal } from '../../components/users';
 
 export default function ManageUsersPage() {
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const {
     users,
     filters,
-    isLoading,
+    
     error,
     setFilters,
     getFilteredUsers,
@@ -47,10 +45,7 @@ export default function ManageUsersPage() {
     }
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
+  // removed unused handleLogout
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({ search: e.target.value });
@@ -83,78 +78,26 @@ export default function ManageUsersPage() {
 
   const filteredUsers = getFilteredUsers();
 
-  if (authLoading || isLoading) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-header text-xl">Loading...</div>
       </div>
     );
   }
-
-  if (!user || (user.role !== 'admin' && user.role !== 'system_admin')) {
-    return null;
+  if (!user) return null;
+  const canView = (user.permissions || []).includes('view_admin_manage_users');
+  if (!canView) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl">Access denied (Manage Users)</div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Left Sidebar */}
-      <aside className="w-64 bg-white shadow-lg">
-        <div className="p-6">
-          {/* Brand */}
-          <h1 className="text-2xl font-bold font-title text-header mb-8">DataDrip</h1>
-          
-          {/* Greeting */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-header">Hi Admin!</h2>
-            </div>
-          
-          {/* Navigation */}
-          <nav className="space-y-2">
-            <a 
-              href="/admin/manage-users" 
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary-500 text-white font-medium"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-              </svg>
-              <span>Manage Users</span>
-            </a>
-            
-            <a 
-              href="/admin/integrations" 
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
-              </svg>
-              <span>Integrations</span>
-            </a>
-            
-            <a 
-              href="/admin/system-health" 
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-              </svg>
-              <span>System Health</span>
-            </a>
-            
-              <button
-                onClick={handleLogout}
-              className="flex items-center space-x-3 px-4 py-3 rounded-lg text-subheader hover:bg-gray-100 hover:text-header transition w-full text-left"
-              >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-              </svg>
-              <span>Log Out</span>
-              </button>
-          </nav>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8">
+      <div className="flex-1 p-8">
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
@@ -260,21 +203,26 @@ export default function ManageUsersPage() {
 
         {/* User Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          {/* Table Header */}
-          <div className="bg-primary-500 px-6 py-4">
-            <div className="grid grid-cols-6 gap-4 text-white font-medium">
-              <div>User</div>
-              <div>Role</div>
-              <div>Status</div>
-              <div>Created</div>
-              <div>Last Login</div>
-              <div>Actions</div>
-            </div>
-          </div>
-
-          {/* Table Content */}
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col style={{ width: '34%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '10%' }} />
+              </colgroup>
+              <thead className="bg-primary-500">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white">Users</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white">Role</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white">Created</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white">Last Login</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white">Actions</th>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.length === 0 ? (
                   <tr>
@@ -288,7 +236,7 @@ export default function ManageUsersPage() {
                 ) : (
                   filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap align-middle">
                         <div>
                           <div className="text-sm font-medium text-header">
                             {user.firstName} {user.lastName}
@@ -296,7 +244,7 @@ export default function ManageUsersPage() {
                           <div className="text-sm text-subheader">{user.email}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap align-middle">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           (user.role === 'admin' || user.role === 'system_admin')
                             ? 'bg-red-100 text-red-700 border border-red-200' 
@@ -305,7 +253,7 @@ export default function ManageUsersPage() {
                           {user.role}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap align-middle">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           user.status === 'active' 
                             ? 'bg-green-100 text-green-700 border border-green-200'
@@ -316,13 +264,13 @@ export default function ManageUsersPage() {
                           {user.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader align-middle">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader align-middle">
                         {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium align-middle">
                         <div className="flex space-x-2">
                           <button
                             onClick={() => {
@@ -332,7 +280,7 @@ export default function ManageUsersPage() {
                             className="text-blue-400 hover:text-blue-300 transition"
                           >
                             Edit
-              </button>
+                          </button>
                           <button
                             onClick={() => {
                               setSelectedUser(user);
@@ -341,7 +289,7 @@ export default function ManageUsersPage() {
                             className="text-purple-400 hover:text-purple-300 transition"
                           >
                             Audit
-              </button>
+                          </button>
                           {user.status === 'active' ? (
                             <button
                               onClick={() => handleUserAction('deactivate', user.id)}
@@ -349,7 +297,7 @@ export default function ManageUsersPage() {
                               className="text-red-400 hover:text-red-300 transition disabled:opacity-50"
                             >
                               {actionLoading === user.id ? 'Deactivating...' : 'Deactivate'}
-              </button>
+                            </button>
                           ) : (
                             <button
                               onClick={() => handleUserAction('activate', user.id)}
@@ -357,7 +305,7 @@ export default function ManageUsersPage() {
                               className="text-green-400 hover:text-green-300 transition disabled:opacity-50"
                             >
                               {actionLoading === user.id ? 'Activating...' : 'Activate'}
-              </button>
+                            </button>
                           )}
                         </div>
                       </td>
@@ -394,7 +342,7 @@ export default function ManageUsersPage() {
             <div className="text-subheader">Inactive Users</div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Modals */}
       {showAddModal && (

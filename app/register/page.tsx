@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '../contexts/auth';
 
 interface RegistrationData {
   firstName: string;
@@ -12,17 +13,6 @@ interface RegistrationData {
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
-}
-
-interface RegisteredUser {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  password: string;
-  role: 'user' | 'admin';
-  acceptTerms: boolean;
-  createdAt: string;
 }
 
 export default function RegisterPage() {
@@ -39,6 +29,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const { register } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -144,51 +135,27 @@ export default function RegisterPage() {
     }
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Get existing users from localStorage
-      const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      
-      // Check if email already exists
-      if (existingUsers.find((user: RegisteredUser) => user.email === formData.email)) {
-        setError('User with this email already exists');
-        setIsLoading(false);
-        return;
-      }
-
-      // Check if username already exists (case-insensitive)
-      if (existingUsers.find((user: RegisteredUser) => user.username.toLowerCase() === formData.username.toLowerCase())) {
-        setError('Username is already taken');
-        setIsLoading(false);
-        return;
-      }
-
-      // Create new user
-      const newUser = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+      const result = await register({
         username: formData.username,
+        fname: formData.firstName,
+        lname: formData.lastName,
         email: formData.email,
-        password: formData.password, // In real app, this would be hashed
-        role: 'user' as const, // All new registrations default to 'user' role
-        acceptTerms: formData.acceptTerms,
-        createdAt: new Date().toISOString()
-      };
+        password: formData.password
+      });
 
-      // Add to existing users
-      existingUsers.push(newUser);
-      localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
-
-      setSuccess(true);
-      setError('');
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push('/');
-      }, 2000);
-
-    } catch {
+      if (result.success) {
+        setSuccess(true);
+        setError('');
+        
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      } else {
+        setError(result.error || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
       setError('An error occurred during registration');
     } finally {
       setIsLoading(false);

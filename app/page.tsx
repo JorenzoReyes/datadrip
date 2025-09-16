@@ -26,7 +26,7 @@ export default function LoginPage() {
         if (userData) {
           const user = JSON.parse(userData);
           if (user.role === 'admin' || user.role === 'system_admin') {
-            router.push('/admin/dashboard');
+            router.push('/admin/manage-users');
           } else {
             router.push('/dashboard');
           }

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth';
 import { seedDemoUsers, clearDemoData } from '../utils/seedDemoData';
 
 export default function DevToolsPage() {

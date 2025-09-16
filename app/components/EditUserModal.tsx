@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useUserManagement } from '../contexts/UserManagementContext';
+import { useAuth } from '../contexts/auth';
+import { useUserManagement } from '../contexts/users';
 import { User, UpdateUserData } from '../types/user';
 
 interface EditUserModalProps {

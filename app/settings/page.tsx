@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
-import { useIntegrationManagement } from '../contexts/IntegrationManagementContext';
+import { useAuth } from '../contexts/auth';
+import { useIntegrationManagement } from '../contexts/integrations';
 
 // Connect Platforms Component
 function ConnectPlatformsSection() {
@@ -92,7 +92,7 @@ function ConnectPlatformsSection() {
       const userId = currentUser.email.replace('@', '_').replace('.', '_');
       const integrationData = {
         platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
-        name: `${template.name} Integration - ${currentUser.firstName || 'User'} ${currentUser.lastName || ''}`,
+        name: `${template.name} Integration - ${currentUser.fname || 'User'} ${currentUser.lname || ''}`,
         apiKey: `user_${userId}_${platformId}_${Date.now()}`, // Simulated API key
         apiSecret: `secret_${userId}_${platformId}_${Date.now()}`, // Simulated API secret
         webhookUrl: '',
@@ -322,7 +322,6 @@ interface UserSettings {
   firstName: string;
   lastName: string;
   email: string;
-  companyName: string;
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -339,7 +338,6 @@ export default function SettingsPage() {
     firstName: '',
     lastName: '',
     email: '',
-    companyName: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -349,10 +347,9 @@ export default function SettingsPage() {
   useEffect(() => {
     if (user) {
       setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
+        firstName: user.fname || '',
+        lastName: user.lname || '',
         email: user.email || '',
-        companyName: user.companyName || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -428,7 +425,13 @@ export default function SettingsPage() {
 
     try {
       // Update user data using the context function
-      const success = await updateUser(formData);
+      // Map form data to User type
+      const userUpdateData = {
+        fname: formData.firstName,
+        lname: formData.lastName,
+        email: formData.email
+      };
+      const success = await updateUser(userUpdateData);
       
       if (success) {
         setMessage({ type: 'success', text: 'Settings updated successfully!' });
@@ -458,10 +461,27 @@ export default function SettingsPage() {
     router.push('/');
   };
 
-  if (authLoading || !user) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-header text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl">Please log in</div>
+      </div>
+    );
+  }
+
+  const canView = (user.permissions || []).includes('view_settings');
+  if (!canView) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-header text-xl">Access denied (Settings)</div>
       </div>
     );
   }
@@ -475,7 +495,7 @@ export default function SettingsPage() {
             <div className="flex items-center space-x-8">
               <h1 className="text-2xl font-bold font-title text-header">DataDrip</h1>
               <nav className="hidden md:flex space-x-6">
-                <a href={user.role === 'admin' || user.role === 'system_admin' ? '/admin/dashboard' : '/dashboard'} className="text-subheader hover:text-header transition">Dashboard</a>
+                <a href={user.role === 'admin' || user.role === 'system_admin' ? '/admin/manage-users' : '/dashboard'} className="text-subheader hover:text-header transition">Dashboard</a>
                 <a href="/sales-inventory" className="text-subheader hover:text-header transition">Sales and Inventory</a>
                 <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
               </nav>
@@ -483,7 +503,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push((user.role === 'admin' || user.role === 'system_admin') ? '/admin/dashboard' : '/dashboard')}
+                onClick={() => router.push((user.role === 'admin' || user.role === 'system_admin') ? '/admin/manage-users' : '/dashboard')}
                 className="px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white transition"
               >
                 ← Back to Dashboard
@@ -618,21 +638,6 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                {/* Company Name */}
-                <div>
-                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-200 mb-1">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    id="companyName"
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleInputChange}
-                    placeholder="Enter your company name (optional)"
-                    className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
 
                 {/* Password Change Section */}
                 <div className="col-span-full border-t border-gray-700 pt-6 mt-6">
@@ -713,6 +718,6 @@ export default function SettingsPage() {
            
        </div>
      </div>
-   </div>
- );
+  </div>
+  );
  }

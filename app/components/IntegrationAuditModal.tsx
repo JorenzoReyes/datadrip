@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PlatformIntegration, IntegrationAuditLog } from '../types/integration';
-import { useIntegrationManagement } from '../contexts/IntegrationManagementContext';
+import { useIntegrationManagement } from '../contexts/integrations';
 
 interface IntegrationAuditModalProps {
   integration: PlatformIntegration;

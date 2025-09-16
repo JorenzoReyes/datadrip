@@ -51,52 +51,14 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     try {
-      // Load managed users
-      const storedUsers = localStorage.getItem(STORAGE_KEYS.USERS);
-      let managedUsers: User[] = [];
-      if (storedUsers) {
-        managedUsers = JSON.parse(storedUsers);
-      }
-
-      // Load existing registered users and convert them to managed users
-      const registeredUsers = localStorage.getItem('registeredUsers');
-      if (registeredUsers) {
-        try {
-          const existingUsers = JSON.parse(registeredUsers);
-          const convertedUsers: User[] = existingUsers.map((user: { email: string; firstName?: string; lastName?: string; role?: string; createdAt?: string }) => ({
-            id: `converted_${user.email}_${Date.now()}`,
-            firstName: user.firstName || 'Unknown',
-            lastName: user.lastName || 'User',
-            email: user.email,
-            companyName: '',
-            role: user.role || 'user',
-            status: 'active',
-            createdAt: user.createdAt || new Date().toISOString(),
-            updatedAt: user.createdAt || new Date().toISOString(),
-            lastLoginAt: undefined,
-            createdBy: 'system'
-          }));
-
-          // Merge with existing managed users, avoiding duplicates
-          const existingEmails = new Set(managedUsers.map(u => u.email));
-          const newUsers = convertedUsers.filter(u => !existingEmails.has(u.email));
-          
-          if (newUsers.length > 0) {
-            const allUsers = [...managedUsers, ...newUsers];
-            setUsers(allUsers);
-            saveUsers(allUsers);
-          } else {
-            setUsers(managedUsers);
-          }
-        } catch (err) {
-          console.error('Error converting registered users:', err);
-          setUsers(managedUsers);
-        }
-      } else {
-        setUsers(managedUsers);
-      }
+      // Fetch live users from API (DB-backed)
+      const res = await fetch('/api/admin/users', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to fetch users');
+      const data = await res.json();
+      const liveUsers: User[] = data.users || [];
+      setUsers(liveUsers);
 
       // Load audit logs
       const storedLogs = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
@@ -123,6 +85,7 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
   }, [loadData]);
 
   const saveUsers = (newUsers: User[]) => {
+    // Keep local storage for audit/demo persistence, but primary source is API
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(newUsers));
     setUsers(newUsers);
   };
