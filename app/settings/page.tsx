@@ -502,12 +502,6 @@ export default function SettingsPage() {
               <span className="text-primary-500 font-bold">SETTINGS</span>
             </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push((user.role === 'admin' || user.role === 'system_admin') ? '/admin/manage-users' : '/dashboard')}
-                className="px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white transition"
-              >
-                ← Back to Dashboard
-              </button>
               <span className="text-subheader">{user.email}</span>
               <button
                 onClick={handleLogout}
@@ -521,7 +515,7 @@ export default function SettingsPage() {
         </div>
       </header>
 
-                           <div className="flex justify-center">
+        <div className="flex justify-center">
           <div className="flex max-w-7xl w-full">
             {/* Left Sidebar */}
             <aside className="w-80 bg-white border-r border-gray-200 p-6 rounded-r-2xl">
