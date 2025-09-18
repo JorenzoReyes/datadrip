@@ -335,16 +335,16 @@ async function addTable(pool, tableName) {
   }
 }
 
-// Reset database using Docker
+// Reset database using Docker (drop ALL tables, including users), then re-init
 async function resetDatabaseWithDocker() {
   try {
-    console.log('⚠️  WARNING: This will drop all tables except users!');
+    console.log('⚠️  WARNING: This will drop ALL tables including users!');
     console.log('This action cannot be undone.');
     console.log('🔄 Resetting database via Docker...');
     
-    // Get all tables except users
+    // Get all tables
     const result = execSync(
-      `docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != 'users';"`,
+      `docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"`,
       { encoding: 'utf8' }
     );
     
@@ -355,7 +355,7 @@ async function resetDatabaseWithDocker() {
       return true;
     }
     
-    // Drop all tables except users
+    // Drop all tables
     for (const line of lines) {
       const tableName = line.trim();
       if (tableName) {
@@ -364,7 +364,9 @@ async function resetDatabaseWithDocker() {
       }
     }
     
-    console.log('✅ Database reset completed via Docker');
+    console.log('🔧 Re-initializing database schema...');
+    execSync('node scripts/init-db.js', { stdio: 'inherit' });
+    console.log('✅ Database reset and initialization completed via Docker');
     return true;
   } catch (error) {
     console.error('❌ Docker reset failed:', error.message);
@@ -372,32 +374,36 @@ async function resetDatabaseWithDocker() {
   }
 }
 
-// Reset database (drop all tables except users)
+// Reset database (drop ALL tables including users), then re-init
 async function resetDatabase(pool) {
   try {
-    console.log('⚠️  WARNING: This will drop all tables except users!');
+    console.log('⚠️  WARNING: This will drop ALL tables including users!');
     console.log('This action cannot be undone.');
     
     // Get all tables
     const result = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name != 'users';
+      WHERE table_schema = 'public';
     `);
     
     if (result.rows.length === 0) {
       console.log('No tables to drop');
+      console.log('🔧 Re-initializing database schema...');
+      execSync('node scripts/init-db.js', { stdio: 'inherit' });
+      console.log('✅ Database reset and initialization completed');
       return;
     }
     
-    // Drop all tables except users
+    // Drop all tables
     for (const row of result.rows) {
       await pool.query(`DROP TABLE IF EXISTS ${row.table_name} CASCADE;`);
       console.log(`🗑️  Dropped table: ${row.table_name}`);
     }
     
-    console.log('✅ Database reset completed');
+    console.log('🔧 Re-initializing database schema...');
+    execSync('node scripts/init-db.js', { stdio: 'inherit' });
+    console.log('✅ Database reset and initialization completed');
   } catch (error) {
     console.error('❌ Error resetting database:', error);
   }

@@ -89,7 +89,9 @@ async function createTables(pool) {
       lname VARCHAR(30) NOT NULL,
       email VARCHAR(100) NOT NULL,
       password VARCHAR(20) NOT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      last_login_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `;
 
@@ -175,11 +177,19 @@ async function initializeDatabaseWithDocker() {
         lname VARCHAR(30) NOT NULL,
         email VARCHAR(100) NOT NULL,
         password VARCHAR(20) NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        last_login_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `;
     
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createUsersTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+    // Ensure columns exist if table was created earlier without them
+    const alterUsersAddUpdatedAt = `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`;
+    const alterUsersAddLastLoginAt = `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`;
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${alterUsersAddUpdatedAt}"`, { stdio: 'inherit' });
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${alterUsersAddLastLoginAt}"`, { stdio: 'inherit' });
 
     // RBAC tables
     const createRolesTable = `

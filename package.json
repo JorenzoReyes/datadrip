@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:init": "node scripts/init-db.js",
-    "db:reset": "node scripts/init-db.js",
+    "db:reset": "node scripts/migrate-db.js reset-db",
     "db:migrate": "node scripts/migrate-db.js",
     "db:list": "node scripts/migrate-db.js list-tables",
     "db:add-table": "node scripts/migrate-db.js add-table",
