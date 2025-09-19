@@ -108,66 +108,35 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
 
   const createUser = async (userData: CreateUserData, createdBy: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Validation
-      if (!userData.firstName || !userData.lastName || !userData.email || !userData.username) {
-        return { success: false, error: 'Required fields are missing' };
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: result.error || 'Failed to create user' };
       }
 
-      if (!userData.email.includes('@')) {
-        return { success: false, error: 'Invalid email address' };
-      }
-
-      if (userData.username.length < 3 || userData.username.length > 30) {
-        return { success: false, error: 'Username must be 3-30 characters long' };
-      }
-
-      if (!/^[a-zA-Z0-9._-]+$/.test(userData.username)) {
-        return { success: false, error: 'Username can only contain letters, numbers, underscores, dots, and hyphens' };
-      }
-
-      // Check for duplicate email
-      const existingUser = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
-      if (existingUser) {
-        return { success: false, error: 'User with this email already exists' };
-      }
-
-      // Check for duplicate username
-      const existingUsername = users.find(u => u.username.toLowerCase() === userData.username.toLowerCase());
-      if (existingUsername) {
-        return { success: false, error: 'Username is already taken' };
-      }
-
-      // Create new user
-      const newUser: User = {
-        id: generateUserId(),
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        username: userData.username,
-        companyName: userData.companyName,
-        role: userData.role,
-        status: 'pending', // New users start as pending
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy
-      };
-
-      const updatedUsers = [...users, newUser];
-      saveUsers(updatedUsers);
+      // Refresh users list from database
+      await loadData();
 
       // Add audit log
       addAuditLog({
         action: 'create',
-        targetUserId: newUser.id,
-        targetUserEmail: newUser.email,
+        targetUserId: result.user.id,
+        targetUserEmail: result.user.email,
         performedBy: createdBy,
-        performedByEmail: createdBy, // Assuming createdBy is email
+        performedByEmail: createdBy,
         timestamp: new Date().toISOString(),
-        details: `User account created with role: ${newUser.role}`
+        details: `User account created with role: ${result.user.role}`
       });
 
       return { success: true };
-    } catch {
+    } catch (error) {
+      console.error('Error creating user:', error);
       return { success: false, error: 'Failed to create user' };
     }
   };
