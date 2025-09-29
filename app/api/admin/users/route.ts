@@ -20,7 +20,7 @@ export async function GET() {
       email: u.email,
       username: u.username,
       role: 'user',
-      status: 'active',
+      status: u.status || 'active',
       createdAt: u.created_at,
       updatedAt: u.created_at,
       lastLoginAt: undefined,
@@ -59,13 +59,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user in database
+    // Create user in database with pending status
     const userData: DbCreateUserData = {
       username,
       fname: firstName,
       lname: lastName,
       email,
-      password: 'temp123' // Much shorter password
+      password: 'temp123',
+      status: 'pending' // New users start as pending
     };
 
     const newUser = await createUser(userData);
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
         email: newUser.email,
         username: newUser.username,
         role: role,
-        status: 'pending',
+        status: newUser.status,
         createdAt: newUser.created_at,
         updatedAt: newUser.created_at,
         createdBy: 'admin'
