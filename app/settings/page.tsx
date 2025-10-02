@@ -14,7 +14,6 @@ function ConnectPlatformsSection() {
   const [platforms, setPlatforms] = useState<Array<{
     id: string;
     name: string;
-    icon: string;
     status: 'connected' | 'not_connected' | 'pending';
     lastSync: string | null;
     description: string;
@@ -22,26 +21,23 @@ function ConnectPlatformsSection() {
     {
       id: 'shopee',
       name: 'Shopee',
-      icon: '🛍️',
       status: 'not_connected',
       lastSync: null,
-      description: 'Southeast Asia\'s leading e-commerce platform'
+      description: 'Southeast Asia\'s leading e‑commerce platform'
     },
     {
       id: 'lazada',
       name: 'Lazada',
-      icon: '📦',
       status: 'not_connected',
       lastSync: null,
-      description: 'Alibaba Group\'s flagship e-commerce platform'
+      description: 'Alibaba Group\'s flagship e‑commerce platform'
     },
     {
       id: 'tiktok',
       name: 'TikTok Shop',
-      icon: '🎵',
       status: 'not_connected',
       lastSync: null,
-      description: 'Social commerce platform with integrated shopping'
+      description: 'Social commerce platform with integrated shopping'
     },
   ]);
 
@@ -157,11 +153,11 @@ function ConnectPlatformsSection() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'connected':
-        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-900/30 text-green-300 border border-green-500/30">Connected</span>;
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200">Connected</span>;
       case 'pending':
-        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900/30 text-yellow-300 border border-yellow-500/30">Pending</span>;
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">Pending</span>;
       case 'not_connected':
-        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-900/30 text-gray-300 border border-gray-500/30">Not Connected</span>;
+        return <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700 border border-gray-200">Not Connected</span>;
       default:
         return null;
     }
@@ -178,42 +174,52 @@ function ConnectPlatformsSection() {
     return date.toLocaleDateString();
   };
 
+  const renderIcon = (icon: string) => {
+    if (icon.endsWith('.svg') || icon.startsWith('/')) {
+      const src = icon.startsWith('/') ? icon : `/${icon}`;
+      return <img src={src} alt="platform icon" className="h-8 w-auto max-w-8" />;
+    }
+    return <span className="text-3xl leading-none">{icon}</span>;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h3 className="text-xl font-semibold text-white mb-2">Connect Platforms</h3>
-        <p className="text-gray-400">Link your e-commerce platforms to enable automated data collection and analytics.</p>
+        <h3 className="text-xl font-semibold text-header mb-2">Connect Platforms</h3>
+        <p className="text-subheader">Link your e-commerce platforms to enable automated data collection and analytics.</p>
       </div>
 
       {/* Message Display */}
       {message && (
         <div className={`rounded-lg p-3 ${
           message.type === 'success' 
-            ? 'bg-green-900/30 border border-green-500/30 text-green-200'
-            : 'bg-red-900/30 border border-red-500/30 text-red-200'
+            ? 'bg-green-50 border border-green-200 text-green-700'
+            : 'bg-red-50 border border-red-200 text-red-700'
         }`}>
           <p className="text-sm">{message.text}</p>
         </div>
       )}
 
       {/* Available Platforms */}
-      <div className="bg-black/40 rounded-xl border border-purple-500/30 p-6">
-        <h4 className="text-lg font-medium text-white mb-4">Available Platforms</h4>
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h4 className="text-lg font-medium text-header mb-4">Available Platforms</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {platforms.map((platform) => (
-            <div key={platform.id} className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+            <div key={platform.id} className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{platform.icon}</span>
+                  <div className="w-12 h-12 flex items-center justify-center pl-1 pr-2">
+                    {renderIcon(platformTemplates.find(t => t.platform === platform.id)?.icon ?? '🔗')}
+                  </div>
                   <div>
-                    <h5 className="font-medium text-white">{platform.name}</h5>
-                    <p className="text-sm text-gray-400">{platform.description}</p>
+                    <h5 className="font-medium text-header">{platform.name}</h5>
+                    <p className="text-sm text-subheader">{platform.description}</p>
                     <div className="mt-2">
                       {getStatusBadge(platform.status)}
                     </div>
                     {platform.status === 'connected' && platform.lastSync && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-subheader mt-1">
                         Last sync: {formatLastSync(platform.lastSync)}
                       </p>
                     )}
@@ -240,7 +246,7 @@ function ConnectPlatformsSection() {
                   {platform.status === 'pending' && (
                     <button
                       disabled
-                      className="px-3 py-1 text-sm rounded-lg bg-gray-600 text-gray-300 cursor-not-allowed"
+                      className="px-3 py-1 text-sm rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed"
                     >
                       Pending
                     </button>
@@ -255,28 +261,28 @@ function ConnectPlatformsSection() {
 
 
       {/* Connection Status */}
-      <div className="bg-black/40 rounded-xl border border-purple-500/30 p-6">
-        <h4 className="text-lg font-medium text-white mb-4">Connection Status</h4>
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h4 className="text-lg font-medium text-header mb-4">Connection Status</h4>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-gray-300">Total Platforms</span>
-            <span className="text-white font-medium">{platforms.length}</span>
+            <span className="text-subheader">Total Platforms</span>
+            <span className="text-header font-medium">{platforms.length}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-300">Connected</span>
-            <span className="text-green-400 font-medium">
+            <span className="text-subheader">Connected</span>
+            <span className="text-green-700 font-medium">
               {platforms.filter(p => p.status === 'connected').length}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-300">Pending</span>
-            <span className="text-yellow-400 font-medium">
+            <span className="text-subheader">Pending</span>
+            <span className="text-yellow-700 font-medium">
               {platforms.filter(p => p.status === 'pending').length}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-300">Not Connected</span>
-            <span className="text-gray-400 font-medium">
+            <span className="text-subheader">Not Connected</span>
+            <span className="text-gray-600 font-medium">
               {platforms.filter(p => p.status === 'not_connected').length}
             </span>
           </div>
@@ -286,22 +292,22 @@ function ConnectPlatformsSection() {
       {/* Disconnect Confirmation Modal */}
       {showDisconnectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md mx-4">
-            <h3 className="text-lg font-medium text-white mb-4">Confirm Disconnection</h3>
-            <p className="text-gray-300 mb-6">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 border border-gray-200">
+            <h3 className="text-lg font-medium text-header mb-4">Confirm Disconnection</h3>
+            <p className="text-subheader mb-6">
               Are you sure you want to disconnect from{' '}
-              <span className="font-medium text-white">
+              <span className="font-medium text-header">
                 {platforms.find(p => p.id === showDisconnectModal)?.name}
               </span>?
               <br />
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-subheader">
                 This will stop data synchronization and remove stored credentials.
               </span>
             </p>
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowDisconnectModal(null)}
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition"
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-header hover:bg-gray-50 transition"
               >
                 Cancel
               </button>

@@ -37,6 +37,14 @@ export default function ConnectIntegrationModal({ onClose, onSuccess }: ConnectI
 
   const selectedPlatformTemplate = platformTemplates.find(t => t.platform === selectedTemplate);
 
+  const renderIcon = (icon: string) => {
+    if (icon.endsWith('.svg') || icon.startsWith('/')) {
+      const src = icon.startsWith('/') ? icon : `/${icon}`;
+      return <img src={src} alt="platform icon" className="h-8 w-auto max-w-8" />;
+    }
+    return <span className="text-3xl leading-none">{icon}</span>;
+  };
+
   const handleTemplateSelect = (platform: string) => {
     const template = platformTemplates.find(t => t.platform === platform);
     if (template) {
@@ -183,7 +191,7 @@ export default function ConnectIntegrationModal({ onClose, onSuccess }: ConnectI
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="text-3xl mb-2">{template.icon}</div>
+                  <div className="mb-2 w-12 h-12 flex items-center justify-center">{renderIcon(template.icon)}</div>
                   <div className="font-medium text-header">{template.name}</div>
                   <div className="text-sm text-subheader">{template.description}</div>
                 </button>
