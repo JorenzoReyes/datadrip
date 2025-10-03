@@ -136,6 +136,7 @@ export interface User {
   lname: string;
   email: string;
   password: string;
+  status: string;
   created_at: string;
 }
 
@@ -145,16 +146,17 @@ export interface CreateUserData {
   lname: string;
   email: string;
   password: string;
+  status?: string;
 }
 
 // Create a new user
 export async function createUser(userData: CreateUserData): Promise<User | null> {
   try {
     const result = await query<User>(
-      `INSERT INTO users (username, fname, lname, email, password) 
-       VALUES ($1, $2, $3, $4, $5) 
+      `INSERT INTO users (username, fname, lname, email, password, status) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING *`,
-      [userData.username, userData.fname, userData.lname, userData.email, userData.password]
+      [userData.username, userData.fname, userData.lname, userData.email, userData.password, userData.status || 'pending']
     );
     return result[0] || null;
   } catch (error) {
@@ -365,6 +367,7 @@ async function createTables(): Promise<void> {
       lname VARCHAR(30) NOT NULL,
       email VARCHAR(100) NOT NULL,
       password VARCHAR(20) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'active',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `;

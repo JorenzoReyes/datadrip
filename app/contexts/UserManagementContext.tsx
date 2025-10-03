@@ -108,216 +108,137 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
 
   const createUser = async (userData: CreateUserData, createdBy: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Validation
-      if (!userData.firstName || !userData.lastName || !userData.email || !userData.username) {
-        return { success: false, error: 'Required fields are missing' };
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: result.error || 'Failed to create user' };
       }
 
-      if (!userData.email.includes('@')) {
-        return { success: false, error: 'Invalid email address' };
-      }
-
-      if (userData.username.length < 3 || userData.username.length > 30) {
-        return { success: false, error: 'Username must be 3-30 characters long' };
-      }
-
-      if (!/^[a-zA-Z0-9._-]+$/.test(userData.username)) {
-        return { success: false, error: 'Username can only contain letters, numbers, underscores, dots, and hyphens' };
-      }
-
-      // Check for duplicate email
-      const existingUser = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
-      if (existingUser) {
-        return { success: false, error: 'User with this email already exists' };
-      }
-
-      // Check for duplicate username
-      const existingUsername = users.find(u => u.username.toLowerCase() === userData.username.toLowerCase());
-      if (existingUsername) {
-        return { success: false, error: 'Username is already taken' };
-      }
-
-      // Create new user
-      const newUser: User = {
-        id: generateUserId(),
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        username: userData.username,
-        companyName: userData.companyName,
-        role: userData.role,
-        status: 'pending', // New users start as pending
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy
-      };
-
-      const updatedUsers = [...users, newUser];
-      saveUsers(updatedUsers);
+      // Refresh users list from database
+      await loadData();
 
       // Add audit log
       addAuditLog({
         action: 'create',
-        targetUserId: newUser.id,
-        targetUserEmail: newUser.email,
+        targetUserId: result.user.id,
+        targetUserEmail: result.user.email,
         performedBy: createdBy,
-        performedByEmail: createdBy, // Assuming createdBy is email
+        performedByEmail: createdBy,
         timestamp: new Date().toISOString(),
-        details: `User account created with role: ${newUser.role}`
+        details: `User account created with role: ${result.user.role}`
       });
 
       return { success: true };
-    } catch {
+    } catch (error) {
+      console.error('Error creating user:', error);
       return { success: false, error: 'Failed to create user' };
     }
   };
 
-  const updateUser = async (userId: string, userData: UpdateUserData, updatedBy: string): Promise<{ success: boolean; error?: string }> => {
+  // Update
+  const updateUser = async (userId: string, userData: UpdateUserData, updatedBy: string) => {
     try {
-      const userIndex = users.findIndex(u => u.id === userId);
-      if (userIndex === -1) {
-        return { success: false, error: 'User not found' };
-      }
-
-      const currentUser = users[userIndex];
-      
-      // Validate username if provided
-      if (userData.username !== undefined) {
-        if (userData.username.length < 3 || userData.username.length > 30) {
-          return { success: false, error: 'Username must be 3-30 characters long' };
-        }
-        if (!/^[a-zA-Z0-9._-]+$/.test(userData.username)) {
-          return { success: false, error: 'Username can only contain letters, numbers, underscores, dots, and hyphens' };
-        }
-        // Check for duplicate username (excluding current user)
-        const existingUsername = users.find(u => u.id !== userId && u.username.toLowerCase() === userData.username!.toLowerCase());
-        if (existingUsername) {
-          return { success: false, error: 'Username is already taken' };
-        }
-      }
-      
-      const changes: { field: string; oldValue: string; newValue: string }[] = [];
-
-      // Track changes
-      Object.entries(userData).forEach(([key, value]) => {
-        if (value !== undefined && currentUser[key as keyof User] !== value) {
-          changes.push({
-            field: key,
-            oldValue: String(currentUser[key as keyof User] || ''),
-            newValue: String(value)
-          });
-        }
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
       });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Failed to update user' };
 
-      if (changes.length === 0) {
-        return { success: false, error: 'No changes detected' };
-      }
-
-      // Update user
-      const updatedUser: User = {
-        ...currentUser,
-        ...userData,
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedUsers = [...users];
-      updatedUsers[userIndex] = updatedUser;
-      saveUsers(updatedUsers);
-
-      // Add audit log
+      await loadData();
       addAuditLog({
         action: 'update',
         targetUserId: userId,
-        targetUserEmail: currentUser.email,
+        targetUserEmail: data.user.email,
         performedBy: updatedBy,
         performedByEmail: updatedBy,
         timestamp: new Date().toISOString(),
-        details: `User details updated`,
-        changes
+        details: 'User updated'
       });
-
       return { success: true };
     } catch {
       return { success: false, error: 'Failed to update user' };
     }
   };
 
-  const deactivateUser = async (userId: string, deactivatedBy: string): Promise<{ success: boolean; error?: string }> => {
+  // Delete
+  const deleteUser = async (userId: string, deletedBy: string) => {
     try {
-      const userIndex = users.findIndex(u => u.id === userId);
-      if (userIndex === -1) {
-        return { success: false, error: 'User not found' };
-      }
+      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Failed to delete user' };
 
-      const currentUser = users[userIndex];
-
-      // Prevent admin from deactivating themselves
-      if (currentUser.email === deactivatedBy) {
-        return { success: false, error: 'Cannot deactivate your own account' };
-      }
-
-      // Update user status
-      const updatedUser: User = {
-        ...currentUser,
-        status: 'inactive',
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedUsers = [...users];
-      updatedUsers[userIndex] = updatedUser;
-      saveUsers(updatedUsers);
-
-      // Add audit log
+      await loadData();
       addAuditLog({
-        action: 'deactivate',
+        action: 'delete',
         targetUserId: userId,
-        targetUserEmail: currentUser.email,
-        performedBy: deactivatedBy,
-        performedByEmail: deactivatedBy,
+        targetUserEmail: '',
+        performedBy: deletedBy,
+        performedByEmail: deletedBy,
         timestamp: new Date().toISOString(),
-        details: 'User account deactivated'
+        details: 'User deleted'
       });
-
       return { success: true };
     } catch {
-      return { success: false, error: 'Failed to deactivate user' };
+      return { success: false, error: 'Failed to delete user' };
     }
   };
 
-  const activateUser = async (userId: string, activatedBy: string): Promise<{ success: boolean; error?: string }> => {
+  // Activate / Deactivate
+  const activateUser = async (userId: string, by: string) => {
     try {
-      const userIndex = users.findIndex(u => u.id === userId);
-      if (userIndex === -1) {
-        return { success: false, error: 'User not found' };
-      }
-
-      const currentUser = users[userIndex];
-
-      // Update user status
-      const updatedUser: User = {
-        ...currentUser,
-        status: 'active',
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedUsers = [...users];
-      updatedUsers[userIndex] = updatedUser;
-      saveUsers(updatedUsers);
-
-      // Add audit log
+      const res = await fetch(`/api/admin/users/${userId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active' })
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Failed to activate user' };
+      await loadData();
       addAuditLog({
         action: 'activate',
         targetUserId: userId,
-        targetUserEmail: currentUser.email,
-        performedBy: activatedBy,
-        performedByEmail: activatedBy,
+        targetUserEmail: '',
+        performedBy: by,
+        performedByEmail: by,
         timestamp: new Date().toISOString(),
-        details: 'User account activated'
+        details: 'User activated'
       });
-
       return { success: true };
     } catch {
       return { success: false, error: 'Failed to activate user' };
+    }
+  };
+
+  const deactivateUser = async (userId: string, by: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'inactive' })
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Failed to deactivate user' };
+      await loadData();
+      addAuditLog({
+        action: 'deactivate',
+        targetUserId: userId,
+        targetUserEmail: '',
+        performedBy: by,
+        performedByEmail: by,
+        timestamp: new Date().toISOString(),
+        details: 'User deactivated'
+      });
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Failed to deactivate user' };
     }
   };
 
