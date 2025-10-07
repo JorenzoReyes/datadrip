@@ -84,11 +84,6 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
     loadData();
   }, [loadData]);
 
-  const saveUsers = (newUsers: User[]) => {
-    // Keep local storage for audit/demo persistence, but primary source is API
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(newUsers));
-    setUsers(newUsers);
-  };
 
   const saveAuditLogs = (newLogs: AuditLog[]) => {
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(newLogs));
@@ -104,7 +99,6 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
     saveAuditLogs(updatedLogs);
   };
 
-  const generateUserId = () => `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const createUser = async (userData: CreateUserData, createdBy: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -168,28 +162,6 @@ export function UserManagementProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Delete
-  const deleteUser = async (userId: string, deletedBy: string) => {
-    try {
-      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) return { success: false, error: data.error || 'Failed to delete user' };
-
-      await loadData();
-      addAuditLog({
-        action: 'delete',
-        targetUserId: userId,
-        targetUserEmail: '',
-        performedBy: deletedBy,
-        performedByEmail: deletedBy,
-        timestamp: new Date().toISOString(),
-        details: 'User deleted'
-      });
-      return { success: true };
-    } catch {
-      return { success: false, error: 'Failed to delete user' };
-    }
-  };
 
   // Activate / Deactivate
   const activateUser = async (userId: string, by: string) => {

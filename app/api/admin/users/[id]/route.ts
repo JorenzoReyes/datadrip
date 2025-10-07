@@ -11,8 +11,9 @@ type DbUserRow = {
   created_at: string;
 };
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const userId = Number(params.id);
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const userId = Number(id);
   if (!Number.isFinite(userId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
 
   const body = await req.json() as {
@@ -89,8 +90,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const userId = Number(params.id);
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const userId = Number(id);
   if (!Number.isFinite(userId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
 
   const existing = await queryOne('SELECT 1 FROM users WHERE user_id=$1', [userId]);
