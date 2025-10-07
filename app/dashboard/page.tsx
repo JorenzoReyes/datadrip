@@ -52,7 +52,7 @@ export default function DashboardPage() {
               </Link>
               <nav className="hidden md:flex space-x-6 text-sm">
                 <a href="/dashboard" className="text-header font-medium">Dashboard</a>
-                <a href="/sales-inventory" className="text-gray-600 hover:text-header transition">Sales and Inventory</a>
+                <a href="/products" className="text-gray-600 hover:text-header transition">Products</a>
                 <a href="/insights" className="text-gray-600 hover:text-header transition">Insights</a>
               </nav>
             </div>

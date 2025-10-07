@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../contexts/auth';
 
-export default function SalesInventoryPage() {
+export default function ProductsPage() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
@@ -37,11 +37,11 @@ export default function SalesInventoryPage() {
     );
   }
 
-  const canView = (user.permissions || []).includes('view_sales_and_inventory');
+  const canView = (user.permissions || []).includes('view_products');
   if (!canView) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-header text-xl">Access denied (Sales & Inventory)</div>
+        <div className="text-header text-xl">Access denied (Products)</div>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function SalesInventoryPage() {
               </Link>
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard" className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/sales-inventory" className="text-header font-medium">Sales and Inventory</a>
+                <a href="/products" className="text-header font-medium">Products</a>
                 <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
               </nav>
             </div>
@@ -91,10 +91,11 @@ export default function SalesInventoryPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold font-title text-header mb-4">Sales and Inventory</h2>
+          <h2 className="text-3xl font-bold font-title text-header mb-4">Products</h2>
           <p className="text-subheader text-lg">This page is coming soon...</p>
         </div>
       </main>
     </div>
   );
 }
+
