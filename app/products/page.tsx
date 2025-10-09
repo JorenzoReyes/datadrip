@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
 
 export default function ProductsPage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,10 +16,7 @@ export default function ProductsPage() {
     }
   }, [user, isLoading, router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
+  
 
   // --- Local UI state & demo data (must be declared before any early returns) ---
   type Product = {
@@ -85,49 +82,11 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition">
-                DataDrip
-              </Link>
-              <nav className="hidden md:flex space-x-6">
-                <a href="/dashboard" className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/products" className="text-header font-medium">Products</a>
-                <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
-              </nav>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/settings')}
-                className="p-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition"
-                title="Settings"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-medium">U</span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium"
-                title="Logout"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header active="products" />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-3xl font-bold font-title text-header mb-6">ManageProducts</h2>
+        <h2 className="text-3xl font-bold font-title text-header mb-6">Manage Products</h2>
 
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
