@@ -41,7 +41,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body: CreateUserData = await request.json();
-    const { firstName, lastName, email, username, role, companyName } = body;
+    const { firstName, lastName, email, username, role } = body;
 
     // Validate required fields
     if (!firstName || !lastName || !email || !username || !role) {

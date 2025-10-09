@@ -112,8 +112,8 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl border border-border w-full max-w-md shadow-xl">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-white rounded-xl border border-gray-200 w-full max-w-2xl max-h-[85vh] shadow-xl overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold font-title text-header">Edit User</h3>
@@ -128,118 +128,136 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
           </div>
 
           {/* User Info */}
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-border">
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="text-sm text-subheader">Editing user:</div>
             <div className="text-header font-medium">{user.firstName} {user.lastName}</div>
             <div className="text-sm text-subheader">{user.email}</div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* First Name */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Personal Information Section */}
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-subheader mb-1">
-                First Name *
-              </label>
-              <input
-                type="text"
-                id="firstName"
-                name="firstName"
-                value={formData.firstName || ''}
-                onChange={handleInputChange}
-                placeholder="Enter first name"
-                required
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-              />
+              <h4 className="text-lg font-semibold text-header mb-4">Personal Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* First Name */}
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-subheader mb-1">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName || ''}
+                    onChange={handleInputChange}
+                    placeholder="Enter first name"
+                    required
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  />
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-subheader mb-1">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName || ''}
+                    onChange={handleInputChange}
+                    placeholder="Enter last name"
+                    required
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Last Name */}
+            {/* Account Information Section */}
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-subheader mb-1">
-                Last Name *
-              </label>
-              <input
-                type="text"
-                id="lastName"
-                name="lastName"
-                value={formData.lastName || ''}
-                onChange={handleInputChange}
-                placeholder="Enter last name"
-                required
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-              />
+              <h4 className="text-lg font-semibold text-header mb-4">Account Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Username */}
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-subheader mb-1">
+                    Username *
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username || ''}
+                    onChange={handleInputChange}
+                    placeholder="Enter username"
+                    required
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  />
+                  <p className="mt-1 text-xs text-subheader">
+                    Must be 3-30 characters, letters, numbers, underscores, dots, and hyphens only
+                  </p>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-subheader mb-1">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email || ''}
+                    onChange={handleInputChange}
+                    placeholder="Enter email address"
+                    required
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Username */}
+            {/* Permissions Section */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-subheader mb-1">
-                Username *
-              </label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username || ''}
-                onChange={handleInputChange}
-                placeholder="Enter username"
-                required
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-              />
-              <p className="mt-1 text-xs text-subheader">
-                Must be 3-30 characters, letters, numbers, underscores, dots, and hyphens only
-              </p>
-            </div>
+              <h4 className="text-lg font-semibold text-header mb-4">Permissions & Status</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Role */}
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-subheader mb-1">
+                    Role *
+                  </label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role || 'user'}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-header focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="system_admin">System Administrator</option>
+                  </select>
+                </div>
 
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-subheader mb-1">
-                Email Address *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email || ''}
-                onChange={handleInputChange}
-                placeholder="Enter email address"
-                required
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header placeholder-subheader focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-              />
-            </div>
-
-            {/* Role */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-subheader mb-1">
-                Role *
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role || 'user'}
-                onChange={handleInputChange}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-                <option value="system_admin">System Administrator</option>
-              </select>
-            </div>
-
-            {/* Status */}
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-subheader mb-1">
-                Status *
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status || 'active'}
-                onChange={handleInputChange}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-header focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="pending">Pending</option>
-              </select>
+                {/* Status */}
+                <div>
+                  <label htmlFor="status" className="block text-sm font-medium text-subheader mb-1">
+                    Status *
+                  </label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={formData.status || 'active'}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-header focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Error Message */}
@@ -250,18 +268,18 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
             )}
 
             {/* Action Buttons */}
-            <div className="flex space-x-3 pt-4">
+            <div className="flex space-x-4 pt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 rounded-lg border border-border text-subheader hover:bg-gray-50 transition"
+                className="flex-1 px-6 py-3 rounded-lg border border-gray-300 text-subheader hover:bg-gray-50 transition font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !hasChanges()}
-                className="flex-1 px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 rounded-lg bg-primary-500 hover:bg-primary-600 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Updating...' : 'Update User'}
               </button>

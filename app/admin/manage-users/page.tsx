@@ -203,16 +203,15 @@ export default function ManageUsersPage() {
 
         {/* User Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
-              <colgroup>
-                <col style={{ width: '34%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '10%' }} />
-              </colgroup>
+          <table className="w-full">
+            <colgroup>
+              <col className="w-1/3" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+            </colgroup>
               <thead className="bg-primary-500">
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-medium text-white">Users</th>
@@ -220,7 +219,7 @@ export default function ManageUsersPage() {
                   <th className="px-6 py-3 text-left text-sm font-medium text-white">Status</th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-white">Created</th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-white">Last Login</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-white">Actions</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white bg-primary-500">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -270,7 +269,7 @@ export default function ManageUsersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-subheader align-middle">
                         {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium align-middle">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium align-middle bg-primary-50">
                         <div className="flex space-x-2">
                           <button
                             onClick={() => {
@@ -314,7 +313,6 @@ export default function ManageUsersPage() {
                 )}
               </tbody>
             </table>
-          </div>
         </div>
 
         {/* Summary Cards */}
