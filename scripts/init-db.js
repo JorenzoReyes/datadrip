@@ -89,6 +89,7 @@ async function createTables(pool) {
       lname VARCHAR(30) NOT NULL,
       email VARCHAR(100) NOT NULL,
       password VARCHAR(20) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'active',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       last_login_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -177,6 +178,7 @@ async function initializeDatabaseWithDocker() {
         lname VARCHAR(30) NOT NULL,
         email VARCHAR(100) NOT NULL,
         password VARCHAR(20) NOT NULL,
+        status VARCHAR(20) DEFAULT 'active',
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         last_login_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

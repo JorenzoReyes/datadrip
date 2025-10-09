@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Omit password in response
-    const { password: _pw, ...userWithoutPassword } = newUser as unknown as User & { password: string };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...userWithoutPassword } = newUser as unknown as User & { password: string };
 
     return NextResponse.json({ success: true, user: userWithoutPassword }, { status: 201 });
   } catch (error) {

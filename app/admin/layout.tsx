@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../contexts/auth';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +31,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="w-64 bg-white shadow-lg">
         <div className="p-6">
           {/* Brand */}
-          <h1 className="text-2xl font-bold font-title text-header mb-8">DataDrip</h1>
+          <Link href="/admin/manage-users" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition mb-8 block">
+            DataDrip
+          </Link>
 
           {/* Greeting */}
           <div className="mb-8">

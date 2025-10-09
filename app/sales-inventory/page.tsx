@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../contexts/auth';
 
 export default function SalesInventoryPage() {
@@ -52,7 +53,9 @@ export default function SalesInventoryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold font-title text-header">DataDrip</h1>
+              <Link href="/dashboard" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition">
+                DataDrip
+              </Link>
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard" className="text-subheader hover:text-header transition">Dashboard</a>
                 <a href="/sales-inventory" className="text-header font-medium">Sales and Inventory</a>
