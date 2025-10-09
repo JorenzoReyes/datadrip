@@ -3,7 +3,7 @@
 /**
  * Seed base roles and permissions into the database
  * Roles: business_owner, admin, system_admin
- * Permissions: create, read, update, deactivate, view_dashboard, view_sales_and_inventory, view_insights
+ * Permissions: create, read, update, deactivate, view_dashboard, view_products, view_insights
  */
 
 const { Pool } = require('pg');
@@ -53,7 +53,7 @@ async function seedDirect() {
       ('deactivate', 'Deactivate resources'),
       ('view_dashboard', 'Access user dashboard'),
       ('view_settings', 'Access settings page'),
-      ('view_sales_and_inventory', 'Access sales and inventory'),
+      ('view_products', 'Access products'),
       ('view_insights', 'Access insights module'),
       ('view_admin_dashboard', 'Access admin dashboard'),
       ('view_admin_manage_users', 'Access admin manage users'),
@@ -107,7 +107,7 @@ async function seedDirect() {
 
     // role_permissions mappings
     // business_owner permissions
-    const boPerms = ['view_dashboard','view_settings','view_sales_and_inventory','view_insights','read','update'];
+    const boPerms = ['view_dashboard','view_settings','view_products','view_insights','read','update'];
     for (const p of boPerms) {
       await pool.query(`
         INSERT INTO role_permissions (permission_id, role_id, permission)
@@ -157,7 +157,7 @@ async function seedDirect() {
 function seedDocker() {
   console.log('🔄 Attempting to seed via Docker...');
   const rolesSql = `INSERT INTO roles (name, description) VALUES ('business_owner','Business owner with access to Insights and business modules'),('admin','Administrator with elevated privileges'),('system_admin','System administrator with full platform control') ON CONFLICT (name) DO NOTHING;`;
-  const permsSql = `INSERT INTO permissions (name, description) VALUES ('create','Create resources'),('read','Read resources'),('update','Update resources'),('deactivate','Deactivate resources'),('view_dashboard','Access user dashboard'),('view_settings','Access settings page'),('view_sales_and_inventory','Access sales and inventory'),('view_insights','Access insights module'),('view_admin_dashboard','Access admin dashboard'),('view_admin_manage_users','Access admin manage users'),('view_admin_integrations','Access admin integrations'),('view_admin_system_health','Access admin system health') ON CONFLICT (name) DO NOTHING;`;
+  const permsSql = `INSERT INTO permissions (name, description) VALUES ('create','Create resources'),('read','Read resources'),('update','Update resources'),('deactivate','Deactivate resources'),('view_dashboard','Access user dashboard'),('view_settings','Access settings page'),('view_products','Access products'),('view_insights','Access insights module'),('view_admin_dashboard','Access admin dashboard'),('view_admin_manage_users','Access admin manage users'),('view_admin_integrations','Access admin integrations'),('view_admin_system_health','Access admin system health') ON CONFLICT (name) DO NOTHING;`;
   try {
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${rolesSql}"`, { stdio: 'inherit' });
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${permsSql}"`, { stdio: 'inherit' });
@@ -170,7 +170,7 @@ function seedDocker() {
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='admin@example.com' AND r.name='admin' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='system.admin@example.com' AND r.name='system_admin' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
     // role_permissions: business_owner
-    const bo = ['view_dashboard','view_settings','view_sales_and_inventory','view_insights','read','update'];
+    const bo = ['view_dashboard','view_settings','view_products','view_insights','read','update'];
     for (const p of bo) {
       execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO role_permissions (permission_id,role_id,permission) SELECT pe.permission_id,r.role_id,pe.name FROM permissions pe, roles r WHERE pe.name='${p}' AND r.name='business_owner' AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.permission_id=pe.permission_id AND rp.role_id=r.role_id);"`, { stdio: 'inherit' });
     }

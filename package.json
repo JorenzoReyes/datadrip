@@ -17,6 +17,12 @@
     "docker:dev:down": "docker-compose -f docker-compose.dev.yml down",
     "docker:prod": "docker-compose up --build",
     "docker:prod:down": "docker-compose down",
+    "jenkins:up": "docker-compose up jenkins -d",
+    "jenkins:down": "docker-compose stop jenkins",
+    "jenkins:setup": "bash scripts/setup-jenkins.sh",
+    "jenkins:setup:complete": "bash scripts/setup-jenkins-complete.sh",
+    "jenkins:plugins": "bash scripts/install-jenkins-plugins.sh",
+    "jenkins:logs": "docker logs datadrip-jenkins -f",
     "db:seed:roles": "node scripts/seed-roles.js"
   },
   "dependencies": {
