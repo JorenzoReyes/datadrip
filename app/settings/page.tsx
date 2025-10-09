@@ -499,7 +499,7 @@ export default function SettingsPage() {
               </Link>
               <nav className="hidden md:flex space-x-6">
                 <a href={user.role === 'admin' || user.role === 'system_admin' ? '/admin/manage-users' : '/dashboard'} className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/sales-inventory" className="text-subheader hover:text-header transition">Sales and Inventory</a>
+                <a href="/products" className="text-subheader hover:text-header transition">Products</a>
                 <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
               </nav>
               <span className="text-primary-500 font-bold">SETTINGS</span>

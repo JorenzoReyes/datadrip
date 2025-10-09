@@ -175,7 +175,7 @@ NEXT_TELEMETRY_DISABLED=1 # Disable Next.js telemetry
 
 The project includes a seeding script that populates:
 - Roles: `business_owner`, `admin`, `system_admin`
-- Permissions: `create`, `read`, `update`, `deactivate`, page/view permissions (dashboard, sales & inventory, insights, settings, admin pages)
+- Permissions: `create`, `read`, `update`, `deactivate`, page/view permissions (dashboard, products, insights, settings, admin pages)
 - Demo users: `user@example.com`, `admin@example.com`, `system.admin@example.com`
 - Mappings: `user_roles` and `role_permissions`
 

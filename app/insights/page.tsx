@@ -262,7 +262,7 @@ export default function InsightsPage() {
               </Link>
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard" className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/sales-inventory" className="text-subheader hover:text-header transition">Sales and Inventory</a>
+                <a href="/products" className="text-subheader hover:text-header transition">Products</a>
                 <a href="/insights" className="text-header font-medium">Insights</a>
               </nav>
             </div>
