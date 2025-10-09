@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmailOrUsername, getUserRoles, getUserPermissions } from '../../../utils/database';
+import { findUserByEmailOrUsername, getUserRoles, getUserPermissions, query } from '../../../utils/database';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Update last_login_at on successful login
+    await query('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE user_id = $1', [user.user_id]);
 
     // Return user data (excluding password) + roles/permissions
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

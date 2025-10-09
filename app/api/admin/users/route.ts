@@ -5,26 +5,31 @@ import {
   User as DbUser, 
   CreateUserData as DbCreateUserData,
   query,
-  queryOne
+  queryOne,
+  getUserRoles
 } from '../../../utils/database';
 import { CreateUserData } from '../../../types/user';
 
 export async function GET() {
   try {
     const users: DbUser[] = await getAllUsers();
-    // Map DB users to frontend User shape expected by admin UI
-    const mapped = users.map((u) => ({
-      id: String(u.user_id),
-      firstName: u.fname,
-      lastName: u.lname,
-      email: u.email,
-      username: u.username,
-      role: 'user',
-      status: u.status || 'active',
-      createdAt: u.created_at,
-      updatedAt: u.created_at,
-      lastLoginAt: undefined,
-      createdBy: 'system'
+    // Map DB users to frontend User shape expected by admin UI, including actual role
+    const mapped = await Promise.all(users.map(async (u) => {
+      const roles = await getUserRoles(u.user_id);
+      const uiRole = roles[0] === 'business_owner' ? 'user' : (roles[0] || 'user');
+      return {
+        id: String(u.user_id),
+        firstName: u.fname,
+        lastName: u.lname,
+        email: u.email,
+        username: u.username,
+        role: uiRole,
+        status: u.status || 'active',
+        createdAt: u.created_at,
+        updatedAt: u.created_at,
+        lastLoginAt: u.last_login_at ?? null,
+        createdBy: 'system'
+      };
     }));
     return NextResponse.json({ users: mapped });
   } catch {
@@ -77,10 +82,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Assign role to user
+    // Assign role to user (map UI 'user' -> DB 'business_owner')
+    const dbRoleName = role === 'user' ? 'business_owner' : role;
     const roleResult = await queryOne<{ role_id: number }>(
       'SELECT role_id FROM roles WHERE name = $1',
-      [role]
+      [dbRoleName]
     );
 
     if (roleResult?.role_id) {

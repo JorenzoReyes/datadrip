@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '../../../../../utils/database';
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const userId = Number(params.id);
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const userId = Number(id);
   if (!Number.isFinite(userId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
 
   const { status } = await req.json() as { status: 'active'|'inactive'|'pending' };
@@ -13,6 +14,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const existing = await queryOne('SELECT 1 FROM users WHERE user_id=$1', [userId]);
   if (!existing) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-  await query('UPDATE users SET status=$1 WHERE user_id=$2', [status, userId]);
+  await query('UPDATE users SET status=$1, updated_at=CURRENT_TIMESTAMP WHERE user_id=$2', [status, userId]);
   return NextResponse.json({ success: true, status });
 }
