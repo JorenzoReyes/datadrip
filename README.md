@@ -221,6 +221,7 @@ railway up
 
 ### Prerequisites for Database Operations
 - Railway CLI installed and authenticated (`railway login`)
+- or browserless login (`railway login --browserless`)
 - Access to your Railway project
 
 ### Setting Up Database Connection
@@ -244,7 +245,7 @@ railway connect
 railway variables --service postgres
 
 # Set it in your local environment (Windows PowerShell)
-$env:DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT/railway?sslmode=require"
+$env:DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT/railway?sslmode=no-verify"
 
 # Or create a .env.tunnel.local file (gitignored)
 echo "DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT/railway?sslmode=require" > .env.tunnel.local
