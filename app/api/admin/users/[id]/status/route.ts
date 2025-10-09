@@ -14,6 +14,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const existing = await queryOne('SELECT 1 FROM users WHERE user_id=$1', [userId]);
   if (!existing) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-  await query('UPDATE users SET status=$1 WHERE user_id=$2', [status, userId]);
+  await query('UPDATE users SET status=$1, updated_at=CURRENT_TIMESTAMP WHERE user_id=$2', [status, userId]);
   return NextResponse.json({ success: true, status });
 }

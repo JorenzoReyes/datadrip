@@ -138,6 +138,8 @@ export interface User {
   password: string;
   status: string;
   created_at: string;
+  updated_at?: string;
+  last_login_at?: string;
 }
 
 export interface CreateUserData {
@@ -266,6 +268,9 @@ export async function updateUser(userId: number, userData: Partial<CreateUserDat
     if (fields.length === 0) {
       throw new Error('No fields to update');
     }
+
+    // Always bump the updated_at timestamp when user details change
+    fields.push('updated_at = CURRENT_TIMESTAMP');
 
     values.push(userId);
     const result = await query<User>(

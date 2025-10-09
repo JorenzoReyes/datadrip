@@ -51,15 +51,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   // Role update
   if (body.role) {
     await query('DELETE FROM user_roles WHERE user_id = $1', [userId]);
-    const r = await queryOne<{ role_id: number }>('SELECT role_id FROM roles WHERE name = $1', [body.role]);
+    const dbRoleName = body.role === 'user' ? 'business_owner' : body.role;
+    const r = await queryOne<{ role_id: number }>('SELECT role_id FROM roles WHERE name = $1', [dbRoleName]);
     if (r?.role_id) {
       await query('INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)', [userId, r.role_id]);
+      // Touch updated_at when role changes
+      await query('UPDATE users SET updated_at=CURRENT_TIMESTAMP WHERE user_id=$1', [userId]);
     }
   }
 
   // Status update
   if (body.status) {
-    await query('UPDATE users SET status = $1 WHERE user_id = $2', [body.status, userId]);
+    await query('UPDATE users SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2', [body.status, userId]);
   }
 
   const updated = await queryOne<DbUserRow>(
@@ -82,7 +85,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       lastName: updated.lname,
       email: updated.email,
       username: updated.username,
-      role: roles[0]?.name ?? 'user',
+      role: (roles[0]?.name === 'business_owner' ? 'user' : (roles[0]?.name ?? 'user')),
       status: updated.status,
       createdAt: updated.created_at,
       updatedAt: updated.created_at,
