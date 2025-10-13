@@ -32,7 +32,8 @@ export default function DashboardPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/shops/metrics', { cache: 'no-store' });
+        const email = encodeURIComponent(user?.email || '');
+        const res = await fetch(`/api/shops/metrics?email=${email}`, { cache: 'no-store' });
         const json = await res.json();
         setData(json);
       } catch (e) {

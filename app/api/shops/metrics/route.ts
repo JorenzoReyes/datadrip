@@ -1,8 +1,23 @@
 import { NextResponse } from 'next/server';
-import { query } from '../../../utils/database';
+import { query, queryOne } from '../../../utils/database';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get('email');
+    if (!email) {
+      return NextResponse.json({ error: 'Missing email' }, { status: 400 });
+    }
+
+    const owner = await queryOne<{ user_id: number }>('SELECT user_id FROM users WHERE email = $1', [email]);
+    if (!owner) {
+      return NextResponse.json({ shops: [], listings: [], totals: { all: 0, tiktok: 0, lazada: 0, shopee: 0 } });
+    }
+    const accounts = await query<{ account_id: number }>('SELECT account_id FROM accounts WHERE owner_user_id = $1', [owner.user_id]);
+    const accountIds = accounts.map(a => a.account_id);
+    if (accountIds.length === 0) {
+      return NextResponse.json({ shops: [], listings: [], totals: { all: 0, tiktok: 0, lazada: 0, shopee: 0 } });
+    }
     // Aggregate per shop across platforms
     const shops = await query<{
       shop_id: number;
@@ -18,7 +33,9 @@ export async function GET() {
       `SELECT s.shop_id, s.account_id, s.name, s.platform, s.followers_count, s.products_count,
               s.rating_value, s.rating_count, s.chat_performance_percent
        FROM shops s
-       ORDER BY s.account_id, s.name, s.platform`
+       WHERE s.account_id = ANY($1)
+       ORDER BY s.account_id, s.name, s.platform`,
+      [accountIds]
     );
 
     // Sales/price summaries per platform (from product_listings)
@@ -29,8 +46,10 @@ export async function GET() {
     }>(
       `SELECT platform, COUNT(*) AS total_listings, AVG(listing_price) AS avg_price
        FROM product_listings
+       WHERE account_id = ANY($1)
        GROUP BY platform
-       ORDER BY platform`
+       ORDER BY platform`,
+      [accountIds]
     );
 
     // Derive simple "sales" totals using sum of listing_price as demo data
@@ -40,7 +59,9 @@ export async function GET() {
     }>(
       `SELECT platform, SUM(listing_price) AS total
        FROM product_listings
-       GROUP BY ROLLUP(platform)`
+       WHERE account_id = ANY($1)
+       GROUP BY ROLLUP(platform)`,
+      [accountIds]
     );
 
     const totals = {
