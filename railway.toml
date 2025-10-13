@@ -10,3 +10,6 @@ restartPolicyMaxRetries = 10
 
 [[services]]
 name = "datadrip"
+
+[[services]]
+name = "postgres"

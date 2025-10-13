@@ -1,0 +1,43 @@
+/* Vastago Grotesk Font Family */
+@font-face {
+  font-family: 'Vastago Grotesk';
+  src: url('/fonts/VastagoGrotesk-Regular.woff2') format('woff2'),
+       url('/fonts/VastagoGrotesk-Regular.woff') format('woff'),
+       url('/fonts/VastagoGrotesk-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vastago Grotesk';
+  src: url('/fonts/VastagoGrotesk-Medium.woff2') format('woff2'),
+       url('/fonts/VastagoGrotesk-Medium.woff') format('woff'),
+       url('/fonts/VastagoGrotesk-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vastago Grotesk';
+  src: url('/fonts/VastagoGrotesk-Bold.woff2') format('woff2'),
+       url('/fonts/VastagoGrotesk-Bold.woff') format('woff'),
+       url('/fonts/VastagoGrotesk-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vastago Grotesk';
+  src: url('/fonts/VastagoGrotesk-Black.woff2') format('woff2'),
+       url('/fonts/VastagoGrotesk-Black.woff') format('woff'),
+       url('/fonts/VastagoGrotesk-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+
