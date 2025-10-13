@@ -183,47 +183,140 @@ async function seedDirect() {
     `);
 
     // Placeholder products for category-focused demo users
-    // Electronics
-    await pool.query(`
-      INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-      SELECT u.user_id, '4K Smart TV 55-inch', 'ELEC-TV-55-4K', 'Ultra HD Smart TV with HDR', 'Electra', 'Electronics', 'TV & Video', 25999.00, 25, '{"color":"black","screen_size":"55-inch","resolution":"4K"}', '["https://example.com/tv1.jpg"]'::jsonb
-      FROM users u WHERE u.email='electronics.owner@example.com'
-      AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='ELEC-TV-55-4K');
-    `);
-    await pool.query(`
-      INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-      SELECT u.user_id, 'Noise-Cancelling Headphones', 'ELEC-HEAD-NC', 'Wireless ANC over-ear headphones', 'SonicX', 'Electronics', 'Audio', 7999.00, 100, '{"color":"silver","battery":"30h"}', '["https://example.com/headphones.jpg"]'::jsonb
-      FROM users u WHERE u.email='electronics.owner@example.com'
-      AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='ELEC-HEAD-NC');
-    `);
+    // Electronics - 15 products
+    const electronicsProducts = [
+      { sku: 'ELEC-TV-55-4K', name: '4K Smart TV 55-inch', price: 25999.00, stock: 25, brand: 'Electra', category: 'TV & Video' },
+      { sku: 'ELEC-HEAD-NC', name: 'Noise-Cancelling Headphones', price: 7999.00, stock: 100, brand: 'SonicX', category: 'Audio' },
+      { sku: 'ELEC-PHONE-128', name: 'Smartphone 128GB', price: 15999.00, stock: 50, brand: 'TechCore', category: 'Mobile' },
+      { sku: 'ELEC-LAPTOP-16', name: 'Gaming Laptop 16GB RAM', price: 45999.00, stock: 15, brand: 'GameMax', category: 'Computers' },
+      { sku: 'ELEC-TABLET-10', name: '10-inch Tablet', price: 12999.00, stock: 75, brand: 'TabPro', category: 'Tablets' },
+      { sku: 'ELEC-SPEAKER-BT', name: 'Bluetooth Speaker', price: 2999.00, stock: 200, brand: 'SoundWave', category: 'Audio' },
+      { sku: 'ELEC-CAMERA-4K', name: '4K Action Camera', price: 8999.00, stock: 60, brand: 'ActionCam', category: 'Cameras' },
+      { sku: 'ELEC-SMARTWATCH', name: 'Smart Watch Pro', price: 5999.00, stock: 120, brand: 'WearTech', category: 'Wearables' },
+      { sku: 'ELEC-CHARGER-WIRELESS', name: 'Wireless Charger', price: 1999.00, stock: 300, brand: 'ChargeMax', category: 'Accessories' },
+      { sku: 'ELEC-KEYBOARD-MECH', name: 'Mechanical Keyboard', price: 3999.00, stock: 80, brand: 'KeyMaster', category: 'Accessories' },
+      { sku: 'ELEC-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2499.00, stock: 150, brand: 'GameGear', category: 'Accessories' },
+      { sku: 'ELEC-MONITOR-27', name: '27-inch Gaming Monitor', price: 18999.00, stock: 30, brand: 'DisplayPro', category: 'Monitors' },
+      { sku: 'ELEC-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 90, brand: 'StreamCam', category: 'Accessories' },
+      { sku: 'ELEC-ROUTER-WIFI6', name: 'WiFi 6 Router', price: 12999.00, stock: 40, brand: 'NetMax', category: 'Networking' },
+      { sku: 'ELEC-POWERBANK-20K', name: '20,000mAh Power Bank', price: 3499.00, stock: 180, brand: 'PowerMax', category: 'Accessories' }
+    ];
 
-    // Cosmetics
-    await pool.query(`
-      INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-      SELECT u.user_id, 'Hydrating Serum 30ml', 'COS-SERUM-30', 'Vitamin C hydrating serum', 'GlowUp', 'Cosmetics', 'Skincare', 1299.00, 200, '{"skin_type":"all","ingredients":["vitamin C","hyaluronic acid"]}', '["https://example.com/serum.jpg"]'::jsonb
-      FROM users u WHERE u.email='cosmetics.owner@example.com'
-      AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='COS-SERUM-30');
-    `);
-    await pool.query(`
-      INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-      SELECT u.user_id, 'Matte Lipstick', 'COS-LIP-MATTE', 'Long-lasting matte lipstick', 'Chroma', 'Cosmetics', 'Makeup', 499.00, 300, '{"shade":"Crimson","finish":"matte"}', '["https://example.com/lipstick.jpg"]'::jsonb
-      FROM users u WHERE u.email='cosmetics.owner@example.com'
-      AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='COS-LIP-MATTE');
-    `);
+    for (const product of electronicsProducts) {
+      try {
+        // First get the user_id
+        const userResult = await pool.query('SELECT user_id FROM users WHERE email = $1', ['electronics.owner@example.com']);
+        if (userResult.rows.length === 0) {
+          console.error('Electronics owner not found');
+          continue;
+        }
+        const userId = userResult.rows[0].user_id;
 
-    // Food & Drinks
-    await pool.query(`
-      INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-      SELECT u.user_id, 'Cold Brew Coffee 1L', 'FOOD-CBREW-1L', 'Ready-to-drink cold brew coffee', 'BrewLab', 'Food & Drinks', 'Beverages', 299.00, 150, '{"caffeine":"high","sugar":"none"}', '["https://example.com/coldbrew.jpg"]'::jsonb
-      FROM users u WHERE u.email='food.owner@example.com'
-      AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='FOOD-CBREW-1L');
-    `);
-    await pool.query(`
-      INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-      SELECT u.user_id, 'Protein Snack Bars (12-pack)', 'FOOD-PROTBAR-12', 'Assorted flavors protein bars', 'NutriBite', 'Food & Drinks', 'Snacks', 799.00, 120, '{"protein":"20g","gluten_free":true}', '["https://example.com/proteinbars.jpg"]'::jsonb
-      FROM users u WHERE u.email='food.owner@example.com'
-      AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='FOOD-PROTBAR-12');
-    `);
+        // Check if product already exists
+        const existingProduct = await pool.query('SELECT product_id FROM products WHERE sku = $1', [product.sku]);
+        if (existingProduct.rows.length > 0) {
+          continue; // Skip if already exists
+        }
+
+        // Insert the product
+        await pool.query(`
+          INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
+          VALUES ($1, $2, $3, $4, $5, 'Electronics', $6, $7, $8, '{"color":"black","warranty":"1 year"}', $9::jsonb)
+        `, [userId, product.name, product.sku, `${product.name} - High quality ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+      } catch (error) {
+        console.error(`Error inserting product ${product.sku}:`, error.message);
+      }
+    }
+
+    // Cosmetics - 15 products
+    const cosmeticsProducts = [
+      { sku: 'COS-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', category: 'Skincare' },
+      { sku: 'COS-LIP-MATTE', name: 'Matte Lipstick', price: 499.00, stock: 300, brand: 'Chroma', category: 'Makeup' },
+      { sku: 'COS-FOUNDATION-30', name: 'Full Coverage Foundation', price: 899.00, stock: 150, brand: 'BeautyBase', category: 'Makeup' },
+      { sku: 'COS-MASCARA-VOL', name: 'Volumizing Mascara', price: 599.00, stock: 250, brand: 'LashPro', category: 'Makeup' },
+      { sku: 'COS-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', category: 'Skincare' },
+      { sku: 'COS-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', category: 'Skincare' },
+      { sku: 'COS-EYESHADOW-PAL', name: 'Eyeshadow Palette', price: 1299.00, stock: 100, brand: 'ColorPop', category: 'Makeup' },
+      { sku: 'COS-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', category: 'Skincare' },
+      { sku: 'COS-CONCEALER-FULL', name: 'Full Coverage Concealer', price: 649.00, stock: 175, brand: 'HideIt', category: 'Makeup' },
+      { sku: 'COS-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', category: 'Skincare' },
+      { sku: 'COS-LIPGLOSS-SHINE', name: 'Shiny Lip Gloss', price: 399.00, stock: 220, brand: 'Glossy', category: 'Makeup' },
+      { sku: 'COS-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', category: 'Skincare' },
+      { sku: 'COS-BLUSH-PINK', name: 'Pink Blush Compact', price: 749.00, stock: 140, brand: 'Cheeky', category: 'Makeup' },
+      { sku: 'COS-EYELINER-WING', name: 'Winged Eyeliner Pen', price: 449.00, stock: 190, brand: 'WingMaster', category: 'Makeup' },
+      { sku: 'COS-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', category: 'Skincare' }
+    ];
+
+    for (const product of cosmeticsProducts) {
+      try {
+        // First get the user_id
+        const userResult = await pool.query('SELECT user_id FROM users WHERE email = $1', ['cosmetics.owner@example.com']);
+        if (userResult.rows.length === 0) {
+          console.error('Cosmetics owner not found');
+          continue;
+        }
+        const userId = userResult.rows[0].user_id;
+
+        // Check if product already exists
+        const existingProduct = await pool.query('SELECT product_id FROM products WHERE sku = $1', [product.sku]);
+        if (existingProduct.rows.length > 0) {
+          continue; // Skip if already exists
+        }
+
+        // Insert the product
+        await pool.query(`
+          INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
+          VALUES ($1, $2, $3, $4, $5, 'Cosmetics', $6, $7, $8, '{"skin_type":"all","cruelty_free":true}', $9::jsonb)
+        `, [userId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+      } catch (error) {
+        console.error(`Error inserting product ${product.sku}:`, error.message);
+      }
+    }
+
+    // Food & Drinks - 15 products
+    const foodProducts = [
+      { sku: 'FOOD-CBREW-1L', name: 'Cold Brew Coffee 1L', price: 299.00, stock: 150, brand: 'BrewLab', category: 'Beverages' },
+      { sku: 'FOOD-PROTBAR-12', name: 'Protein Snack Bars (12-pack)', price: 799.00, stock: 120, brand: 'NutriBite', category: 'Snacks' },
+      { sku: 'FOOD-GRANOLA-500G', name: 'Organic Granola 500g', price: 449.00, stock: 200, brand: 'NatureCrunch', category: 'Breakfast' },
+      { sku: 'FOOD-SMOOTHIE-MIX', name: 'Superfood Smoothie Mix', price: 599.00, stock: 100, brand: 'GreenBoost', category: 'Supplements' },
+      { sku: 'FOOD-CHOCOLATE-DARK', name: 'Dark Chocolate 70%', price: 349.00, stock: 300, brand: 'CocoaPure', category: 'Confectionery' },
+      { sku: 'FOOD-NUTS-MIXED', name: 'Mixed Nuts 250g', price: 399.00, stock: 180, brand: 'NuttyGood', category: 'Snacks' },
+      { sku: 'FOOD-TEA-GREEN', name: 'Green Tea Bags (50-pack)', price: 249.00, stock: 250, brand: 'TeaLeaf', category: 'Beverages' },
+      { sku: 'FOOD-HONEY-RAW', name: 'Raw Honey 500g', price: 699.00, stock: 80, brand: 'BeePure', category: 'Sweeteners' },
+      { sku: 'FOOD-CRACKERS-SEED', name: 'Seed Crackers 200g', price: 299.00, stock: 150, brand: 'CrispySeed', category: 'Snacks' },
+      { sku: 'FOOD-JUICE-ORGANIC', name: 'Organic Apple Juice 1L', price: 199.00, stock: 200, brand: 'FruitFresh', category: 'Beverages' },
+      { sku: 'FOOD-SPICE-MIX', name: 'Gourmet Spice Mix Set', price: 899.00, stock: 60, brand: 'SpiceMaster', category: 'Seasonings' },
+      { sku: 'FOOD-CEREAL-HEALTHY', name: 'Healthy Cereal 500g', price: 549.00, stock: 120, brand: 'GrainGood', category: 'Breakfast' },
+      { sku: 'FOOD-ENERGY-DRINK', name: 'Natural Energy Drink', price: 149.00, stock: 300, brand: 'EnergyBoost', category: 'Beverages' },
+      { sku: 'FOOD-DRIED-FRUIT', name: 'Mixed Dried Fruit 300g', price: 399.00, stock: 160, brand: 'FruitMix', category: 'Snacks' },
+      { sku: 'FOOD-SUPERFOOD-POWDER', name: 'Superfood Powder 200g', price: 1299.00, stock: 70, brand: 'SuperNutrients', category: 'Supplements' }
+    ];
+
+    for (const product of foodProducts) {
+      try {
+        // First get the user_id
+        const userResult = await pool.query('SELECT user_id FROM users WHERE email = $1', ['food.owner@example.com']);
+        if (userResult.rows.length === 0) {
+          console.error('Food owner not found');
+          continue;
+        }
+        const userId = userResult.rows[0].user_id;
+
+        // Check if product already exists
+        const existingProduct = await pool.query('SELECT product_id FROM products WHERE sku = $1', [product.sku]);
+        if (existingProduct.rows.length > 0) {
+          continue; // Skip if already exists
+        }
+
+        // Insert the product
+        await pool.query(`
+          INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
+          VALUES ($1, $2, $3, $4, $5, 'Food & Drinks', $6, $7, $8, '{"organic":true,"gluten_free":true}', $9::jsonb)
+        `, [userId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+      } catch (error) {
+        console.error(`Error inserting product ${product.sku}:`, error.message);
+      }
+    }
 
     // Create accounts for demo owners (idempotent)
     await pool.query(`
@@ -322,6 +415,95 @@ async function seedDirect() {
       WHERE u.email='food.owner@example.com'
         AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');
     `);
+
+    // Seed product sales data from October 5 to November 5, 2025
+    const startDate = new Date('2025-10-05');
+    const endDate = new Date('2025-11-05');
+    const currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      // Generate realistic product sales for each business owner
+      const businessOwners = [
+        { email: 'electronics.owner@example.com', platforms: ['shopee', 'lazada', 'tiktok'], dailySalesRange: [5000, 15000] },
+        { email: 'cosmetics.owner@example.com', platforms: ['shopee', 'lazada', 'tiktok'], dailySalesRange: [3000, 10000] },
+        { email: 'food.owner@example.com', platforms: ['shopee', 'lazada', 'tiktok'], dailySalesRange: [2000, 8000] }
+      ];
+
+      for (const owner of businessOwners) {
+        // Get products for this owner
+        const products = await pool.query(`
+          SELECT p.product_id, p.price, a.account_id, s.shop_id, s.platform
+          FROM products p
+          JOIN users u ON p.owner_user_id = u.user_id
+          JOIN accounts a ON a.owner_user_id = u.user_id
+          JOIN shops s ON s.account_id = a.account_id
+          WHERE u.email = $1
+        `, [owner.email]);
+
+        if (products.rows.length > 0) {
+          // Generate 5-15 sales per day for this owner
+          const numSales = Math.floor(Math.random() * 11) + 5; // 5-15 sales
+          
+          for (let i = 0; i < numSales; i++) {
+            const randomProduct = products.rows[Math.floor(Math.random() * products.rows.length)];
+            const quantity = Math.floor(Math.random() * 3) + 1; // 1-3 quantity
+            const unitPrice = randomProduct.price * (0.9 + Math.random() * 0.2); // ±10% price variation
+            const totalSales = unitPrice * quantity;
+
+            await pool.query(`
+              INSERT INTO product_sales (account_id, product_id, shop_id, platform, sale_date, quantity_sold, unit_price, total_sales, order_id)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `, [
+              randomProduct.account_id,
+              randomProduct.product_id,
+              randomProduct.shop_id,
+              randomProduct.platform,
+              dateStr,
+              quantity,
+              unitPrice,
+              totalSales,
+              `ORD-${dateStr.replace(/-/g, '')}-${Math.floor(Math.random() * 10000)}`
+            ]);
+          }
+        }
+      }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Now aggregate the product sales into daily_sales_aggregated
+    try {
+      await pool.query(`
+        INSERT INTO daily_sales_aggregated (account_id, sale_date, total_sales, total_orders, platform_breakdown)
+        SELECT 
+          account_id,
+          sale_date,
+          SUM(total_sales) as total_sales,
+          COUNT(DISTINCT order_id) as total_orders,
+          jsonb_object_agg(platform, platform_total)
+        FROM (
+          SELECT 
+            account_id,
+            sale_date,
+            platform,
+            SUM(total_sales) as platform_total
+          FROM product_sales
+          GROUP BY account_id, sale_date, platform
+        ) platform_sales
+        GROUP BY account_id, sale_date
+        ON CONFLICT (account_id, sale_date) DO UPDATE SET
+          total_sales = EXCLUDED.total_sales,
+          total_orders = EXCLUDED.total_orders,
+          platform_breakdown = EXCLUDED.platform_breakdown,
+          updated_at = CURRENT_TIMESTAMP;
+      `);
+    } catch (error) {
+      console.error('Error aggregating daily sales:', error.message);
+      // Continue with the rest of the seeding even if aggregation fails
+    }
 
     // Create product_listings linking products to their shop (idempotent)
     // Electronics on all platforms
@@ -482,13 +664,73 @@ function seedDocker() {
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
 
-    // Placeholder products for those users (idempotent)
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'4K Smart TV 55-inch','ELEC-TV-55-4K','Ultra HD Smart TV with HDR','Electra','Electronics','TV & Video',25999.00,25,'{\\\"color\\\":\\\"black\\\",\\\"screen_size\\\":\\\"55-inch\\\",\\\"resolution\\\":\\\"4K\\\"}'::jsonb,'[\\\"https://example.com/tv1.jpg\\\"]'::jsonb FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='ELEC-TV-55-4K');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'Noise-Cancelling Headphones','ELEC-HEAD-NC','Wireless ANC over-ear headphones','SonicX','Electronics','Audio',7999.00,100,'{\\\"color\\\":\\\"silver\\\",\\\"battery\\\":\\\"30h\\\"}'::jsonb,'[\\\"https://example.com/headphones.jpg\\\"]'::jsonb FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='ELEC-HEAD-NC');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'Hydrating Serum 30ml','COS-SERUM-30','Vitamin C hydrating serum','GlowUp','Cosmetics','Skincare',1299.00,200,'{\\\"skin_type\\\":\\\"all\\\",\\\"ingredients\\\":[\\\"vitamin C\\\",\\\"hyaluronic acid\\\"]}'::jsonb,'[\\\"https://example.com/serum.jpg\\\"]'::jsonb FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='COS-SERUM-30');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'Matte Lipstick','COS-LIP-MATTE','Long-lasting matte lipstick','Chroma','Cosmetics','Makeup',499.00,300,'{\\\"shade\\\":\\\"Crimson\\\",\\\"finish\\\":\\\"matte\\\"}'::jsonb,'[\\\"https://example.com/lipstick.jpg\\\"]'::jsonb FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='COS-LIP-MATTE');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'Cold Brew Coffee 1L','FOOD-CBREW-1L','Ready-to-drink cold brew coffee','BrewLab','Food & Drinks','Beverages',299.00,150,'{\\\"caffeine\\\":\\\"high\\\",\\\"sugar\\\":\\\"none\\\"}'::jsonb,'[\\\"https://example.com/coldbrew.jpg\\\"]'::jsonb FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='FOOD-CBREW-1L');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'Protein Snack Bars (12-pack)','FOOD-PROTBAR-12','Assorted flavors protein bars','NutriBite','Food & Drinks','Snacks',799.00,120,'{\\\"protein\\\":\\\"20g\\\",\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/proteinbars.jpg\\\"]'::jsonb FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='FOOD-PROTBAR-12');"`, { stdio: 'inherit' });
+    // Electronics products (15 total)
+    const electronicsDockerProducts = [
+      { sku: 'ELEC-TV-55-4K', name: '4K Smart TV 55-inch', price: 25999.00, stock: 25, brand: 'Electra', category: 'TV & Video' },
+      { sku: 'ELEC-HEAD-NC', name: 'Noise-Cancelling Headphones', price: 7999.00, stock: 100, brand: 'SonicX', category: 'Audio' },
+      { sku: 'ELEC-PHONE-128', name: 'Smartphone 128GB', price: 15999.00, stock: 50, brand: 'TechCore', category: 'Mobile' },
+      { sku: 'ELEC-LAPTOP-16', name: 'Gaming Laptop 16GB RAM', price: 45999.00, stock: 15, brand: 'GameMax', category: 'Computers' },
+      { sku: 'ELEC-TABLET-10', name: '10-inch Tablet', price: 12999.00, stock: 75, brand: 'TabPro', category: 'Tablets' },
+      { sku: 'ELEC-SPEAKER-BT', name: 'Bluetooth Speaker', price: 2999.00, stock: 200, brand: 'SoundWave', category: 'Audio' },
+      { sku: 'ELEC-CAMERA-4K', name: '4K Action Camera', price: 8999.00, stock: 60, brand: 'ActionCam', category: 'Cameras' },
+      { sku: 'ELEC-SMARTWATCH', name: 'Smart Watch Pro', price: 5999.00, stock: 120, brand: 'WearTech', category: 'Wearables' },
+      { sku: 'ELEC-CHARGER-WIRELESS', name: 'Wireless Charger', price: 1999.00, stock: 300, brand: 'ChargeMax', category: 'Accessories' },
+      { sku: 'ELEC-KEYBOARD-MECH', name: 'Mechanical Keyboard', price: 3999.00, stock: 80, brand: 'KeyMaster', category: 'Accessories' },
+      { sku: 'ELEC-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2499.00, stock: 150, brand: 'GameGear', category: 'Accessories' },
+      { sku: 'ELEC-MONITOR-27', name: '27-inch Gaming Monitor', price: 18999.00, stock: 30, brand: 'DisplayPro', category: 'Monitors' },
+      { sku: 'ELEC-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 90, brand: 'StreamCam', category: 'Accessories' },
+      { sku: 'ELEC-ROUTER-WIFI6', name: 'WiFi 6 Router', price: 12999.00, stock: 40, brand: 'NetMax', category: 'Networking' },
+      { sku: 'ELEC-POWERBANK-20K', name: '20,000mAh Power Bank', price: 3499.00, stock: 180, brand: 'PowerMax', category: 'Accessories' }
+    ];
+
+    for (const product of electronicsDockerProducts) {
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Electronics','${product.category}',${product.price},${product.stock},'{\\\"color\\\":\\\"black\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+    // Cosmetics products (15 total)
+    const cosmeticsDockerProducts = [
+      { sku: 'COS-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', category: 'Skincare' },
+      { sku: 'COS-LIP-MATTE', name: 'Matte Lipstick', price: 499.00, stock: 300, brand: 'Chroma', category: 'Makeup' },
+      { sku: 'COS-FOUNDATION-30', name: 'Full Coverage Foundation', price: 899.00, stock: 150, brand: 'BeautyBase', category: 'Makeup' },
+      { sku: 'COS-MASCARA-VOL', name: 'Volumizing Mascara', price: 599.00, stock: 250, brand: 'LashPro', category: 'Makeup' },
+      { sku: 'COS-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', category: 'Skincare' },
+      { sku: 'COS-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', category: 'Skincare' },
+      { sku: 'COS-EYESHADOW-PAL', name: 'Eyeshadow Palette', price: 1299.00, stock: 100, brand: 'ColorPop', category: 'Makeup' },
+      { sku: 'COS-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', category: 'Skincare' },
+      { sku: 'COS-CONCEALER-FULL', name: 'Full Coverage Concealer', price: 649.00, stock: 175, brand: 'HideIt', category: 'Makeup' },
+      { sku: 'COS-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', category: 'Skincare' },
+      { sku: 'COS-LIPGLOSS-SHINE', name: 'Shiny Lip Gloss', price: 399.00, stock: 220, brand: 'Glossy', category: 'Makeup' },
+      { sku: 'COS-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', category: 'Skincare' },
+      { sku: 'COS-BLUSH-PINK', name: 'Pink Blush Compact', price: 749.00, stock: 140, brand: 'Cheeky', category: 'Makeup' },
+      { sku: 'COS-EYELINER-WING', name: 'Winged Eyeliner Pen', price: 449.00, stock: 190, brand: 'WingMaster', category: 'Makeup' },
+      { sku: 'COS-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', category: 'Skincare' }
+    ];
+
+    for (const product of cosmeticsDockerProducts) {
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Cosmetics','${product.category}',${product.price},${product.stock},'{\\\"skin_type\\\":\\\"all\\\",\\\"cruelty_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Food & Drinks products (15 total)
+    const foodDockerProducts = [
+      { sku: 'FOOD-CBREW-1L', name: 'Cold Brew Coffee 1L', price: 299.00, stock: 150, brand: 'BrewLab', category: 'Beverages' },
+      { sku: 'FOOD-PROTBAR-12', name: 'Protein Snack Bars (12-pack)', price: 799.00, stock: 120, brand: 'NutriBite', category: 'Snacks' },
+      { sku: 'FOOD-GRANOLA-500G', name: 'Organic Granola 500g', price: 449.00, stock: 200, brand: 'NatureCrunch', category: 'Breakfast' },
+      { sku: 'FOOD-SMOOTHIE-MIX', name: 'Superfood Smoothie Mix', price: 599.00, stock: 100, brand: 'GreenBoost', category: 'Supplements' },
+      { sku: 'FOOD-CHOCOLATE-DARK', name: 'Dark Chocolate 70%', price: 349.00, stock: 300, brand: 'CocoaPure', category: 'Confectionery' },
+      { sku: 'FOOD-NUTS-MIXED', name: 'Mixed Nuts 250g', price: 399.00, stock: 180, brand: 'NuttyGood', category: 'Snacks' },
+      { sku: 'FOOD-TEA-GREEN', name: 'Green Tea Bags (50-pack)', price: 249.00, stock: 250, brand: 'TeaLeaf', category: 'Beverages' },
+      { sku: 'FOOD-HONEY-RAW', name: 'Raw Honey 500g', price: 699.00, stock: 80, brand: 'BeePure', category: 'Sweeteners' },
+      { sku: 'FOOD-CRACKERS-SEED', name: 'Seed Crackers 200g', price: 299.00, stock: 150, brand: 'CrispySeed', category: 'Snacks' },
+      { sku: 'FOOD-JUICE-ORGANIC', name: 'Organic Apple Juice 1L', price: 199.00, stock: 200, brand: 'FruitFresh', category: 'Beverages' },
+      { sku: 'FOOD-SPICE-MIX', name: 'Gourmet Spice Mix Set', price: 899.00, stock: 60, brand: 'SpiceMaster', category: 'Seasonings' },
+      { sku: 'FOOD-CEREAL-HEALTHY', name: 'Healthy Cereal 500g', price: 549.00, stock: 120, brand: 'GrainGood', category: 'Breakfast' },
+      { sku: 'FOOD-ENERGY-DRINK', name: 'Natural Energy Drink', price: 149.00, stock: 300, brand: 'EnergyBoost', category: 'Beverages' },
+      { sku: 'FOOD-DRIED-FRUIT', name: 'Mixed Dried Fruit 300g', price: 399.00, stock: 160, brand: 'FruitMix', category: 'Snacks' },
+      { sku: 'FOOD-SUPERFOOD-POWDER', name: 'Superfood Powder 200g', price: 1299.00, stock: 70, brand: 'SuperNutrients', category: 'Supplements' }
+    ];
+
+    for (const product of foodDockerProducts) {
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Food & Drinks','${product.category}',${product.price},${product.stock},'{\\\"organic\\\":true,\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
     // Accounts for demo owners
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Electra Shop','active' FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Cosma Beauty','active' FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
@@ -511,6 +753,9 @@ function seedDocker() {
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'shopee',p.sku,p.name,p.price*0.97,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='shopee' WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='shopee');"`, { stdio: 'inherit' });
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'lazada',p.sku,p.name,p.price*1.02,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='lazada' WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='lazada');"`, { stdio: 'inherit' });
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'tiktok',p.sku,p.name,p.price*0.93,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='tiktok' WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='tiktok');"`, { stdio: 'inherit' });
+
+    // Note: Docker seeding doesn't include sales data aggregation
+    // The direct seeding (Railway) handles the complete data setup
 
     console.log('✅ Seeded roles, permissions, users, products, accounts, shops, and listings via Docker');
     return true;

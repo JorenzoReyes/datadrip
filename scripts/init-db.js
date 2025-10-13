@@ -254,6 +254,8 @@ async function createTables(pool) {
     );
   `;
 
+
+
   // RBAC tables
   const createRolesTable = `
     CREATE TABLE IF NOT EXISTS roles (
@@ -295,8 +297,41 @@ async function createTables(pool) {
   // Execute table creation queries (order matters for FKs)
   await pool.query(createUsersTable);
   await pool.query(createAccountsTable);
+  
+  // Create daily_sales_aggregated table for efficient sales tracking
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS daily_sales_aggregated (
+      account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+      sale_date DATE NOT NULL,
+      total_sales DECIMAL(12,2) DEFAULT 0,
+      total_orders INTEGER DEFAULT 0,
+      platform_breakdown JSONB DEFAULT '{}',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (account_id, sale_date)
+    );
+  `);
+
   await pool.query(createShopsTable);
   await pool.query(createProductsTable);
+  
+  // Create product_sales table for individual product sales tracking
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS product_sales (
+      sale_id SERIAL PRIMARY KEY,
+      account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+      product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+      shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE,
+      platform VARCHAR(30) NOT NULL,
+      sale_date DATE NOT NULL,
+      quantity_sold INTEGER NOT NULL DEFAULT 1,
+      unit_price DECIMAL(12,2) NOT NULL,
+      total_sales DECIMAL(12,2) NOT NULL,
+      order_id VARCHAR(100),
+      customer_info JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
   await pool.query(createProductListingsTable);
   await pool.query(createRolesTable);
   await pool.query(createPermissionsTable);
@@ -335,6 +370,10 @@ async function createTables(pool) {
     'CREATE INDEX IF NOT EXISTS idx_product_listings_shop_id ON product_listings(shop_id);',
     'CREATE INDEX IF NOT EXISTS idx_product_listings_platform ON product_listings(platform);',
     'CREATE INDEX IF NOT EXISTS idx_product_listings_platform_pid ON product_listings(platform_product_id);',
+    // product_sales
+    'CREATE INDEX IF NOT EXISTS idx_product_sales_date_product ON product_sales(sale_date, product_id, account_id);',
+    // daily_sales_aggregated
+    'CREATE INDEX IF NOT EXISTS idx_daily_sales_agg_date ON daily_sales_aggregated(sale_date, account_id);',
     // roles/permissions lookup
     'CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);',
     'CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name);',

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserManagementProvider } from "./contexts/UserManagementContext";
 import { IntegrationManagementProvider } from "./contexts/IntegrationManagementContext";
+import VersionIndicator from "./components/VersionIndicator";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -37,6 +38,7 @@ export default function RootLayout({
             <IntegrationManagementProvider>
               {/* Sidechat removed; insights chat now embedded on insights page */}
               {children}
+              <VersionIndicator />
             </IntegrationManagementProvider>
           </UserManagementProvider>
         </AuthProvider>

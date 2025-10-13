@@ -38,28 +38,35 @@ export async function GET(req: Request) {
       [accountIds]
     );
 
-    // Sales/price summaries per platform (from product_listings)
-    const listings = await query<{
+    // Daily sales for the past 7 days from product_sales table (using seeded data range)
+    // Since the dashboard shows October 14, 2025, we'll show the 7 days before that
+    const dailySales = await query<{
+      sale_date: string;
       platform: string;
-      total_listings: string; // pg returns as string
-      avg_price: string | null;
+      total_sales: number;
     }>(
-      `SELECT platform, COUNT(*) AS total_listings, AVG(listing_price) AS avg_price
-       FROM product_listings
-       WHERE account_id = ANY($1)
-       GROUP BY platform
-       ORDER BY platform`,
+      `SELECT sale_date, 
+              platform,
+              SUM(total_sales) as total_sales
+       FROM product_sales
+       WHERE account_id = ANY($1) 
+         AND sale_date >= '2025-10-08'::date
+         AND sale_date <= '2025-10-14'::date
+       GROUP BY sale_date, platform
+       ORDER BY sale_date, platform`,
       [accountIds]
     );
 
-    // Derive simple "sales" totals using sum of listing_price as demo data
+    // Get actual sales totals directly from product_sales table for the seeded data range
     const totalsRows = await query<{
       platform: string | null;
       total: string | null;
     }>(
-      `SELECT platform, SUM(listing_price) AS total
-       FROM product_listings
-       WHERE account_id = ANY($1)
+      `SELECT platform, SUM(total_sales) AS total
+       FROM product_sales
+       WHERE account_id = ANY($1) 
+         AND sale_date >= '2025-10-05'
+         AND sale_date <= '2025-11-05'
        GROUP BY ROLLUP(platform)`,
       [accountIds]
     );
@@ -71,7 +78,7 @@ export async function GET(req: Request) {
       shopee: Number(totalsRows.find(r => r.platform === 'shopee')?.total || 0)
     };
 
-    return NextResponse.json({ shops, listings, totals });
+    return NextResponse.json({ shops, dailySales, totals });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to load metrics';
     return NextResponse.json({ error: message }, { status: 500 });
