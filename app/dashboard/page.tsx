@@ -14,7 +14,6 @@ export default function DashboardPage() {
   const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; platform: string; total_sales: number }[]; totals?: Totals } | null>(null);
   const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; dayOfWeek: number }[]>([]);
   const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string }[]>([]);
-  const [loadingData, setLoadingData] = useState<boolean>(true);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -84,8 +83,6 @@ export default function DashboardPage() {
         }
       } catch (e) {
         console.error(e);
-      } finally {
-        setLoadingData(false);
       }
     }
     if (!isLoading && user) load();
@@ -112,6 +109,7 @@ export default function DashboardPage() {
   };
 
   // Custom XAxis Tick component
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomXAxisTick = (props: any) => {
     const { x, y, payload } = props;
     const dateString = payload.value;
@@ -242,7 +240,7 @@ export default function DashboardPage() {
                   />
                   <YAxis />
                   <Tooltip 
-                    formatter={(value: any) => [`₱${Math.round(value).toLocaleString()}`, 'Total Sales']}
+                    formatter={(value: number) => [`₱${Math.round(value).toLocaleString()}`, 'Total Sales']}
                     labelFormatter={() => ''}
                   />
                   <Line type="monotone" dataKey="totalSales" name="Total Sales" stroke="#f97316" />
