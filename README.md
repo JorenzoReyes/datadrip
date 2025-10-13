@@ -54,6 +54,14 @@ This project is deployed to three environments on Railway:
    docker exec -it datadrip-postgres-1 psql -U postgres -d datadrip
    ```
 
+### Access Local PostgreSQL (without Docker)
+
+If you are running the local PostgreSQL instance on your machine (default port 5432), you can connect with:
+
+```bash
+psql -h localhost -p 5432 -U postgres -d datadrip
+```
+
 ### Quick Start without Docker
 
 1. **Clone and install dependencies**

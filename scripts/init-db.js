@@ -24,6 +24,7 @@ function getDatabaseConfig() {
   // Check if we're running with local/Docker Postgres
   const isDockerAvailable = checkDockerAvailability();
   const isDockerPostgresRunning = isDockerAvailable && checkDockerPostgresRunning();
+  const isLocalPostgresRunning = checkLocalPostgresRunning();
 
   if (isDockerPostgresRunning) {
     console.log('🐳 Using Docker PostgreSQL configuration');
@@ -37,13 +38,25 @@ function getDatabaseConfig() {
     };
   }
 
-  console.log('💻 Using local PostgreSQL configuration');
+  if (isLocalPostgresRunning) {
+    console.log('💻 Using local PostgreSQL configuration');
+    return {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'datadrip',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    };
+  }
+
+  console.log('⚠️  No PostgreSQL instance detected, using default configuration');
   return {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),
     database: process.env.DB_NAME || 'datadrip',
     user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
+    password: process.env.DB_PASSWORD || 'postgres',
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   };
 }
@@ -68,6 +81,17 @@ function checkDockerPostgresRunning() {
   }
 }
 
+// Check if local PostgreSQL is running
+function checkLocalPostgresRunning() {
+  try {
+    // Try to connect to local PostgreSQL on port 5432
+    execSync('pg_isready -h localhost -p 5432', { stdio: 'ignore' });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 // Test database connection
 async function testConnection(pool) {
   try {
@@ -75,6 +99,46 @@ async function testConnection(pool) {
     return true;
   } catch (error) {
     console.error('Database connection test failed:', error);
+    return false;
+  }
+}
+
+// Create database if it doesn't exist (for local PostgreSQL)
+async function createDatabaseIfNotExists() {
+  const config = getDatabaseConfig();
+  
+  // Only try to create database for local PostgreSQL, not for DATABASE_URL or Docker
+  if (config.connectionString) {
+    return true; // Skip for DATABASE_URL
+  }
+
+  try {
+    // Try to connect to postgres database to create our target database
+    const adminConfig = {
+      ...config,
+      database: 'postgres' // Connect to default postgres database
+    };
+    
+    const adminPool = new Pool(adminConfig);
+    
+    // Check if our target database exists
+    const result = await adminPool.query(
+      "SELECT 1 FROM pg_database WHERE datname = $1",
+      [config.database]
+    );
+    
+    if (result.rows.length === 0) {
+      console.log(`📦 Creating database '${config.database}'...`);
+      await adminPool.query(`CREATE DATABASE "${config.database}"`);
+      console.log(`✅ Database '${config.database}' created successfully`);
+    } else {
+      console.log(`✅ Database '${config.database}' already exists`);
+    }
+    
+    await adminPool.end();
+    return true;
+  } catch (error) {
+    console.error('⚠️  Could not create database (this may be normal if database already exists):', error.message);
     return false;
   }
 }
@@ -161,6 +225,42 @@ async function createTables(pool) {
 
   for (const indexQuery of createIndexes) {
     await pool.query(indexQuery);
+  }
+}
+
+// Update existing tables with new columns or modifications
+async function updateTables(pool) {
+  console.log('🔄 Checking for table updates...');
+  
+  try {
+    // Update users table with any missing columns
+    const updateUsersTable = [
+      `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`,
+      `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`,
+      `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';`
+    ];
+
+    for (const updateQuery of updateUsersTable) {
+      await pool.query(updateQuery);
+    }
+
+    // Update timestamps for existing records if needed
+    await pool.query(`
+      UPDATE users 
+      SET updated_at = CURRENT_TIMESTAMP 
+      WHERE updated_at IS NULL OR updated_at = created_at;
+    `);
+
+    await pool.query(`
+      UPDATE users 
+      SET last_login_at = CURRENT_TIMESTAMP 
+      WHERE last_login_at IS NULL OR last_login_at = created_at;
+    `);
+
+    console.log('✅ Table updates completed successfully');
+  } catch (error) {
+    console.error('⚠️  Some table updates failed (this may be normal for new databases):', error.message);
+    // Don't throw error here as this is expected for new databases
   }
 }
 
@@ -255,7 +355,22 @@ async function initializeDatabaseWithDocker() {
       execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${indexQuery}"`, { stdio: 'inherit' });
     }
     
-    console.log('✅ Database initialized successfully via Docker');
+    // Update existing tables with any new columns or modifications
+    const updateUsersTable = [
+      `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`,
+      `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`,
+      `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';`
+    ];
+
+    for (const updateQuery of updateUsersTable) {
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${updateQuery}"`, { stdio: 'inherit' });
+    }
+
+    // Update timestamps for existing records if needed
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL OR updated_at = created_at;"`, { stdio: 'inherit' });
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE last_login_at IS NULL OR last_login_at = created_at;"`, { stdio: 'inherit' });
+    
+    console.log('✅ Database initialized and updated successfully via Docker');
     return true;
   } catch (error) {
     console.error('❌ Docker initialization failed:', error.message);
@@ -263,9 +378,13 @@ async function initializeDatabaseWithDocker() {
   }
 }
 
-// Initialize database
+// Initialize database with improved local PostgreSQL support
 async function initializeDatabase() {
   const config = getDatabaseConfig();
+  
+  // Try to create database if it doesn't exist (for local PostgreSQL)
+  await createDatabaseIfNotExists();
+  
   const pool = new Pool(config);
 
   try {
@@ -289,7 +408,10 @@ async function initializeDatabase() {
     // Create tables if they don't exist
     await createTables(pool);
     
-    console.log('Database initialized successfully');
+    // Update existing tables with any new columns or modifications
+    await updateTables(pool);
+    
+    console.log('Database initialized and updated successfully');
   } catch (error) {
     console.error('Database initialization failed:', error);
     
@@ -314,21 +436,17 @@ async function main() {
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
     process.exit(1);
-  } finally {
-    await closePool();
   }
 }
 
 // Handle uncaught exceptions
 process.on('uncaughtException', async (error) => {
   console.error('Uncaught Exception:', error);
-  await closePool();
   process.exit(1);
 });
 
 process.on('unhandledRejection', async (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  await closePool();
   process.exit(1);
 });
 

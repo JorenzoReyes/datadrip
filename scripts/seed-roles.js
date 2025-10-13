@@ -26,17 +26,54 @@ function getDatabaseConfig() {
     console.log('🔗 Using DATABASE_URL environment variable');
     return { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } };
   }
-  // Otherwise check for Docker
+  // Otherwise check for Docker/local
   const isDocker = checkDockerAvailability() && checkDockerPostgresRunning();
   if (isDocker) {
     console.log('🐳 Using Docker PostgreSQL configuration');
-    return { host: process.env.DB_HOST || 'localhost', port: parseInt(process.env.DB_PORT || '5432'), database: process.env.DB_NAME || 'datadrip', user: process.env.DB_USER || 'postgres', password: process.env.DB_PASSWORD || 'postgres', ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false };
+    return {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'datadrip',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    };
   }
   console.log('💻 Using local PostgreSQL configuration');
-  return { host: process.env.DB_HOST || 'localhost', port: parseInt(process.env.DB_PORT || '5432'), database: process.env.DB_NAME || 'datadrip', user: process.env.DB_USER || 'postgres', password: process.env.DB_PASSWORD || 'password', ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false };
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'datadrip',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  };
+}
+
+// Create database if it doesn't exist (local/direct only)
+async function createDatabaseIfNotExists() {
+  const config = getDatabaseConfig();
+  if (config.connectionString) return true; // Skip for DATABASE_URL
+  try {
+    const adminConfig = { ...config, database: 'postgres' };
+    const adminPool = new Pool(adminConfig);
+    const result = await adminPool.query('SELECT 1 FROM pg_database WHERE datname = $1', [config.database]);
+    if (result.rows.length === 0) {
+      console.log(`📦 Creating database '${config.database}'...`);
+      await adminPool.query(`CREATE DATABASE "${config.database}"`);
+      console.log(`✅ Database '${config.database}' created successfully`);
+    }
+    await adminPool.end();
+    return true;
+  } catch (e) {
+    console.error('⚠️  Could not ensure database exists:', e.message);
+    return false;
+  }
 }
 
 async function seedDirect() {
+  // Ensure DB exists for local setups
+  await createDatabaseIfNotExists();
   const pool = new Pool(getDatabaseConfig());
   const rolesSql = `
     INSERT INTO roles (name, description) VALUES
