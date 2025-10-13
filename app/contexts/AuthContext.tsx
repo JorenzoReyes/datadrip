@@ -62,6 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userInfo = JSON.parse(userData);
         if (userInfo.isAuthenticated) {
+          // Ensure baseline permissions for business owners when hydrating
+          const rolesList = userInfo.roles || (userInfo.role ? [userInfo.role] : []);
+          if (rolesList.includes('business_owner')) {
+            const basePerms = new Set<string>(userInfo.permissions || []);
+            ['view_dashboard','view_products','view_insights','view_settings','read','update'].forEach(p => basePerms.add(p));
+            userInfo.permissions = Array.from(basePerms);
+          }
           setUser(userInfo);
         }
       } catch (error) {
@@ -85,7 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         const userFromApi = data.user as User;
         const primaryRole = (userFromApi.roles && userFromApi.roles[0]) || userFromApi.role || 'user';
-        const userInfo: User = { ...userFromApi, role: primaryRole, isAuthenticated: true };
+        // Ensure baseline permissions for business owners
+        const rolesList = userFromApi.roles || (userFromApi.role ? [userFromApi.role] : []);
+        const basePerms = new Set<string>(userFromApi.permissions || []);
+        if (rolesList.includes('business_owner')) {
+          ['view_dashboard','view_products','view_insights','view_settings','read','update'].forEach(p => basePerms.add(p));
+        }
+        const userInfo: User = { ...userFromApi, permissions: Array.from(basePerms), role: primaryRole, isAuthenticated: true };
 
         localStorage.setItem('user', JSON.stringify(userInfo));
         setUser(userInfo);

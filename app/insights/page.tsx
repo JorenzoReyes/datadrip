@@ -239,7 +239,9 @@ export default function InsightsPage() {
     );
   }
 
-  const canView = (user.permissions || []).includes('view_insights');
+  const roles = user.roles || (user.role ? [user.role] : []);
+  const isAdmin = roles.includes('admin') || roles.includes('system_admin');
+  const canView = !isAdmin; // allow all authenticated non-admin users
   if (!canView) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">

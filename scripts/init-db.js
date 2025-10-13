@@ -160,6 +160,100 @@ async function createTables(pool) {
     );
   `;
 
+  // Accounts table (tenant)
+  const createAccountsTable = `
+    CREATE TABLE IF NOT EXISTS accounts (
+      account_id SERIAL PRIMARY KEY,
+      owner_user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+      name VARCHAR(150) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'active',
+      metadata JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  // Products table
+  const createProductsTable = `
+    CREATE TABLE IF NOT EXISTS products (
+      product_id SERIAL PRIMARY KEY,
+      owner_user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+      account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+      sku VARCHAR(100) UNIQUE,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      brand VARCHAR(100),
+      category VARCHAR(100),
+      subcategory VARCHAR(100),
+      price DECIMAL(12,2) NOT NULL DEFAULT 0,
+      cost DECIMAL(12,2),
+      currency CHAR(3) DEFAULT 'PHP',
+      stock INTEGER NOT NULL DEFAULT 0,
+      reorder_level INTEGER DEFAULT 0,
+      sales_count INTEGER NOT NULL DEFAULT 0,
+      sales_revenue DECIMAL(14,2) NOT NULL DEFAULT 0,
+      weight_grams INTEGER,
+      length_cm DECIMAL(8,2),
+      width_cm DECIMAL(8,2),
+      height_cm DECIMAL(8,2),
+      barcode VARCHAR(64),
+      attributes JSONB,
+      images JSONB,
+      status VARCHAR(20) NOT NULL DEFAULT 'active',
+      is_archived BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  // Shops table (per-platform store under an account)
+  const createShopsTable = `
+    CREATE TABLE IF NOT EXISTS shops (
+      shop_id SERIAL PRIMARY KEY,
+      account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+      name VARCHAR(200) NOT NULL,
+      platform VARCHAR(30) NOT NULL, -- 'tiktok' | 'shopee' | 'lazada' | 'custom'
+      platform_shop_id VARCHAR(120) NOT NULL,
+      url TEXT,
+      status VARCHAR(20) NOT NULL DEFAULT 'active',
+      products_count INTEGER DEFAULT 0,
+      followers_count INTEGER DEFAULT 0,
+      following_count INTEGER DEFAULT 0,
+      chat_performance_percent DECIMAL(5,2),
+      rating_value DECIMAL(3,2),
+      rating_count INTEGER,
+      joined_at TIMESTAMP,
+      metadata JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (platform, platform_shop_id)
+    );
+  `;
+
+  // Product listings per platform
+  const createProductListingsTable = `
+    CREATE TABLE IF NOT EXISTS product_listings (
+      product_listing_id SERIAL PRIMARY KEY,
+      product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+      account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+      shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE,
+      platform VARCHAR(30) NOT NULL,
+      platform_product_id VARCHAR(100) NOT NULL,
+      title VARCHAR(255),
+      listing_price DECIMAL(12,2),
+      currency CHAR(3) DEFAULT 'PHP',
+      listing_status VARCHAR(30) DEFAULT 'active',
+      url TEXT,
+      category_path TEXT,
+      commission_rate DECIMAL(5,2),
+      warehouse_sku VARCHAR(100),
+      extra JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (platform, platform_product_id)
+    );
+  `;
+
   // RBAC tables
   const createRolesTable = `
     CREATE TABLE IF NOT EXISTS roles (
@@ -200,16 +294,47 @@ async function createTables(pool) {
 
   // Execute table creation queries (order matters for FKs)
   await pool.query(createUsersTable);
+  await pool.query(createAccountsTable);
+  await pool.query(createShopsTable);
+  await pool.query(createProductsTable);
+  await pool.query(createProductListingsTable);
   await pool.query(createRolesTable);
   await pool.query(createPermissionsTable);
   await pool.query(createRolePermissionsTable);
   await pool.query(createUserRolesTable);
+
+  // Ensure new columns exist on older schemas before creating indexes
+  await pool.query(`
+    ALTER TABLE IF EXISTS product_listings 
+    ADD COLUMN IF NOT EXISTS shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE;
+  `);
 
   // Create indexes for better performance
   const createIndexes = [
     // users
     'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
     'CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);',
+    // accounts
+    'CREATE INDEX IF NOT EXISTS idx_accounts_owner_user_id ON accounts(owner_user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts(status);',
+    // shops
+    'CREATE INDEX IF NOT EXISTS idx_shops_account_id ON shops(account_id);',
+    'CREATE INDEX IF NOT EXISTS idx_shops_platform_shop ON shops(platform, platform_shop_id);',
+    'CREATE INDEX IF NOT EXISTS idx_shops_status ON shops(status);',
+    'CREATE INDEX IF NOT EXISTS idx_shops_name ON shops(name);',
+    // products
+    'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);',
+    'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);',
+    'CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory);',
+    'CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products(owner_user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_products_account_id ON products(account_id);',
+    "CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);",
+    // product_listings
+    'CREATE INDEX IF NOT EXISTS idx_product_listings_product_id ON product_listings(product_id);',
+    'CREATE INDEX IF NOT EXISTS idx_product_listings_account_id ON product_listings(account_id);',
+    'CREATE INDEX IF NOT EXISTS idx_product_listings_shop_id ON product_listings(shop_id);',
+    'CREATE INDEX IF NOT EXISTS idx_product_listings_platform ON product_listings(platform);',
+    'CREATE INDEX IF NOT EXISTS idx_product_listings_platform_pid ON product_listings(platform_product_id);',
     // roles/permissions lookup
     'CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);',
     'CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name);',
@@ -264,6 +389,30 @@ async function updateTables(pool) {
   }
 }
 
+// Seed additional demo users with domain focuses (idempotent)
+async function seedAdditionalUsers(pool) {
+  try {
+    await pool.query(`
+      INSERT INTO users (username, fname, lname, email, password)
+      SELECT 'electronics_owner','Electra','Shop','electronics.owner@example.com','electra123'
+      WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='electronics.owner@example.com');
+    `);
+    await pool.query(`
+      INSERT INTO users (username, fname, lname, email, password)
+      SELECT 'cosmetics_owner','Cosma','Beauty','cosmetics.owner@example.com','cosma123'
+      WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='cosmetics.owner@example.com');
+    `);
+    await pool.query(`
+      INSERT INTO users (username, fname, lname, email, password)
+      SELECT 'food_owner','Gusto','Bites','food.owner@example.com','gusto123'
+      WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='food.owner@example.com');
+    `);
+    console.log('✅ Seeded additional demo users');
+  } catch (error) {
+    console.error('⚠️  Seeding additional users failed:', error.message);
+  }
+}
+
 // Initialize database using Docker exec as fallback
 async function initializeDatabaseWithDocker() {
   console.log('🔄 Attempting database initialization via Docker...');
@@ -286,6 +435,107 @@ async function initializeDatabaseWithDocker() {
     `;
     
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createUsersTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+    // Create accounts table
+    const createAccountsTable = `
+      CREATE TABLE IF NOT EXISTS accounts (
+        account_id SERIAL PRIMARY KEY,
+        owner_user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+        name VARCHAR(150) NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'active',
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createAccountsTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+    // Create shops table (after accounts exists)
+    const createShopsTable = `
+      CREATE TABLE IF NOT EXISTS shops (
+        shop_id SERIAL PRIMARY KEY,
+        account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+        name VARCHAR(200) NOT NULL,
+        platform VARCHAR(30) NOT NULL,
+        platform_shop_id VARCHAR(120) NOT NULL,
+        url TEXT,
+        status VARCHAR(20) NOT NULL DEFAULT 'active',
+        products_count INTEGER DEFAULT 0,
+        followers_count INTEGER DEFAULT 0,
+        following_count INTEGER DEFAULT 0,
+        chat_performance_percent DECIMAL(5,2),
+        rating_value DECIMAL(3,2),
+        rating_count INTEGER,
+        joined_at TIMESTAMP,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (platform, platform_shop_id)
+      );
+    `;
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createShopsTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+    // Create products table (after accounts exists)
+    const createProductsTable = `
+      CREATE TABLE IF NOT EXISTS products (
+        product_id SERIAL PRIMARY KEY,
+        owner_user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+        account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+        sku VARCHAR(100) UNIQUE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        brand VARCHAR(100),
+        category VARCHAR(100),
+        subcategory VARCHAR(100),
+        price DECIMAL(12,2) NOT NULL DEFAULT 0,
+        cost DECIMAL(12,2),
+        currency CHAR(3) DEFAULT 'PHP',
+        stock INTEGER NOT NULL DEFAULT 0,
+        reorder_level INTEGER DEFAULT 0,
+        sales_count INTEGER NOT NULL DEFAULT 0,
+        sales_revenue DECIMAL(14,2) NOT NULL DEFAULT 0,
+        weight_grams INTEGER,
+        length_cm DECIMAL(8,2),
+        width_cm DECIMAL(8,2),
+        height_cm DECIMAL(8,2),
+        barcode VARCHAR(64),
+        attributes JSONB,
+        images JSONB,
+        status VARCHAR(20) NOT NULL DEFAULT 'active',
+        is_archived BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createProductsTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+    // Create product_listings table
+    const createProductListingsTable = `
+      CREATE TABLE IF NOT EXISTS product_listings (
+        product_listing_id SERIAL PRIMARY KEY,
+        product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+        account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+        shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE,
+        platform VARCHAR(30) NOT NULL,
+        platform_product_id VARCHAR(100) NOT NULL,
+        title VARCHAR(255),
+        listing_price DECIMAL(12,2),
+        currency CHAR(3) DEFAULT 'PHP',
+        listing_status VARCHAR(30) DEFAULT 'active',
+        url TEXT,
+        category_path TEXT,
+        commission_rate DECIMAL(5,2),
+        warehouse_sku VARCHAR(100),
+        extra JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (platform, platform_product_id)
+      );
+    `;
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createProductListingsTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+    // Ensure new columns exist on older schemas
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "ALTER TABLE IF EXISTS product_listings ADD COLUMN IF NOT EXISTS shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE;"`, { stdio: 'inherit' });
 
     // Ensure columns exist if table was created earlier without them
     const alterUsersAddUpdatedAt = `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`;
@@ -338,6 +588,27 @@ async function initializeDatabaseWithDocker() {
       // users
       'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
       'CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);',
+      // products
+      'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);',
+      'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);',
+      'CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory);',
+      'CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products(owner_user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_products_account_id ON products(account_id);',
+      'CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);',
+      // accounts
+      'CREATE INDEX IF NOT EXISTS idx_accounts_owner_user_id ON accounts(owner_user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts(status);',
+      // shops
+      'CREATE INDEX IF NOT EXISTS idx_shops_account_id ON shops(account_id);',
+      'CREATE INDEX IF NOT EXISTS idx_shops_platform_shop ON shops(platform, platform_shop_id);',
+      'CREATE INDEX IF NOT EXISTS idx_shops_status ON shops(status);',
+      'CREATE INDEX IF NOT EXISTS idx_shops_name ON shops(name);',
+      // product_listings
+      'CREATE INDEX IF NOT EXISTS idx_product_listings_product_id ON product_listings(product_id);',
+      'CREATE INDEX IF NOT EXISTS idx_product_listings_account_id ON product_listings(account_id);',
+      'CREATE INDEX IF NOT EXISTS idx_product_listings_shop_id ON product_listings(shop_id);',
+      'CREATE INDEX IF NOT EXISTS idx_product_listings_platform ON product_listings(platform);',
+      'CREATE INDEX IF NOT EXISTS idx_product_listings_platform_pid ON product_listings(platform_product_id);',
       // roles/permissions lookup
       'CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);',
       'CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name);',
@@ -378,7 +649,7 @@ async function initializeDatabaseWithDocker() {
   }
 }
 
-// Initialize database with improved local PostgreSQL support
+// Initialize database with support for both direct and Docker targets
 async function initializeDatabase() {
   const config = getDatabaseConfig();
   
@@ -388,37 +659,34 @@ async function initializeDatabase() {
   const pool = new Pool(config);
 
   try {
-    // Test connection first
+    // Direct / DATABASE_URL target
     const isConnected = await testConnection(pool);
-    if (!isConnected) {
-      // If we were using DATABASE_URL, do not attempt Docker fallback
-      if (config.connectionString) {
-        throw new Error('Failed to connect using DATABASE_URL');
-      }
-      console.log('⚠️  Direct connection failed, trying Docker fallback...');
-      const dockerSuccess = await initializeDatabaseWithDocker();
-      if (dockerSuccess) {
-        return;
-      }
-      throw new Error('Failed to connect to database via both direct connection and Docker');
+    if (isConnected) {
+      console.log('Database connected successfully (direct/DATABASE_URL)');
+      await createTables(pool);
+      await updateTables(pool);
+      await seedAdditionalUsers(pool);
+      console.log('Database initialized and updated successfully (direct/DATABASE_URL)');
+    } else {
+      console.warn('⚠️  Direct connection failed. Skipping direct initialization.');
     }
 
-    console.log('Database connected successfully');
-
-    // Create tables if they don't exist
-    await createTables(pool);
-    
-    // Update existing tables with any new columns or modifications
-    await updateTables(pool);
-    
-    console.log('Database initialized and updated successfully');
+    // Docker target (in addition to direct)
+    const dockerAvailable = checkDockerAvailability() && checkDockerPostgresRunning();
+    if (dockerAvailable) {
+      const dockerSuccess = await initializeDatabaseWithDocker();
+      if (!dockerSuccess) {
+        console.warn('⚠️  Docker initialization failed.');
+      }
+    }
   } catch (error) {
-    console.error('Database initialization failed:', error);
-    
-    // Try Docker fallback if direct connection failed
-    console.log('🔄 Attempting Docker fallback...');
-    const dockerSuccess = await initializeDatabaseWithDocker();
-    if (!dockerSuccess) {
+    console.error('Database initialization encountered an error:', error);
+    // Best effort Docker init even if direct path errored
+    const dockerAvailable = checkDockerAvailability() && checkDockerPostgresRunning();
+    if (dockerAvailable) {
+      const dockerSuccess = await initializeDatabaseWithDocker();
+      if (!dockerSuccess) throw error;
+    } else {
       throw error;
     }
   } finally {

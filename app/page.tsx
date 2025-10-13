@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from './contexts/AuthContext';
@@ -12,6 +12,23 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState('');
   const { login } = useAuth();
   const router = useRouter();
+  const [demoPage, setDemoPage] = useState(0);
+
+  const demoPages = useMemo(
+    () => [
+      [
+        { label: 'User', creds: 'user@example.com or demo_user / password123' },
+        { label: 'Admin', creds: 'admin@example.com or demo_admin / admin123' },
+        { label: 'System Admin', creds: 'system.admin@example.com or demo_system_admin / system123' }
+      ],
+      [
+        { label: 'Electronics Owner', creds: 'electronics.owner@example.com or electronics_owner / electra123' },
+        { label: 'Cosmetics Owner', creds: 'cosmetics.owner@example.com or cosmetics_owner / cosma123' },
+        { label: 'Food & Drinks Owner', creds: 'food.owner@example.com or food_owner / gusto123' }
+      ]
+    ],
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,13 +64,36 @@ export default function LoginPage() {
         <h1 className="text-center text-4xl font-extrabold font-title text-header">DataDrip</h1>
         <p className="mt-2 text-center text-subheader">Log in to your account</p>
 
-        {/* Demo Credentials Info */}
+        {/* Demo Credentials Info (paginated) */}
         <div className="mt-4 rounded-lg bg-primary-50 p-4 border border-primary-200">
-          <p className="text-sm text-primary-700 font-medium mb-2">Demo Credentials:</p>
-          <div className="text-xs text-primary-600 space-y-1">
-            <div><strong>User:</strong> user@example.com or demo_user / password123</div>
-            <div><strong>Admin:</strong> admin@example.com or demo_admin / admin123</div>
-            <div><strong>System Admin:</strong> system.admin@example.com or demo_system_admin / system123</div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-primary-700 font-medium">Demo Credentials</p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Previous"
+                onClick={() => setDemoPage((p) => (p === 0 ? demoPages.length - 1 : p - 1))}
+                className="h-6 w-6 rounded-md bg-primary-100 text-primary-700 grid place-items-center hover:bg-primary-200"
+              >
+                ‹
+              </button>
+              <span className="text-[11px] text-primary-700">{demoPage + 1} / {demoPages.length}</span>
+              <button
+                type="button"
+                aria-label="Next"
+                onClick={() => setDemoPage((p) => (p + 1) % demoPages.length)}
+                className="h-6 w-6 rounded-md bg-primary-100 text-primary-700 grid place-items-center hover:bg-primary-200"
+              >
+                ›
+              </button>
+            </div>
+          </div>
+          <div className="text-xs text-primary-600 space-y-1 max-h-32 overflow-y-auto pr-1 break-words whitespace-normal">
+            {demoPages[demoPage].map((row) => (
+              <div key={row.label}>
+                <strong>{row.label}:</strong> {row.creds}
+              </div>
+            ))}
           </div>
         </div>
 

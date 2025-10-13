@@ -52,6 +52,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Ensure business_owner has permissions including products and insights
+    const neededPerms = ['view_products', 'view_insights'];
+    for (const p of neededPerms) {
+      await query(
+        `INSERT INTO role_permissions (permission_id, role_id, permission)
+         SELECT pe.permission_id, r.role_id, pe.name
+         FROM permissions pe, roles r
+         WHERE pe.name = $1 AND r.name = 'business_owner'
+           AND NOT EXISTS (
+             SELECT 1 FROM role_permissions rp WHERE rp.permission_id = pe.permission_id AND rp.role_id = r.role_id
+           );`,
+        [p]
+      );
+    }
+
     // Omit password in response
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = newUser as unknown as User & { password: string };

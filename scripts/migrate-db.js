@@ -466,74 +466,62 @@ Examples:
   try {
     // Test connection
     const isConnected = await testConnection(pool);
-    if (!isConnected) {
-      // If using DATABASE_URL, do not attempt Docker fallback
-      if (config.connectionString) {
-        throw new Error('Failed to connect using DATABASE_URL');
-      }
-      console.log('⚠️  Direct connection failed, trying Docker fallback...');
-      
-      // Try Docker fallback for each command
+    const dockerAvailable = checkDockerAvailability() && checkDockerPostgresRunning();
+
+    // Run on direct target if connected
+    if (isConnected) {
+      console.log('✅ Database connected successfully (direct/DATABASE_URL)');
       switch (command) {
         case 'list-tables':
-          const listSuccess = await listTablesWithDocker();
-          if (!listSuccess) {
-            throw new Error('Failed to list tables via both direct connection and Docker');
-          }
-          return;
-          
+          await listTables(pool);
+          break;
         case 'add-table':
           if (!tableName) {
             console.error('❌ Table name is required');
             console.log('Usage: node scripts/migrate-db.js add-table <table_name>');
             process.exit(1);
           }
-          const addSuccess = await addTableWithDocker(tableName);
-          if (!addSuccess) {
-            throw new Error('Failed to add table via both direct connection and Docker');
-          }
-          return;
-          
+          await addTable(pool, tableName);
+          break;
         case 'reset-db':
-          const resetSuccess = await resetDatabaseWithDocker();
-          if (!resetSuccess) {
-            throw new Error('Failed to reset database via both direct connection and Docker');
-          }
-          return;
-          
+          await resetDatabase(pool);
+          break;
+        case 'help':
+          console.log('Use the script without arguments to see help');
+          break;
         default:
-          throw new Error(`Unknown command: ${command}`);
+          console.error(`❌ Unknown command: ${command}`);
+          console.log('Use "node scripts/migrate-db.js help" for available commands');
+          process.exit(1);
       }
+    } else {
+      console.warn('⚠️  Direct connection failed. Skipping direct migration.');
     }
 
-    console.log('✅ Database connected successfully');
-
-    switch (command) {
-      case 'list-tables':
-        await listTables(pool);
-        break;
-        
-      case 'add-table':
-        if (!tableName) {
-          console.error('❌ Table name is required');
-          console.log('Usage: node scripts/migrate-db.js add-table <table_name>');
-          process.exit(1);
-        }
-        await addTable(pool, tableName);
-        break;
-        
-      case 'reset-db':
-        await resetDatabase(pool);
-        break;
-        
-      case 'help':
-        console.log('Use the script without arguments to see help');
-        break;
-        
-      default:
-        console.error(`❌ Unknown command: ${command}`);
-        console.log('Use "node scripts/migrate-db.js help" for available commands');
-        process.exit(1);
+    // Also perform the command against Docker if available
+    if (dockerAvailable) {
+      switch (command) {
+        case 'list-tables':
+          await listTablesWithDocker();
+          break;
+        case 'add-table':
+          if (!tableName) {
+            console.error('❌ Table name is required');
+            console.log('Usage: node scripts/migrate-db.js add-table <table_name>');
+            process.exit(1);
+          }
+          await addTableWithDocker(tableName);
+          break;
+        case 'reset-db':
+          await resetDatabaseWithDocker();
+          break;
+        case 'help':
+          // no-op for Docker
+          break;
+        default:
+          // ignore unknown
+          break;
+      }
     }
 
   } catch (error) {
