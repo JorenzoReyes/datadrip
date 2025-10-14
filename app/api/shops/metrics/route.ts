@@ -38,35 +38,37 @@ export async function GET(req: Request) {
       [accountIds]
     );
 
-    // Daily sales for the past 7 days from product_sales table (using seeded data range)
+    // Daily sales for the past 7 days from daily_sales_aggregated table (using seeded data range)
     // Since the dashboard shows October 14, 2025, we'll show the 7 days before that
     const dailySales = await query<{
       sale_date: string;
       platform: string;
       total_sales: number;
     }>(
-      `SELECT sale_date, 
+      `SELECT dsa.sale_date, 
               platform,
-              SUM(total_sales) as total_sales
-       FROM product_sales
-       WHERE account_id = ANY($1) 
-         AND sale_date >= '2025-10-08'::date
-         AND sale_date <= '2025-10-14'::date
-       GROUP BY sale_date, platform
-       ORDER BY sale_date, platform`,
+              (platform_breakdown->>platform)::DECIMAL(12,2) as total_sales
+       FROM daily_sales_aggregated dsa
+       CROSS JOIN LATERAL jsonb_object_keys(dsa.platform_breakdown) AS platform
+       WHERE dsa.account_id = ANY($1) 
+         AND dsa.sale_date >= '2025-10-08'::date
+         AND dsa.sale_date <= '2025-10-14'::date
+         AND (platform_breakdown->>platform)::DECIMAL(12,2) > 0
+       ORDER BY dsa.sale_date, platform`,
       [accountIds]
     );
 
-    // Get actual sales totals directly from product_sales table for the seeded data range
+    // Get actual sales totals from daily_sales_aggregated table for the seeded data range
     const totalsRows = await query<{
       platform: string | null;
       total: string | null;
     }>(
-      `SELECT platform, SUM(total_sales) AS total
-       FROM product_sales
-       WHERE account_id = ANY($1) 
-         AND sale_date >= '2025-10-05'
-         AND sale_date <= '2025-11-05'
+      `SELECT platform, SUM((platform_breakdown->>platform)::DECIMAL(12,2)) AS total
+       FROM daily_sales_aggregated dsa
+       CROSS JOIN LATERAL jsonb_object_keys(dsa.platform_breakdown) AS platform
+       WHERE dsa.account_id = ANY($1) 
+         AND dsa.sale_date >= '2025-10-05'
+         AND dsa.sale_date <= '2025-11-05'
        GROUP BY ROLLUP(platform)`,
       [accountIds]
     );

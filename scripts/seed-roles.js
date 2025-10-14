@@ -474,6 +474,23 @@ async function seedDirect() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
+    // Ensure required column exists for aggregation (defensive)
+    try {
+      await pool.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name='product_sales' AND column_name='total_sales'
+          ) THEN
+            ALTER TABLE product_sales ADD COLUMN total_sales DECIMAL(12,2) NOT NULL DEFAULT 0;
+          END IF;
+        END $$;
+      `);
+    } catch (error) {
+      console.error('Error ensuring product_sales.total_sales column:', error.message);
+    }
+
     // Now aggregate the product sales into daily_sales_aggregated
     try {
       await pool.query(`
@@ -481,16 +498,17 @@ async function seedDirect() {
         SELECT 
           account_id,
           sale_date,
-          SUM(total_sales) as total_sales,
-          COUNT(DISTINCT order_id) as total_orders,
-          jsonb_object_agg(platform, platform_total)
+          SUM(platform_total) as total_sales,
+          COUNT(*) as total_orders,
+          jsonb_object_agg(platform, platform_total) FILTER (WHERE platform IS NOT NULL)
         FROM (
           SELECT 
             account_id,
             sale_date,
             platform,
-            SUM(total_sales) as platform_total
+            SUM(unit_price * quantity_sold) as platform_total
           FROM product_sales
+          WHERE platform IS NOT NULL
           GROUP BY account_id, sale_date, platform
         ) platform_sales
         GROUP BY account_id, sale_date
@@ -500,6 +518,7 @@ async function seedDirect() {
           platform_breakdown = EXCLUDED.platform_breakdown,
           updated_at = CURRENT_TIMESTAMP;
       `);
+      console.log('✅ Successfully aggregated daily sales data');
     } catch (error) {
       console.error('Error aggregating daily sales:', error.message);
       // Continue with the rest of the seeding even if aggregation fails

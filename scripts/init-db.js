@@ -421,6 +421,19 @@ async function updateTables(pool) {
       WHERE last_login_at IS NULL OR last_login_at = created_at;
     `);
 
+    // Ensure product_sales.total_sales exists (defensive for older local setups)
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='product_sales' AND column_name='total_sales'
+        ) THEN
+          ALTER TABLE product_sales ADD COLUMN total_sales DECIMAL(12,2) NOT NULL DEFAULT 0;
+        END IF;
+      END $$;
+    `);
+
     console.log('✅ Table updates completed successfully');
   } catch (error) {
     console.error('⚠️  Some table updates failed (this may be normal for new databases):', error.message);
