@@ -79,10 +79,15 @@ export default function ProductsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  // Lazy load modal to keep initial bundle small
+  // Lazy load modals to keep initial bundle small
   const AddProductModal = useMemo(
     () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
+    []
+  );
+  const EditProductModal = useMemo(
+    () => dynamic(() => import('../components/EditProductModal'), { ssr: false }),
     []
   );
 
@@ -105,6 +110,38 @@ export default function ProductsPage() {
       return matchQuery && matchCategory;
     });
   }, [products, query, category]);
+
+  // Handle saving edited product
+  const handleSaveProduct = async (updatedFields: Partial<Product>) => {
+    if (!editingProduct) return;
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${editingProduct.product_id}?email=${email}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to update product');
+      }
+
+      // Update the local products list
+      setProducts(products.map(p => 
+        p.product_id === editingProduct.product_id 
+          ? { ...p, ...updatedFields }
+          : p
+      ));
+
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -313,7 +350,11 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-4">
-                        <button className="text-gray-700 hover:text-gray-900" title="Edit">
+                        <button 
+                          onClick={() => setEditingProduct(p)}
+                          className="text-gray-700 hover:text-gray-900" 
+                          title="Edit"
+                        >
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
@@ -338,6 +379,13 @@ export default function ProductsPage() {
       </main>
       {showAddModal && (
         <AddProductModal onClose={() => setShowAddModal(false)} />
+      )}
+      {editingProduct && (
+        <EditProductModal 
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSave={handleSaveProduct}
+        />
       )}
     </div>
   );
