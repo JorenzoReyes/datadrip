@@ -6,6 +6,28 @@ import Header from '../components/Header';
 import dynamic from 'next/dynamic';
 import { useAuth } from '../contexts/auth';
 
+// --- Product type definition ---
+export type Product = {
+  product_id: number;
+  sku: string | null;
+  name: string;
+  description: string | null;
+  brand: string | null;
+  category: string | null;
+  subcategory: string | null;
+  price: number;
+  cost: number | null;
+  currency: string;
+  stock: number;
+  reorder_level: number | null;
+  sales_count: number;
+  sales_revenue: number;
+  status: string;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export default function ProductsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
@@ -46,30 +68,6 @@ export default function ProductsPage() {
       loadProducts();
     }
   }, [user]);
-
-  
-
-  // --- Local UI state & data types ---
-  type Product = {
-    product_id: number;
-    sku: string | null;
-    name: string;
-    description: string | null;
-    brand: string | null;
-    category: string | null;
-    subcategory: string | null;
-    price: number;
-    cost: number | null;
-    currency: string;
-    stock: number;
-    reorder_level: number | null;
-    sales_count: number;
-    sales_revenue: number;
-    status: string;
-    is_archived: boolean;
-    created_at: string;
-    updated_at: string;
-  };
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -139,6 +137,40 @@ export default function ProductsPage() {
       setEditingProduct(null);
     } catch (error) {
       console.error('Error updating product:', error);
+      throw error;
+    }
+  };
+
+  // Handle adding new product
+  const handleAddProduct = async (productData: {
+    name: string;
+    sku?: string;
+    description?: string;
+    brand?: string;
+    category?: string;
+    subcategory?: string;
+    price: number;
+    stock: number;
+  }) => {
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products?email=${email}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to add product');
+      }
+
+      // Add the new product to the local products list
+      setProducts([json.product, ...products]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding product:', error);
       throw error;
     }
   };
@@ -378,7 +410,10 @@ export default function ProductsPage() {
         </div>
       </main>
       {showAddModal && (
-        <AddProductModal onClose={() => setShowAddModal(false)} />
+        <AddProductModal 
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddProduct}
+        />
       )}
       {editingProduct && (
         <EditProductModal 
