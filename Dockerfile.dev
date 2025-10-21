@@ -27,4 +27,5 @@ ENV HOSTNAME="0.0.0.0"
 ENV NEXT_TELEMETRY_DISABLED=0
 
 # Start development server with hot reloading
-CMD ["npm", "run", "dev"]
+# Use polling for file watching on Windows
+CMD ["npx", "next", "dev", "--turbopack", "--hostname", "0.0.0.0"]
