@@ -39,13 +39,15 @@ export async function GET(req: Request) {
     );
 
     // Daily sales for the past 7 days from daily_sales_aggregated table
-    // Get the last 7 days of aggregated data
+    // Get the last 7 days of aggregated data with platform breakdown
     const dailySales = await query<{
       sale_date: string;
       total_sales: number;
+      platform_breakdown: { tiktok?: number; shopee?: number; lazada?: number };
     }>(
       `SELECT sale_date::text, 
-              total_sales
+              total_sales,
+              platform_breakdown
        FROM daily_sales_aggregated
        WHERE account_id = ANY($1) 
        ORDER BY sale_date DESC
