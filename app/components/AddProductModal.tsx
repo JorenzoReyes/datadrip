@@ -17,6 +17,12 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
   const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [hasHadImages, setHasHadImages] = useState(false);
+  const [showSpecialPrice, setShowSpecialPrice] = useState(false);
+  const [specialPrice, setSpecialPrice] = useState('');
+  const [price, setPrice] = useState('');
+  const [stock, setStock] = useState('');
+  const [sellerSKU, setSellerSKU] = useState('');
+  const [isAvailable, setIsAvailable] = useState(true);
   const errorTimeouts = useRef<{ [key: string]: number }>({});
 
   const setErrorWithTimeout = (key: string, message: string) => {
@@ -37,6 +43,42 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
       });
       delete errorTimeouts.current[key];
     }, 3000);
+  };
+
+  // Helper functions for number inputs
+  const handleNumberChange = (value: string, setter: (value: string) => void) => {
+    // Only allow numbers and decimal point
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    // Ensure only one decimal point
+    const parts = numericValue.split('.');
+    if (parts.length > 2) {
+      return;
+    }
+    setter(numericValue);
+  };
+
+  const incrementPrice = (currentValue: string, setter: (value: string) => void) => {
+    const num = parseFloat(currentValue) || 0;
+    const newValue = (num + 0.01).toFixed(2);
+    setter(newValue);
+  };
+
+  const decrementPrice = (currentValue: string, setter: (value: string) => void) => {
+    const num = parseFloat(currentValue) || 0;
+    const newValue = Math.max(0, num - 0.01).toFixed(2);
+    setter(newValue);
+  };
+
+  const incrementStock = (currentValue: string, setter: (value: string) => void) => {
+    const num = parseInt(currentValue) || 0;
+    const newValue = (num + 1).toString();
+    setter(newValue);
+  };
+
+  const decrementStock = (currentValue: string, setter: (value: string) => void) => {
+    const num = parseInt(currentValue) || 0;
+    const newValue = Math.max(0, num - 1).toString();
+    setter(newValue);
   };
 
   const handlePickFiles = async (accept: string, multiple: boolean): Promise<FileList | null> => {
@@ -503,7 +545,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
   <div className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
     <div className="min-w-[600px] grid">
        {/* Header Row */}
-       <div className="grid grid-cols-[0.9fr_1fr_1.1fr_1.8fr_0.6fr] bg-gray-50 text-xs font-medium text-subheader">
+        <div className="grid grid-cols-[1fr_1fr_1.1fr_1.8fr_0.6fr] bg-gray-50 text-xs font-medium text-subheader">
          <div className="border-r border-gray-200 p-3 text-center">
            <span className="text-red-500">*</span> Price
          </div>
@@ -514,30 +556,118 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
        </div>
 
       {/* Data Row */}
-      <div className="grid grid-cols-[0.9fr_1fr_1.1fr_1.8fr_0.6fr] border-t border-gray-200">
+       <div className="grid grid-cols-[1fr_1fr_1.1fr_1.8fr_0.6fr] border-t border-gray-200">
          {/* Price */}
          <div className="border-r border-gray-200 p-3 flex justify-center">
            <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
              <span className="text-sm text-subheader">₱</span>
              <input
                type="text"
+               value={price}
+               onChange={(e) => handleNumberChange(e.target.value, setPrice)}
                className="flex-1 border-none bg-transparent text-center text-sm text-header focus:outline-none min-w-0"
                style={{ width: 'calc(100% - 20px)' }}
+               placeholder="0.00"
              />
+             <div className="flex flex-col">
+               <button
+                 type="button"
+                 onClick={() => incrementPrice(price, setPrice)}
+                 className="h-3 w-3 flex items-center justify-center text-gray-400 hover:text-gray-600"
+               >
+                 <svg className="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                   <path d="M18 15l-6-6-6 6"/>
+                 </svg>
+               </button>
+               <button
+                 type="button"
+                 onClick={() => decrementPrice(price, setPrice)}
+                 className="h-3 w-3 flex items-center justify-center text-gray-400 hover:text-gray-600"
+               >
+                 <svg className="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                   <path d="M6 9l6 6 6-6"/>
+                 </svg>
+               </button>
+             </div>
            </div>
          </div>
 
         {/* Special Price */}
         <div className="border-r border-gray-200 p-3 flex justify-center items-center">
-          <button className="text-sm text-blue-600 hover:underline">Add</button>
+          {showSpecialPrice ? (
+            <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
+              <span className="text-sm text-subheader">₱</span>
+              <input
+                type="text"
+                value={specialPrice}
+                onChange={(e) => handleNumberChange(e.target.value, setSpecialPrice)}
+                className="flex-1 border-none bg-transparent text-center text-sm text-header focus:outline-none min-w-0"
+                style={{ width: 'calc(100% - 20px)' }}
+                placeholder="0.00"
+              />
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => incrementPrice(specialPrice, setSpecialPrice)}
+                  className="h-3 w-3 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 15l-6-6-6 6"/>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => decrementPrice(specialPrice, setSpecialPrice)}
+                  className="h-3 w-3 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowSpecialPrice(true)}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Add
+            </button>
+          )}
         </div>
 
         {/* Stock */}
         <div className="border-r border-gray-200 p-3 flex justify-center">
-          <input
-            type="text"
-            className="w-full max-w-[120px] rounded-md border border-gray-300 bg-white px-2 py-1 text-center text-sm text-header focus:outline-none"
-          />
+          <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
+            <input
+              type="text"
+              value={stock}
+              onChange={(e) => handleNumberChange(e.target.value, setStock)}
+              className="flex-1 border-none bg-transparent text-center text-sm text-header focus:outline-none min-w-0"
+              style={{ width: 'calc(100% - 20px)' }}
+              placeholder="0"
+            />
+            <div className="flex flex-col">
+              <button
+                type="button"
+                onClick={() => incrementStock(stock, setStock)}
+                className="h-3 w-3 flex items-center justify-center text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 15l-6-6-6 6"/>
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => decrementStock(stock, setStock)}
+                className="h-3 w-3 flex items-center justify-center text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
          {/* Seller SKU */}
@@ -545,20 +675,32 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
            <div className="relative w-full max-w-[200px] mx-auto">
              <input
                type="text"
-               className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 pr-12 text-left text-sm text-header focus:outline-none"
+               value={sellerSKU}
+               onChange={(e) => setSellerSKU(e.target.value.slice(0, 200))}
+               maxLength={200}
+               className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 pr-12 text-left text-[12px] text-header focus:outline-none"
                placeholder="Seller SKU"
              />
              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-               0/200
+               {sellerSKU.length}/200
              </span>
            </div>
          </div>
 
         {/* Availability */}
         <div className="flex items-center justify-center p-3">
-          <div className="relative h-5 w-9 rounded-full bg-gray-200">
-            <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></div>
-          </div>
+          <button
+            onClick={() => setIsAvailable(!isAvailable)}
+            className={`relative h-5 w-9 rounded-full transition-colors ${
+              isAvailable ? 'bg-green-500' : 'bg-gray-200'
+            }`}
+          >
+            <div 
+              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                isAvailable ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            ></div>
+          </button>
         </div>
       </div>
     </div>
