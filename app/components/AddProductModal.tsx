@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 interface AddProductModalProps {
 	onClose: () => void;
@@ -67,7 +68,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 
   const validateImageDimensions = (file: File, type: 'product' | 'promo'): Promise<string | null> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         const { width, height } = img;
         
@@ -313,7 +314,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
                                     <div className="flex flex-wrap items-center gap-3">
                                         {productImages.map((src, idx) => (
                                             <div key={idx} className="group relative h-[60px] w-[60px] overflow-hidden rounded-md bg-gray-200 hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer">
-                                                <img src={src} alt={`Product ${idx+1}`} className="h-full w-full object-cover" />
+                                                <Image src={src} alt={`Product ${idx+1}`} width={60} height={60} className="h-full w-full object-cover" />
                                                 <button
                                                     title="Remove"
                                                     onClick={(e) => { 
@@ -360,7 +361,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
                         <div className="flex items-start gap-3">
                                         {promoImage ? (
                                             <div className="group relative h-[60px] w-[60px] overflow-hidden rounded-md hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer">
-                                                <img src={promoImage} alt="Promo" className="h-full w-full object-cover" />
+                                                <Image src={promoImage} alt="Promo" width={60} height={60} className="h-full w-full object-cover" />
                                                 <button
                                                     title="Remove"
                                                     onClick={(e)=>{e.stopPropagation(); setPromoImage(null);}}
@@ -387,7 +388,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
                                         <div className="absolute left-full top-0 z-20 ml-2 w-[460px] rounded-lg border border-gray-200 bg-white p-3 shadow-lg" onMouseEnter={keepExample} onMouseLeave={scheduleHideExample}>
                                             <div className="mb-2 text-[12px] font-semibold text-header">See Example</div>
 											<div className="flex gap-3">
-												<img src="https://img.lazcdn.com/g/tps/tfs/TB1RuGzMxD1gK0jSZFsXXbldVXa-330-330.jpg_2200x2200q80.jpg_.webp" alt="Sample white background" className="h-[110px] w-[140px] rounded-md border border-gray-200 object-cover" />
+												<Image src="https://img.lazcdn.com/g/tps/tfs/TB1RuGzMxD1gK0jSZFsXXbldVXa-330-330.jpg_2200x2200q80.jpg_.webp" alt="Sample white background" width={140} height={110} className="h-[110px] w-[140px] rounded-md border border-gray-200 object-cover" />
 												<ol className="list-decimal pl-4 text-[12px] text-header space-y-1">
 													<li>Size: Less than 6MB.</li>
 													<li>Supported formats: JPG, JEPG or PNG.</li>
@@ -610,7 +611,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 
 							{/* What's in the box */}
 							<div>
-								<label className="mb-1 block text-[12px] text-subheader">What's in the box</label>
+								<label className="mb-1 block text-[12px] text-subheader">What&apos;s in the box</label>
 								<div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">Indicates the items that customer will get when they receive this product. For example, for a smartphone, a customer may get: 1 x Phone, 1 x Cable, 1 x Headset</div>
 							</div>
 						</div>
@@ -696,5 +697,8 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 		</div>
 	);
 }
+
+
+
 
 
