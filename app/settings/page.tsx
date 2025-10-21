@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
-import Header from '../components/Header';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../contexts/auth';
 import { useIntegrationManagement } from '../contexts/integrations';
 
@@ -11,6 +10,7 @@ import { useIntegrationManagement } from '../contexts/integrations';
 function ConnectPlatformsSection() {
   const { user } = useAuth();
   const { integrations, createIntegration, deleteIntegrationByUser, platformTemplates } = useIntegrationManagement();
+  const searchParams = useSearchParams();
   
   const [platforms, setPlatforms] = useState<Array<{
     id: string;
@@ -50,6 +50,70 @@ function ConnectPlatformsSection() {
   const [showDisconnectModal, setShowDisconnectModal] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Handle OAuth callback
+  useEffect(() => {
+    const platform = searchParams.get('platform');
+    const status = searchParams.get('status');
+    const oauthError = searchParams.get('oauth_error');
+    const oauthMessage = searchParams.get('message');
+
+    if (platform && status === 'success' && oauthMessage) {
+      // OAuth success - create integration
+      handleOAuthSuccess(platform, oauthMessage);
+    } else if (oauthError) {
+      // OAuth error
+      setMessage({ 
+        type: 'error', 
+        text: `OAuth authentication failed: ${decodeURIComponent(oauthError)}` 
+      });
+      setTimeout(() => setMessage(null), 5000);
+    }
+  }, [searchParams]);
+
+  // Handle OAuth success
+  const handleOAuthSuccess = async (platform: string, successMessage: string) => {
+    if (!user) return;
+
+    try {
+      // Find the platform template
+      const template = platformTemplates.find(t => t.platform === platform);
+      if (!template) {
+        throw new Error('Platform template not found');
+      }
+
+      // Create integration in admin system
+      const userId = user.email.replace('@', '_').replace('.', '_');
+      const integrationData = {
+        platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
+        name: `${template.name} Integration - ${user.fname || 'User'} ${user.lname || ''}`,
+        accessToken: `oauth_token_${userId}_${platform}_${Date.now()}`, // OAuth access token
+        refreshToken: `oauth_refresh_${userId}_${platform}_${Date.now()}`, // OAuth refresh token
+        webhookUrl: '',
+        syncFrequency: 'daily' as const,
+        configuration: { ...template.defaultConfiguration }
+      };
+
+      const result = await createIntegration(integrationData, user.email);
+      
+      if (result.success) {
+        // Update local platform status
+        setPlatforms(prev => prev.map(p => 
+          p.id === platform 
+            ? { ...p, status: 'connected', lastSync: new Date().toISOString() }
+            : p
+        ));
+        
+        setMessage({ type: 'success', text: successMessage });
+        setTimeout(() => setMessage(null), 5000);
+      } else {
+        throw new Error(result.error || 'Failed to create integration');
+      }
+    } catch (err) {
+      console.error('OAuth success handling error:', err);
+      setMessage({ type: 'error', text: 'Failed to complete OAuth integration. Please try again.' });
+    }
+  };
+
   // Sync platform status with existing integrations
   useEffect(() => {
     if (integrations.length > 0) {
@@ -81,41 +145,67 @@ function ConnectPlatformsSection() {
     setMessage(null);
 
     try {
-      // Simulate OAuth flow
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       // Find the platform template
       const template = platformTemplates.find(t => t.platform === platformId);
       if (!template) {
         throw new Error('Platform template not found');
       }
 
-      // Create integration in admin system
-      const userId = currentUser.email.replace('@', '_').replace('.', '_');
-      const integrationData = {
-        platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
-        name: `${template.name} Integration - ${currentUser.fname || 'User'} ${currentUser.lname || ''}`,
-        apiKey: `user_${userId}_${platformId}_${Date.now()}`, // Simulated API key
-        apiSecret: `secret_${userId}_${platformId}_${Date.now()}`, // Simulated API secret
-        webhookUrl: '',
-        syncFrequency: 'daily' as const,
-        configuration: { ...template.defaultConfiguration }
-      };
+      // Check if platform uses OAuth
+      if (template.authType === 'oauth2') {
+        // Initiate OAuth flow
+        const response = await fetch('/api/oauth/initiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            platform: platformId,
+            userId: currentUser.email
+          })
+        });
 
-      const result = await createIntegration(integrationData, currentUser.email);
-      
-      if (result.success) {
-        // Update local platform status
-        setPlatforms(prev => prev.map(p => 
-          p.id === platformId 
-            ? { ...p, status: 'connected', lastSync: new Date().toISOString() }
-            : p
-        ));
+        const result = await response.json();
         
-        setMessage({ type: 'success', text: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}! Integration has been added to admin management.` });
-        setTimeout(() => setMessage(null), 5000);
+        if (result.success && result.authUrl) {
+          // Redirect to OAuth provider
+          window.location.href = result.authUrl;
+          return; // Don't set isConnecting to null as we're redirecting
+        } else {
+          throw new Error(result.error || 'Failed to initiate OAuth flow');
+        }
       } else {
-        throw new Error(result.error || 'Failed to create integration');
+        // For API key based platforms, use the existing flow
+        // Simulate connection process
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Create integration in admin system
+        const userId = currentUser.email.replace('@', '_').replace('.', '_');
+        const integrationData = {
+          platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
+          name: `${template.name} Integration - ${currentUser.fname || 'User'} ${currentUser.lname || ''}`,
+          apiKey: `user_${userId}_${platformId}_${Date.now()}`, // Simulated API key
+          apiSecret: `secret_${userId}_${platformId}_${Date.now()}`, // Simulated API secret
+          webhookUrl: '',
+          syncFrequency: 'daily' as const,
+          configuration: { ...template.defaultConfiguration }
+        };
+
+        const result = await createIntegration(integrationData, currentUser.email);
+        
+        if (result.success) {
+          // Update local platform status
+          setPlatforms(prev => prev.map(p => 
+            p.id === platformId 
+              ? { ...p, status: 'connected', lastSync: new Date().toISOString() }
+              : p
+          ));
+          
+          setMessage({ type: 'success', text: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}! Integration has been added to admin management.` });
+          setTimeout(() => setMessage(null), 5000);
+        } else {
+          throw new Error(result.error || 'Failed to create integration');
+        }
       }
     } catch (err) {
       console.error('Connection error:', err);
@@ -226,6 +316,10 @@ function ConnectPlatformsSection() {
                       onClick={() => handleConnect(platform.id)}
                       disabled={isConnecting === platform.id}
                       className="px-3 py-1 text-sm rounded-lg bg-green-600 hover:bg-green-700 text-white transition disabled:opacity-50"
+                      title={platformTemplates.find(t => t.platform === platform.id)?.authType === 'oauth2' 
+                        ? 'Click to authenticate with OAuth' 
+                        : 'Click to connect with API keys'
+                      }
                     >
                       {isConnecting === platform.id ? 'Connecting...' : 'Connect'}
                     </button>
@@ -479,9 +573,7 @@ export default function SettingsPage() {
     );
   }
 
-  const roles = user.roles || (user.role ? [user.role] : []);
-  const isAdmin = roles.includes('admin') || roles.includes('system_admin');
-  const canView = !isAdmin; // allow all authenticated non-admin users
+  const canView = (user.permissions || []).includes('view_settings');
   if (!canView) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -492,7 +584,34 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header active="settings" />
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-8">
+              <Link href="/dashboard" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition">
+                DataDrip
+              </Link>
+              <nav className="hidden md:flex space-x-6">
+                <a href={user.role === 'admin' || user.role === 'system_admin' ? '/admin/manage-users' : '/dashboard'} className="text-subheader hover:text-header transition">Dashboard</a>
+                <a href="/sales-inventory" className="text-subheader hover:text-header transition">Sales and Inventory</a>
+                <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
+              </nav>
+              <span className="text-primary-500 font-bold">SETTINGS</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-subheader">{user.email}</span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium"
+                title="Logout"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
 
         <div className="flex justify-center">
           <div className="flex max-w-7xl w-full">
@@ -522,15 +641,6 @@ export default function SettingsPage() {
                     }`}
                   >
                     🔗 Connect Platforms
-                  </button>
-
-                  {/* Logout placed after Connect Platforms in the sidebar */}
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 rounded-lg transition text-subheader hover:bg-gray-100 hover:text-header"
-                    title="Logout"
-                  >
-                    🚪 Logout
                   </button>
                 </nav>
 
