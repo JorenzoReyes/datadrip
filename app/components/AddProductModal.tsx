@@ -17,10 +17,6 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
   const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [hasHadImages, setHasHadImages] = useState(false);
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [sellerSku, setSellerSku] = useState('');
-  const [showSpecialPrice, setShowSpecialPrice] = useState(false);
-  const [specialPrice, setSpecialPrice] = useState('');
   const errorTimeouts = useRef<{ [key: string]: number }>({});
 
   const setErrorWithTimeout = (key: string, message: string) => {
@@ -505,9 +501,9 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
   </h5>
 
   <div className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
-    <div className="min-w-[600px]">
+    <div className="min-w-[600px] grid">
        {/* Header Row */}
-       <div className="grid grid-cols-5 bg-gray-50 text-xs font-medium text-subheader">
+       <div className="grid grid-cols-[0.9fr_1fr_1.1fr_1.8fr_0.6fr] bg-gray-50 text-xs font-medium text-subheader">
          <div className="border-r border-gray-200 p-3 text-center">
            <span className="text-red-500">*</span> Price
          </div>
@@ -518,7 +514,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
        </div>
 
       {/* Data Row */}
-      <div className="grid grid-cols-5 border-t border-gray-200">
+      <div className="grid grid-cols-[0.9fr_1fr_1.1fr_1.8fr_0.6fr] border-t border-gray-200">
          {/* Price */}
          <div className="border-r border-gray-200 p-3 flex justify-center">
            <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
@@ -533,25 +529,7 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 
         {/* Special Price */}
         <div className="border-r border-gray-200 p-3 flex justify-center items-center">
-          {!showSpecialPrice ? (
-            <button 
-              onClick={() => setShowSpecialPrice(true)}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Add
-            </button>
-          ) : (
-            <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
-              <span className="text-sm text-subheader">₱</span>
-              <input
-                type="text"
-                value={specialPrice}
-                onChange={(e) => setSpecialPrice(e.target.value)}
-                className="flex-1 border-none bg-transparent text-center text-sm text-header focus:outline-none min-w-0"
-                style={{ width: 'calc(100% - 20px)' }}
-              />
-            </div>
-          )}
+          <button className="text-sm text-blue-600 hover:underline">Add</button>
         </div>
 
         {/* Stock */}
@@ -567,33 +545,20 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
            <div className="relative w-full max-w-[200px] mx-auto">
              <input
                type="text"
-               value={sellerSku || ''}
-               onChange={(e) => setSellerSku(e.target.value)}
-               className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 pr-12 text-left text-[12px] text-header focus:outline-none"
+               className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 pr-12 text-left text-sm text-header focus:outline-none"
                placeholder="Seller SKU"
-               maxLength={200}
              />
              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-               {(sellerSku || '').length}/200
+               0/200
              </span>
            </div>
          </div>
 
         {/* Availability */}
         <div className="flex items-center justify-center p-3">
-          <button
-            type="button"
-            onClick={() => setIsAvailable(!isAvailable)}
-            className={`relative h-5 w-9 rounded-full transition-colors duration-200 ${
-              isAvailable ? 'bg-green-500' : 'bg-gray-200'
-            }`}
-          >
-            <div 
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                isAvailable ? 'translate-x-4' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
+          <div className="relative h-5 w-9 rounded-full bg-gray-200">
+            <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"></div>
+          </div>
         </div>
       </div>
     </div>
