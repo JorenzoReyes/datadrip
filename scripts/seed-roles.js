@@ -481,7 +481,7 @@ async function seedDirect() {
         SELECT 
           account_id,
           sale_date,
-          SUM(total_sales) as total_sales,
+          SUM(platform_total) as total_sales,
           COUNT(DISTINCT order_id) as total_orders,
           jsonb_object_agg(platform, platform_total)
         FROM (
@@ -489,9 +489,10 @@ async function seedDirect() {
             account_id,
             sale_date,
             platform,
-            SUM(total_sales) as platform_total
+            SUM(total_sales) as platform_total,
+            order_id
           FROM product_sales
-          GROUP BY account_id, sale_date, platform
+          GROUP BY account_id, sale_date, platform, order_id
         ) platform_sales
         GROUP BY account_id, sale_date
         ON CONFLICT (account_id, sale_date) DO UPDATE SET

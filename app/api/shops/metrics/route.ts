@@ -38,22 +38,18 @@ export async function GET(req: Request) {
       [accountIds]
     );
 
-    // Daily sales for the past 7 days from product_sales table (using seeded data range)
-    // Since the dashboard shows October 14, 2025, we'll show the 7 days before that
+    // Daily sales for the past 7 days from daily_sales_aggregated table
+    // Get the last 7 days of aggregated data
     const dailySales = await query<{
       sale_date: string;
-      platform: string;
       total_sales: number;
     }>(
-      `SELECT sale_date, 
-              platform,
-              SUM(total_sales) as total_sales
-       FROM product_sales
+      `SELECT sale_date::text, 
+              total_sales
+       FROM daily_sales_aggregated
        WHERE account_id = ANY($1) 
-         AND sale_date >= '2025-10-08'::date
-         AND sale_date <= '2025-10-14'::date
-       GROUP BY sale_date, platform
-       ORDER BY sale_date, platform`,
+       ORDER BY sale_date DESC
+       LIMIT 7`,
       [accountIds]
     );
 

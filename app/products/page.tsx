@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
+import dynamic from 'next/dynamic';
 import { useAuth } from '../contexts/auth';
 
 export default function ProductsPage() {
@@ -46,6 +47,13 @@ export default function ProductsPage() {
   const [category, setCategory] = useState(categories[0]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Lazy load modal to keep initial bundle small
+  const AddProductModal = useMemo(
+    () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
+    []
+  );
 
   const filtered = useMemo(() => {
     return demoProducts.filter((p) => {
@@ -153,7 +161,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Add product button */}
-            <button className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
+            <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
               Add Products
             </button>
 
@@ -259,6 +267,9 @@ export default function ProductsPage() {
           </table>
         </div>
       </main>
+      {showAddModal && (
+        <AddProductModal onClose={() => setShowAddModal(false)} />
+      )}
     </div>
   );
 }
