@@ -32,6 +32,13 @@ export async function GET(request: NextRequest) {
 
     const stateData = global.oauthStates.get(state);
     
+    // Check if stateData exists
+    if (!stateData) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings?oauth_error=invalid_state`
+      );
+    }
+    
     // Check if state has expired
     if (Date.now() > stateData.expiresAt) {
       global.oauthStates.delete(state);
