@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const router = useRouter();
   type ShopRow = { platform: string; followers_count: number | null };
   type Totals = { all: number; tiktok: number; lazada: number; shopee: number };
-  const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; platform: string; total_sales: number }[]; totals?: Totals } | null>(null);
+  const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; total_sales: number }[]; totals?: Totals } | null>(null);
   const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; dayOfWeek: number }[]>([]);
   const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string }[]>([]);
 
@@ -42,41 +42,25 @@ export default function DashboardPage() {
         const topProductsJson = await topProductsRes.json();
         setTopProducts(topProductsJson.topProducts || []);
 
-        // Process daily sales data for the line chart, ensuring all 7 days are present
+        // Process daily sales data for the line chart from daily_sales_aggregated
         if (json.dailySales && json.dailySales.length > 0) {
-          const aggregatedSales: { [date: string]: number } = {};
-          json.dailySales.forEach((sale: { sale_date: string; platform: string; total_sales: number }) => {
-            // Convert ISO date to YYYY-MM-DD format
-            const dateStr = sale.sale_date.split('T')[0];
-            aggregatedSales[dateStr] = (aggregatedSales[dateStr] || 0) + parseFloat(sale.total_sales.toString());
+          // Data is already aggregated per day from daily_sales_aggregated table
+          const processedData: { date: string; totalSales: number; dayOfWeek: number }[] = json.dailySales.map((sale: { sale_date: string; total_sales: number }) => {
+            const dateStr = sale.sale_date.split('T')[0]; // Convert to YYYY-MM-DD format
+            const date = new Date(dateStr);
+            return {
+              date: dateStr,
+              totalSales: parseFloat(sale.total_sales.toString()),
+              dayOfWeek: date.getUTCDay(), // 0 for Sunday, 1 for Monday, etc.
+            };
           });
           
-          // Generate all 7 days to ensure complete X-axis
-          const sevenDaysData: { date: string; totalSales: number; dayOfWeek: number }[] = [];
-          const today = new Date();
-          today.setUTCHours(0, 0, 0, 0); // Normalize to start of day UTC
-
-          // Start from 6 days ago and go to today (7 days total)
-          for (let i = 6; i >= 0; i--) { 
-            const d = new Date(today);
-            d.setUTCDate(today.getUTCDate() - i);
-            const dateString = d.toISOString().split('T')[0]; // YYYY-MM-DD
-
-            sevenDaysData.push({
-              date: dateString,
-              totalSales: aggregatedSales[dateString] || 0,
-              dayOfWeek: d.getUTCDay(), // 0 for Sunday, 1 for Monday, etc.
-            });
-          }
-          
           // Sort by date to ensure chronological order (oldest to newest)
-          const sortedData = sevenDaysData.sort((a, b) => {
+          const sortedData = processedData.sort((a: { date: string; totalSales: number; dayOfWeek: number }, b: { date: string; totalSales: number; dayOfWeek: number }) => {
             return new Date(a.date).getTime() - new Date(b.date).getTime();
           });
           
-          console.log('Original data order:', sevenDaysData.map(d => d.date));
-          console.log('Sorted data order:', sortedData.map(d => d.date));
-          console.log('Sorted seven days data (chronological):', sortedData.map(d => ({ date: d.date, day: d.dayOfWeek, sales: d.totalSales })));
+          console.log('Daily sales from aggregated table:', sortedData.map(d => ({ date: d.date, day: d.dayOfWeek, sales: d.totalSales })));
           setProcessedDailySales(sortedData);
         } else {
           setProcessedDailySales([]);
