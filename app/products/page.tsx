@@ -175,6 +175,35 @@ export default function ProductsPage() {
     }
   };
 
+  // Handle archiving product
+  const handleArchiveProduct = async (productId: number) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm('Are you sure you want to archive this product? It will be hidden from your product list.');
+    
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${productId}/archive?email=${email}`, {
+        method: 'PATCH',
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to archive product');
+      }
+
+      // Remove the archived product from the local products list
+      setProducts(products.filter(p => p.product_id !== productId));
+    } catch (error) {
+      console.error('Error archiving product:', error);
+      alert(error instanceof Error ? error.message : 'Failed to archive product');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -392,7 +421,11 @@ export default function ProductsPage() {
                             <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
                           </svg>
                         </button>
-                        <button className="text-red-600 hover:text-red-700" title="Archive">
+                        <button 
+                          onClick={() => handleArchiveProduct(p.product_id)}
+                          className="text-red-600 hover:text-red-700" 
+                          title="Archive"
+                        >
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="3 6 5 6 21 6" />
                             <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
