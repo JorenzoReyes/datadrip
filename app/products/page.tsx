@@ -77,6 +77,23 @@ export default function ProductsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Pagination and sorting state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price' | 'created_at'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const itemsPerPage = 10;
+
+  // Lazy load modals to keep initial bundle small
+  const AddProductModal = useMemo(
+    () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
+    []
+  );
+  const EditProductModal = useMemo(
+    () => dynamic(() => import('../components/EditProductModal'), { ssr: false }),
+    []
+  );
 
   // Extract unique categories from products
   const categories = useMemo(() => {
@@ -87,22 +104,83 @@ export default function ProductsPage() {
     return ['All Categories', ...Array.from(uniqueCategories).sort()];
   }, [products]);
 
-  // Lazy load modal to keep initial bundle small
-  const AddProductModal = useMemo(
-    () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
-    []
-  );
-
-  // Filter products based on search query and category
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
+  // Filter, sort, and paginate products
+  const { paginated, totalPages, totalItems } = useMemo(() => {
+    // First filter products
+    const filteredProducts = products.filter((p) => {
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
                          p.brand?.toLowerCase().includes(query.toLowerCase()) ||
                          p.sku?.toLowerCase().includes(query.toLowerCase());
       const matchCategory = category === 'All Categories' ? true : p.category === category;
       return matchQuery && matchCategory;
     });
-  }, [products, query, category]);
+
+    // Then sort products
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'stock':
+          aValue = a.stock;
+          bValue = b.stock;
+          break;
+        case 'price':
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Calculate pagination
+    const totalItems = sortedProducts.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
+
+    return {
+      paginated: paginatedProducts,
+      totalPages,
+      totalItems
+    };
+  }, [products, query, category, sortBy, sortOrder, currentPage, itemsPerPage]);
+
+  // Handle sorting
+  const handleSort = (newSortBy: 'name' | 'stock' | 'price' | 'created_at') => {
+    if (sortBy === newSortBy) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, category, sortBy, sortOrder]);
 
   // Handle adding new product
   const handleAddProduct = async (productData: {
@@ -256,14 +334,39 @@ export default function ProductsPage() {
                 </svg>
               </button>
               {filterOpen && (
-                <div className="absolute right-0 z-10 mt-2 w-48 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
-                  <button className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50">
-                    Status: Available
-                    <span className="text-xs text-gray-500">(demo)</span>
+                <div className="absolute right-0 z-10 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
+                  <div className="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider">Sort by</div>
+                  <button 
+                    onClick={() => handleSort('name')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'name' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
-                  <button className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50">
-                    Price: Low → High
-                    <span className="text-xs text-gray-500">(demo)</span>
+                  <button 
+                    onClick={() => handleSort('stock')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'stock' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Stock {sortBy === 'stock' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button 
+                    onClick={() => handleSort('price')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'price' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button 
+                    onClick={() => handleSort('created_at')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'created_at' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Date Added {sortBy === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
                 </div>
               )}
@@ -303,14 +406,14 @@ export default function ProductsPage() {
                     Loading products...
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : paginated.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
                     {products.length === 0 ? 'No products found. Click "Add Products" to get started.' : 'No products match your search criteria.'}
                   </td>
                 </tr>
               ) : (
-                filtered.map((p) => (
+                paginated.map((p) => (
                   <tr key={p.product_id} className="hover:bg-gray-100/70">
                     <td className="px-4 py-3">
                       <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label={`Select ${p.name}`} />
@@ -367,6 +470,68 @@ export default function ProductsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} products
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              {/* Page numbers */}
+              <div className="flex space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current page
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          page === currentPage
+                            ? 'bg-emerald-700 text-white'
+                            : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return (
+                      <span key={page} className="px-2 py-2 text-sm text-gray-500">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </main>
       {showAddModal && (
         <AddProductModal 

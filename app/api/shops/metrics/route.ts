@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query, queryOne } from '../../../utils/database';
+import { EnhancedDataSanitizationService } from '../../../services/enhancedDataSanitizationService';
 
 export async function GET(req: Request) {
   try {
@@ -76,7 +77,18 @@ export async function GET(req: Request) {
       shopee: Number(totalsRows.find(r => r.platform === 'shopee')?.total || 0)
     };
 
-    return NextResponse.json({ shops, dailySales, totals });
+    // Log data access for audit
+    EnhancedDataSanitizationService.logDataAccess(owner.user_id, 'dashboard_metrics', false);
+
+    // Mask financial data for dashboard display (round to nearest 1000)
+    const maskedTotals = {
+      all: Math.round(totals.all / 1000) * 1000,
+      tiktok: Math.round(totals.tiktok / 1000) * 1000,
+      lazada: Math.round(totals.lazada / 1000) * 1000,
+      shopee: Math.round(totals.shopee / 1000) * 1000
+    };
+
+    return NextResponse.json({ shops, dailySales, totals: maskedTotals });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to load metrics';
     return NextResponse.json({ error: message }, { status: 500 });

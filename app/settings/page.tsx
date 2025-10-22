@@ -330,7 +330,7 @@ interface UserSettings {
 }
 
 export default function SettingsPage() {
-  const { user, isLoading: authLoading, logout, updateUser } = useAuth();
+  const { user, isLoading: authLoading, updateUser } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<'details' | 'platforms'>('details');
   const [isLoading, setIsLoading] = useState(false);
@@ -458,10 +458,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
 
   if (authLoading) {
     return (
@@ -524,14 +520,6 @@ export default function SettingsPage() {
                     🔗 Connect Platforms
                   </button>
 
-                  {/* Logout placed after Connect Platforms in the sidebar */}
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 rounded-lg transition text-subheader hover:bg-gray-100 hover:text-header"
-                    title="Logout"
-                  >
-                    🚪 Logout
-                  </button>
                 </nav>
 
                 {/* Additional Info */}

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, BarChart, Bar, Cell } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell } from 'recharts';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
@@ -13,7 +13,8 @@ export default function DashboardPage() {
   type Totals = { all: number; tiktok: number; lazada: number; shopee: number };
   const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; total_sales: number; platform_breakdown?: { tiktok?: number; shopee?: number; lazada?: number } }[]; totals?: Totals } | null>(null);
   const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[]>([]);
-  const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string }[]>([]);
+  const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string; platform?: string; platforms?: string }[]>([]);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
 
   useEffect(() => {
     // Check if user is authenticated
@@ -38,7 +39,8 @@ export default function DashboardPage() {
         setData(json);
 
         // Fetch top selling products
-        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30`, { cache: 'no-store' });
+        const platformParam = selectedPlatform === 'all' ? '' : `&platform=${selectedPlatform}`;
+        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30${platformParam}`, { cache: 'no-store' });
         const topProductsJson = await topProductsRes.json();
         setTopProducts(topProductsJson.topProducts || []);
 
@@ -88,7 +90,7 @@ export default function DashboardPage() {
       }
     }
     if (!isLoading && user) load();
-  }, [isLoading, user]);
+  }, [isLoading, user, selectedPlatform]);
 
   if (isLoading) {
     return (
@@ -282,7 +284,23 @@ export default function DashboardPage() {
 
         {/* Top 5 Selling Products */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top 5 Selling Products (Last 30 Days)</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Top 5 Selling Products (Last 30 Days)</h3>
+            <div className="flex items-center space-x-2">
+              <label htmlFor="platform-filter" className="text-sm font-medium text-gray-700">Platform:</label>
+              <select
+                id="platform-filter"
+                value={selectedPlatform}
+                onChange={(e) => setSelectedPlatform(e.target.value)}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="all">All Platforms</option>
+                <option value="shopee">Shopee</option>
+                <option value="lazada">Lazada</option>
+                <option value="tiktok">TikTok</option>
+              </select>
+            </div>
+          </div>
           {topProducts.length > 0 ? (
             <div className="space-y-3">
               {topProducts.map((product, index) => (
@@ -299,6 +317,9 @@ export default function DashboardPage() {
                   <div className="text-right">
                     <p className="font-semibold text-gray-900">₱{Math.round(product.total_revenue).toLocaleString()}</p>
                     <p className="text-sm text-gray-500">{product.total_quantity_sold} sold</p>
+                    <p className="text-xs text-gray-400">
+                      {selectedPlatform === 'all' ? (product.platforms || 'Multiple platforms') : (product.platform || selectedPlatform)}
+                    </p>
                   </div>
                 </div>
               ))}
