@@ -5,9 +5,19 @@ import Image from 'next/image';
 
 interface AddProductModalProps {
 	onClose: () => void;
+	onSave: (productData: {
+		name: string;
+		sku?: string;
+		description?: string;
+		brand?: string;
+		category?: string;
+		subcategory?: string;
+		price: number;
+		stock: number;
+	}) => Promise<void>;
 }
 
-export default function AddProductModal({ onClose }: AddProductModalProps) {
+export default function AddProductModal({ onClose, onSave }: AddProductModalProps) {
 	const scrollRef = useRef<HTMLDivElement | null>(null);
 	const [showExample, setShowExample] = useState(false);
   const hideExampleTimer = useRef<number | null>(null);
@@ -24,6 +34,14 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
   const [sellerSKU, setSellerSKU] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
   const errorTimeouts = useRef<{ [key: string]: number }>({});
+  
+  // Additional form fields for backend integration
+  const [description, setDescription] = useState('');
+  const [brand, setBrand] = useState('');
+  const [category, setCategory] = useState('');
+  const [subcategory, setSubcategory] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const setErrorWithTimeout = (key: string, message: string) => {
     // Clear existing timeout for this key
@@ -270,6 +288,49 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
     }, 200); // small grace period to allow moving from link to popup
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError(null);
+    setLoading(true);
+
+    // Validate required fields
+    if (!productName.trim()) {
+      setSubmitError('Product name is required');
+      setLoading(false);
+      return;
+    }
+    
+    if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+      setSubmitError('Valid price is required');
+      setLoading(false);
+      return;
+    }
+    
+    if (!stock || isNaN(parseInt(stock)) || parseInt(stock) < 0) {
+      setSubmitError('Valid stock is required');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      await onSave({
+        name: productName.trim(),
+        sku: sellerSKU.trim() || undefined,
+        description: description.trim() || undefined,
+        brand: brand.trim() || undefined,
+        category: category.trim() || undefined,
+        subcategory: subcategory.trim() || undefined,
+        price: parseFloat(price),
+        stock: parseInt(stock),
+      });
+      // onClose is called by the parent after successful save
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to add product.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 	// Trap focus basic: focus the dialog on open
 	useEffect(() => {
 		const previousActive = document.activeElement as HTMLElement | null;
@@ -331,10 +392,27 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
 									<span className="text-red-500">*</span> Category
 								</label>
-								<div className="flex items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">
-									<span>Please select category or search with keyword</span>
-									<svg className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
-								</div>
+								<input
+									type="text"
+									value={category}
+									onChange={(e) => setCategory(e.target.value)}
+									placeholder="Enter category (e.g., Electronics, Cosmetics, Food)"
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+								/>
+							</div>
+
+							{/* Subcategory */}
+							<div>
+								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+									Subcategory
+								</label>
+								<input
+									type="text"
+									value={subcategory}
+									onChange={(e) => setSubcategory(e.target.value)}
+									placeholder="Enter subcategory (optional)"
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+								/>
 							</div>
 
 							{/* Product Images */}
@@ -430,7 +508,13 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
                                         <div className="absolute left-full top-0 z-20 ml-2 w-[460px] rounded-lg border border-gray-200 bg-white p-3 shadow-lg" onMouseEnter={keepExample} onMouseLeave={scheduleHideExample}>
                                             <div className="mb-2 text-[12px] font-semibold text-header">See Example</div>
 											<div className="flex gap-3">
-												<Image src="https://img.lazcdn.com/g/tps/tfs/TB1RuGzMxD1gK0jSZFsXXbldVXa-330-330.jpg_2200x2200q80.jpg_.webp" alt="Sample white background" width={140} height={110} className="h-[110px] w-[140px] rounded-md border border-gray-200 object-cover" />
+												<Image 
+													src="/examplepic.png" 
+													alt="Sample white background" 
+													width={140} 
+													height={110} 
+													className="h-[110px] w-[140px] rounded-md border border-gray-200 object-cover" 
+												/>
 												<ol className="list-decimal pl-4 text-[12px] text-header space-y-1">
 													<li>Size: Less than 6MB.</li>
 													<li>Supported formats: JPG, JEPG or PNG.</li>
@@ -504,7 +588,13 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 						<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 							<div>
 								<label className="mb-1 block text-xs text-subheader"><span className="text-red-500">*</span> Brand</label>
-								<div className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-subheader">Type to search brand...</div>
+								<input
+									type="text"
+									value={brand}
+									onChange={(e) => setBrand(e.target.value)}
+									placeholder="Enter brand name"
+									className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+								/>
 							</div>
 							<div>
 								<label className="mb-1 block text-xs text-subheader">Type</label>
@@ -714,30 +804,16 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 					<section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
 						<h4 className="mb-4 text-[18px] font-semibold text-header">Product Description</h4>
 						<div className="space-y-4">
-							{/* Main Description with toolbar mimic */}
+							{/* Main Description */}
 							<div>
-								<label className="mb-1 block text-[12px] text-subheader">Main Description</label>
-								<div className="rounded-md border border-gray-300 bg-white">
-									{/* Toolbar */}
-									<div className="flex items-center gap-3 border-b border-gray-200 px-3 py-2 text-[12px] text-subheader">
-										<div className="flex items-center gap-2">
-											<span>12</span>
-											<svg className="h-3 w-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
-										</div>
-										<div className="mx-2 h-4 w-px bg-gray-200" />
-										<div className="flex items-center gap-2">
-											<b className="text-gray-700">B</b>
-											<i className="text-gray-700 not-italic">I</i>
-											<span className="text-gray-700">U</span>
-											<span className="text-gray-700">S</span>
-											<span className="text-gray-700">•</span>
-											<span className="text-gray-700">1.</span>
-											<svg className="h-4 w-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 8h8v8H8z"/></svg>
-										</div>
-									</div>
-									{/* Editor area mimic */}
-									<div className="min-h-[180px] px-3 py-2 text-[12px] text-subheader">Please input description...</div>
-								</div>
+								<label className="mb-1 block text-[12px] text-subheader">Description</label>
+								<textarea
+									value={description}
+									onChange={(e) => setDescription(e.target.value)}
+									placeholder="Enter product description..."
+									rows={6}
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+								/>
 							</div>
 
 							{/* Product Highlights */}
@@ -832,8 +908,25 @@ export default function AddProductModal({ onClose }: AddProductModalProps) {
 
 				{/* Footer */}
 				<div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-gray-200 bg-white px-6 py-4 rounded-b-xl">
-					<button onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-subheader hover:bg-gray-50">Cancel</button>
-					<button className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600">Submit</button>
+					{submitError && (
+						<div className="flex-1 rounded-md bg-red-50 border border-red-200 p-3">
+							<p className="text-sm text-red-600">{submitError}</p>
+						</div>
+					)}
+					<button 
+						onClick={onClose} 
+						className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-subheader hover:bg-gray-50"
+						disabled={loading}
+					>
+						Cancel
+					</button>
+					<button 
+						onClick={handleSubmit}
+						className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+						disabled={loading}
+					>
+						{loading ? 'Adding...' : 'Add Product'}
+					</button>
 				</div>
 			</div>
 		</div>
