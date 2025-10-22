@@ -26,17 +26,9 @@ export async function PATCH(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get all accounts owned by this user
-    const accounts = await query<{ account_id: number }>('SELECT account_id FROM accounts WHERE owner_user_id = $1', [owner.user_id]);
-    const accountIds = accounts.map(a => a.account_id);
-    
-    if (accountIds.length === 0) {
-      return NextResponse.json({ error: 'No accounts found' }, { status: 404 });
-    }
-
-    // Verify the product belongs to this user's account
-    const product = await queryOne<{ product_id: number; account_id: number }>(
-      'SELECT product_id, account_id FROM products WHERE product_id = $1',
+    // Verify the product belongs to this user
+    const product = await queryOne<{ product_id: number; owner_user_id: number }>(
+      'SELECT product_id, owner_user_id FROM products WHERE product_id = $1',
       [productId]
     );
 
@@ -44,7 +36,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    if (!accountIds.includes(product.account_id)) {
+    if (product.owner_user_id !== owner.user_id) {
       return NextResponse.json({ error: 'Unauthorized to edit this product' }, { status: 403 });
     }
 

@@ -524,14 +524,6 @@ export default function SettingsPage() {
                     🔗 Connect Platforms
                   </button>
 
-                  {/* Logout placed after Connect Platforms in the sidebar */}
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 rounded-lg transition text-subheader hover:bg-gray-100 hover:text-header"
-                    title="Logout"
-                  >
-                    🚪 Logout
-                  </button>
                 </nav>
 
                 {/* Additional Info */}

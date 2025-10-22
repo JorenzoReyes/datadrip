@@ -38,15 +38,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ products: [] });
     }
 
-    // Get all accounts owned by this user
-    const accounts = await query<{ account_id: number }>('SELECT account_id FROM accounts WHERE owner_user_id = $1', [owner.user_id]);
-    const accountIds = accounts.map(a => a.account_id);
-    
-    if (accountIds.length === 0) {
-      return NextResponse.json({ products: [] });
-    }
-
-    // Get all products for these accounts
+    // Get all products owned by this user
     const products = await query<Product>(
       `SELECT 
         product_id,
@@ -68,10 +60,10 @@ export async function GET(req: Request) {
         created_at,
         updated_at
        FROM products
-       WHERE account_id = ANY($1)
+       WHERE owner_user_id = $1
        AND is_archived = false
        ORDER BY created_at DESC`,
-      [accountIds]
+      [owner.user_id]
     );
 
     return NextResponse.json({ products });
@@ -101,11 +93,8 @@ export async function POST(req: Request) {
     // Get the first account owned by this user (or you could make account selection part of the form)
     const accounts = await query<{ account_id: number }>('SELECT account_id FROM accounts WHERE owner_user_id = $1', [owner.user_id]);
     
-    if (accounts.length === 0) {
-      return NextResponse.json({ error: 'No accounts found' }, { status: 404 });
-    }
-
-    const accountId = accounts[0].account_id;
+    // Use the first account if available, otherwise use null
+    const accountId = accounts.length > 0 ? accounts[0].account_id : null;
 
     // Parse request body
     const body = await req.json();
