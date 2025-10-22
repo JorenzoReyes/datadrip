@@ -3,7 +3,30 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
+import dynamic from 'next/dynamic';
 import { useAuth } from '../contexts/auth';
+
+// --- Product type definition ---
+export type Product = {
+  product_id: number;
+  sku: string | null;
+  name: string;
+  description: string | null;
+  brand: string | null;
+  category: string | null;
+  subcategory: string | null;
+  price: number;
+  cost: number | null;
+  currency: string;
+  stock: number;
+  reorder_level: number | null;
+  sales_count: number;
+  sales_revenue: number;
+  status: string;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+};
 
 export default function ProductsPage() {
   const { user, isLoading } = useAuth();
@@ -16,44 +39,170 @@ export default function ProductsPage() {
     }
   }, [user, isLoading, router]);
 
-  
+  // Fetch products from the database
+  useEffect(() => {
+    async function loadProducts() {
+      if (!user?.email) return;
+      
+      try {
+        setLoadingProducts(true);
+        const email = encodeURIComponent(user.email);
+        const res = await fetch(`/api/products?email=${email}`, { cache: 'no-store' });
+        const json = await res.json();
+        
+        if (json.error) {
+          console.error('Error loading products:', json.error);
+          setProducts([]);
+        } else {
+          setProducts(json.products || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch products:', e);
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    
+    if (user) {
+      loadProducts();
+    }
+  }, [user]);
 
-  // --- Local UI state & demo data (must be declared before any early returns) ---
-  type Product = {
-    id: string;
-    name: string;
-    price: number;
-    stock: number;
-    status: 'Available' | 'Draft' | 'Archived';
-    category: string;
-  };
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-  const demoProducts: Product[] = useMemo(
-    () =>
-      Array.from({ length: 8 }).map((_, i) => ({
-        id: `p-${i + 1}`,
-        name: 'Lorem Ipsum',
-        price: 250,
-        stock: 3024,
-        status: 'Available',
-        category: ['All', 'Beverages', 'Snacks', 'Household'][(i % 3) + 1] || 'Beverages',
-      })),
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('All Categories');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Lazy load modals to keep initial bundle small
+  const AddProductModal = useMemo(
+    () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
+    []
+  );
+  const EditProductModal = useMemo(
+    () => dynamic(() => import('../components/EditProductModal'), { ssr: false }),
     []
   );
 
-  const categories = ['All Categories', 'Beverages', 'Snacks', 'Household'];
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState(categories[0]);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
+  // Extract unique categories from products
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    products.forEach(p => {
+      if (p.category) uniqueCategories.add(p.category);
+    });
+    return ['All Categories', ...Array.from(uniqueCategories).sort()];
+  }, [products]);
 
+  // Filter products based on search query and category
   const filtered = useMemo(() => {
-    return demoProducts.filter((p) => {
-      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase());
+    return products.filter((p) => {
+      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
+                         p.brand?.toLowerCase().includes(query.toLowerCase()) ||
+                         p.sku?.toLowerCase().includes(query.toLowerCase());
       const matchCategory = category === 'All Categories' ? true : p.category === category;
       return matchQuery && matchCategory;
     });
-  }, [demoProducts, query, category]);
+  }, [products, query, category]);
+
+  // Handle saving edited product
+  const handleSaveProduct = async (updatedFields: Partial<Product>) => {
+    if (!editingProduct) return;
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${editingProduct.product_id}?email=${email}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to update product');
+      }
+
+      // Update the local products list
+      setProducts(products.map(p => 
+        p.product_id === editingProduct.product_id 
+          ? { ...p, ...updatedFields }
+          : p
+      ));
+
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  };
+
+  // Handle adding new product
+  const handleAddProduct = async (productData: {
+    name: string;
+    sku?: string;
+    description?: string;
+    brand?: string;
+    category?: string;
+    subcategory?: string;
+    price: number;
+    stock: number;
+  }) => {
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products?email=${email}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to add product');
+      }
+
+      // Add the new product to the local products list
+      setProducts([json.product, ...products]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      throw error;
+    }
+  };
+
+  // Handle archiving product
+  const handleArchiveProduct = async (productId: number) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm('Are you sure you want to archive this product? It will be hidden from your product list.');
+    
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${productId}/archive?email=${email}`, {
+        method: 'PATCH',
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to archive product');
+      }
+
+      // Remove the archived product from the local products list
+      setProducts(products.filter(p => p.product_id !== productId));
+    } catch (error) {
+      console.error('Error archiving product:', error);
+      alert(error instanceof Error ? error.message : 'Failed to archive product');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -153,7 +302,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Add product button */}
-            <button className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
+            <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
               Add Products
             </button>
 
@@ -214,51 +363,98 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-gray-50">
-              {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-100/70">
-                  <td className="px-4 py-3">
-                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label={`Select ${p.name}`} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-md bg-gray-300" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-header">{p.name}</span>
-                        <span className="text-xs text-subheader">{p.category}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-header">₱{p.price.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-sm text-header">{p.stock}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-4">
-                      <button className="text-gray-700 hover:text-gray-900" title="Edit">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
-                        </svg>
-                      </button>
-                      <button className="text-red-600 hover:text-red-700" title="Delete">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                        </svg>
-                      </button>
-                    </div>
+              {loadingProducts ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                    Loading products...
                   </td>
                 </tr>
-              ))}
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                    {products.length === 0 ? 'No products found. Click "Add Products" to get started.' : 'No products match your search criteria.'}
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((p) => (
+                  <tr key={p.product_id} className="hover:bg-gray-100/70">
+                    <td className="px-4 py-3">
+                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label={`Select ${p.name}`} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-md bg-gray-300 flex items-center justify-center text-xs text-gray-600">
+                          {p.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-header">{p.name}</span>
+                          <span className="text-xs text-subheader">
+                            {p.brand ? `${p.brand} • ` : ''}{p.category || 'Uncategorized'}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
+                        {p.stock}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+                        p.status === 'active' 
+                          ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+                          : 'bg-gray-50 text-gray-700 ring-gray-600/20'
+                      }`}>
+                        {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-4">
+                        <button 
+                          onClick={() => setEditingProduct(p)}
+                          className="text-gray-700 hover:text-gray-900" 
+                          title="Edit"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
+                          </svg>
+                        </button>
+                        <button 
+                          onClick={() => handleArchiveProduct(p.product_id)}
+                          className="text-red-600 hover:text-red-700" 
+                          title="Archive"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </main>
+      {showAddModal && (
+        <AddProductModal 
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddProduct}
+        />
+      )}
+      {editingProduct && (
+        <EditProductModal 
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSave={handleSaveProduct}
+        />
+      )}
     </div>
   );
 }

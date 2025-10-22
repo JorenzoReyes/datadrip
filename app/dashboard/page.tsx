@@ -4,15 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, BarChart, Bar, Cell } from 'recharts';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   type ShopRow = { platform: string; followers_count: number | null };
   type Totals = { all: number; tiktok: number; lazada: number; shopee: number };
-  const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; total_sales: number }[]; totals?: Totals } | null>(null);
-  const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; dayOfWeek: number }[]>([]);
+  const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; total_sales: number; platform_breakdown?: { tiktok?: number; shopee?: number; lazada?: number } }[]; totals?: Totals } | null>(null);
+  const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[]>([]);
   const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string }[]>([]);
 
   useEffect(() => {
@@ -44,23 +44,41 @@ export default function DashboardPage() {
 
         // Process daily sales data for the line chart from daily_sales_aggregated
         if (json.dailySales && json.dailySales.length > 0) {
-          // Data is already aggregated per day from daily_sales_aggregated table
-          const processedData: { date: string; totalSales: number; dayOfWeek: number }[] = json.dailySales.map((sale: { sale_date: string; total_sales: number }) => {
+          // Aggregate platform data by date (multiple accounts may have same date)
+          const aggregatedByDate: { [date: string]: { totalSales: number; tiktok: number; shopee: number; lazada: number } } = {};
+          
+          json.dailySales.forEach((sale: { sale_date: string; total_sales: number; platform_breakdown?: { tiktok?: number; shopee?: number; lazada?: number } }) => {
             const dateStr = sale.sale_date.split('T')[0]; // Convert to YYYY-MM-DD format
+            
+            if (!aggregatedByDate[dateStr]) {
+              aggregatedByDate[dateStr] = { totalSales: 0, tiktok: 0, shopee: 0, lazada: 0 };
+            }
+            
+            aggregatedByDate[dateStr].totalSales += parseFloat(sale.total_sales.toString());
+            aggregatedByDate[dateStr].tiktok += sale.platform_breakdown?.tiktok || 0;
+            aggregatedByDate[dateStr].shopee += sale.platform_breakdown?.shopee || 0;
+            aggregatedByDate[dateStr].lazada += sale.platform_breakdown?.lazada || 0;
+          });
+          
+          // Convert to array format
+          const processedData: { date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[] = Object.entries(aggregatedByDate).map(([dateStr, values]) => {
             const date = new Date(dateStr);
             return {
               date: dateStr,
-              totalSales: parseFloat(sale.total_sales.toString()),
+              totalSales: values.totalSales,
+              tiktok: values.tiktok,
+              shopee: values.shopee,
+              lazada: values.lazada,
               dayOfWeek: date.getUTCDay(), // 0 for Sunday, 1 for Monday, etc.
             };
           });
           
           // Sort by date to ensure chronological order (oldest to newest)
-          const sortedData = processedData.sort((a: { date: string; totalSales: number; dayOfWeek: number }, b: { date: string; totalSales: number; dayOfWeek: number }) => {
+          const sortedData = processedData.sort((a, b) => {
             return new Date(a.date).getTime() - new Date(b.date).getTime();
           });
           
-          console.log('Daily sales from aggregated table:', sortedData.map(d => ({ date: d.date, day: d.dayOfWeek, sales: d.totalSales })));
+          console.log('Daily sales with platform breakdown:', sortedData.map(d => ({ date: d.date, tiktok: d.tiktok, shopee: d.shopee, lazada: d.lazada })));
           setProcessedDailySales(sortedData);
         } else {
           setProcessedDailySales([]);
@@ -208,7 +226,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-base font-semibold font-title text-header mb-4">Sales Trend (Past 7 Days)</h4>
+            <h4 className="text-base font-semibold font-title text-header mb-4">Sales Trend by Platform (Past 7 Days)</h4>
             <div className="h-64">
               {processedDailySales.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -224,10 +242,33 @@ export default function DashboardPage() {
                   />
                   <YAxis />
                   <Tooltip 
-                    formatter={(value: number) => [`₱${Math.round(value).toLocaleString()}`, 'Total Sales']}
-                    labelFormatter={() => ''}
+                    formatter={(value: number) => [`₱${Math.round(value).toLocaleString()}`]}
+                    labelFormatter={(label: string) => `Date: ${label}`}
                   />
-                  <Line type="monotone" dataKey="totalSales" name="Total Sales" stroke="#f97316" />
+                  <Line 
+                    type="monotone" 
+                    dataKey="tiktok" 
+                    name="TikTok" 
+                    stroke="#000000" 
+                    strokeWidth={2}
+                    dot={{ fill: '#000000', r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="shopee" 
+                    name="Shopee" 
+                    stroke="#EE4D2D" 
+                    strokeWidth={2}
+                    dot={{ fill: '#EE4D2D', r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="lazada" 
+                    name="Lazada" 
+                    stroke="#0F146D" 
+                    strokeWidth={2}
+                    dot={{ fill: '#0F146D', r: 4 }}
+                  />
                 </LineChart>
                 </ResponsiveContainer>
               ) : (
