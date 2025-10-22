@@ -11,7 +11,7 @@ export interface AuditLogEntry {
   sanitized: boolean;
   ipAddress?: string;
   userAgent?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export class AuditLogService {
@@ -22,7 +22,7 @@ export class AuditLogService {
     userId: number, 
     dataType: string, 
     sanitized: boolean = true,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ) {
     const entry: AuditLogEntry = {
       timestamp: new Date().toISOString(),
@@ -42,7 +42,7 @@ export class AuditLogService {
   static logSecurityEvent(
     userId: number,
     event: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ) {
     const entry: AuditLogEntry = {
       timestamp: new Date().toISOString(),
@@ -119,7 +119,7 @@ export class AuditLogService {
   /**
    * Send to external logging service (implement based on your infrastructure)
    */
-  private static async sendToExternalLoggingService(entry: AuditLogEntry) {
+  private static async sendToExternalLoggingService(_entry: AuditLogEntry) {
     try {
       // Example: Send to AWS CloudWatch
       // await cloudWatchLogs.putLogEvents({
@@ -144,7 +144,7 @@ export class AuditLogService {
   /**
    * Get audit logs for a user (admin function)
    */
-  static async getUserAuditLogs(userId: number, limit: number = 100) {
+  static async getUserAuditLogs(userId: number, _limit: number = 100) {
     // This would query your audit log storage
     // For now, return empty array as we're using console logging
     return [];
@@ -153,7 +153,7 @@ export class AuditLogService {
   /**
    * Get security events (admin function)
    */
-  static async getSecurityEvents(limit: number = 100) {
+  static async getSecurityEvents(_limit: number = 100) {
     // This would query your audit log storage for security events
     return [];
   }

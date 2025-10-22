@@ -87,7 +87,7 @@ Use this data to provide specific, data-driven insights. Reference the summary m
     const historyText = Array.isArray(history)
       ? history
           .slice(-8)
-          .map((m: any) => `${m.type === 'user' ? 'User' : 'AI'}: ${m.content}`)
+          .map((m: { type: string; content: string }) => `${m.type === 'user' ? 'User' : 'AI'}: ${m.content}`)
           .join('\n')
       : '';
 
@@ -120,7 +120,7 @@ Constraints:
     const text = result.response.text();
 
     return NextResponse.json({ content: text });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Gemini insights error:', err);
     return NextResponse.json({ error: 'Failed to generate insights' }, { status: 500 });
   }

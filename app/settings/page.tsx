@@ -330,7 +330,7 @@ interface UserSettings {
 }
 
 export default function SettingsPage() {
-  const { user, isLoading: authLoading, logout, updateUser } = useAuth();
+  const { user, isLoading: authLoading, updateUser } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<'details' | 'platforms'>('details');
   const [isLoading, setIsLoading] = useState(false);
@@ -458,10 +458,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
 
   if (authLoading) {
     return (

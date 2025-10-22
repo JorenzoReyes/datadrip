@@ -186,7 +186,7 @@ export default function InsightsPage() {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
+    } catch {
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',

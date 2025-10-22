@@ -3,6 +3,8 @@
  * Maintains accuracy while protecting sensitive information
  */
 
+import { AuditLogService } from './auditLogService';
+
 export interface EnhancedSanitizedBusinessData {
   summary: {
     totalProducts: number;
@@ -51,21 +53,46 @@ export class EnhancedDataSanitizationService {
   /**
    * Enhanced sanitization that maintains accuracy while protecting sensitive data
    */
-  static sanitizeForAI(rawData: any): EnhancedSanitizedBusinessData {
+  static sanitizeForAI(rawData: {
+    totalProducts?: number;
+    totalShops?: number;
+    totalAccounts?: number;
+    products?: Array<{
+      actual_sales_revenue?: number;
+      actual_sales_count?: number;
+      stock: number;
+      category?: string;
+      name: string;
+    }>;
+    recentSales?: Array<{
+      sale_date: string;
+      daily_revenue?: number;
+      daily_quantity?: number;
+    }>;
+    shops?: Array<{
+      name: string;
+      platform: string;
+      followers_count?: number;
+      rating_value?: number;
+      products_count?: number;
+      total_revenue?: number;
+    }>;
+    accounts?: Array<unknown>;
+  }): EnhancedSanitizedBusinessData {
     try {
       // Calculate summary metrics with minimal rounding
-      const totalRevenue = rawData.products?.reduce((sum: number, p: any) => 
+      const totalRevenue = rawData.products?.reduce((sum: number, p) => 
         sum + (p.actual_sales_revenue || 0), 0) || 0;
-      const totalSales = rawData.products?.reduce((sum: number, p: any) => 
+      const totalSales = rawData.products?.reduce((sum: number, p) => 
         sum + (p.actual_sales_count || 0), 0) || 0;
-      const avgDailyRevenue = rawData.recentSales?.length > 0 
-        ? rawData.recentSales.reduce((sum: number, s: any) => sum + s.daily_revenue, 0) / rawData.recentSales.length
+      const avgDailyRevenue = rawData.recentSales && rawData.recentSales.length > 0
+        ? rawData.recentSales.reduce((sum: number, s) => sum + (s.daily_revenue || 0), 0) / rawData.recentSales.length
         : 0;
 
       // Enhanced top products with performance indicators
       const topProducts = (rawData.products || [])
         .slice(0, 5)
-        .map((p: any, index: number) => ({
+        .map((p, index: number) => ({
           name: p.name || 'Unknown Product',
           revenue: Math.round(p.actual_sales_revenue || 0), // Keep exact revenue
           quantity: Math.round(p.actual_sales_count || 0), // Keep exact quantity
@@ -77,7 +104,7 @@ export class EnhancedDataSanitizationService {
       // Enhanced recent sales with trend analysis
       const recentSales = (rawData.recentSales || [])
         .slice(0, 7)
-        .map((s: any, index: number, array: any[]) => {
+        .map((s, index: number, array) => {
           const prevRevenue = index < array.length - 1 ? array[index + 1]?.daily_revenue || 0 : 0;
           const currentRevenue = s.daily_revenue || 0;
           const trend = this.calculateTrend(prevRevenue, currentRevenue);
@@ -92,7 +119,7 @@ export class EnhancedDataSanitizationService {
 
       // Enhanced shop performance with performance indicators
       const shopPerformance = (rawData.shops || [])
-        .map((s: any) => ({
+        .map((s) => ({
           platform: s.platform || 'Unknown',
           followers: Math.round(s.followers_count || 0), // Keep exact follower count
           rating: Math.round((s.rating_value || 0) * 10) / 10, // Round to 1 decimal
@@ -103,10 +130,10 @@ export class EnhancedDataSanitizationService {
       const products = rawData.products || [];
       const inventoryInsights = {
         totalProducts: products.length,
-        outOfStock: products.filter((p: any) => (p.stock || 0) === 0).length,
-        lowStock: products.filter((p: any) => (p.stock || 0) < 10).length,
-        overstocked: products.filter((p: any) => (p.stock || 0) > 100).length,
-        avgStockLevel: products.length > 0 ? Math.round(products.reduce((sum: number, p: any) => sum + (p.stock || 0), 0) / products.length) : 0
+        outOfStock: products.filter((p) => (p.stock || 0) === 0).length,
+        lowStock: products.filter((p) => (p.stock || 0) < 10).length,
+        overstocked: products.filter((p) => (p.stock || 0) > 100).length,
+        avgStockLevel: products.length > 0 ? Math.round(products.reduce((sum: number, p) => sum + (p.stock || 0), 0) / products.length) : 0
       };
 
       // Business metrics for better insights
@@ -180,7 +207,7 @@ export class EnhancedDataSanitizationService {
   /**
    * Calculate revenue growth percentage
    */
-  private static calculateRevenueGrowth(recentSales: any[]): number {
+  private static calculateRevenueGrowth(recentSales: Array<{ daily_revenue?: number }>): number {
     if (recentSales.length < 2) return 0;
     const latest = recentSales[0]?.daily_revenue || 0;
     const previous = recentSales[1]?.daily_revenue || 0;
@@ -191,28 +218,34 @@ export class EnhancedDataSanitizationService {
   /**
    * Get top category by product count
    */
-  private static getTopCategory(products: any[]): string {
-    const categories = products.reduce((acc: any, p: any) => {
-      acc[p.category] = (acc[p.category] || 0) + 1;
+  private static getTopCategory(products: Array<{ category?: string }>): string {
+    const categories = products.reduce((acc: Record<string, number>, p) => {
+      const category = p.category || 'General';
+      acc[category] = (acc[category] || 0) + 1;
       return acc;
     }, {});
-    return Object.keys(categories).reduce((a, b) => categories[a] > categories[b] ? a : b, 'General');
+    const categoryKeys = Object.keys(categories);
+    if (categoryKeys.length === 0) return 'General';
+    return categoryKeys.reduce((a, b) => categories[a] > categories[b] ? a : b, 'General');
   }
 
   /**
    * Get best performing platform
    */
-  private static getBestPlatform(shopPerformance: any[]): string {
+  private static getBestPlatform(shopPerformance: Array<{ platform: string; followers: number; rating: number }>): string {
+    if (shopPerformance.length === 0) return 'Unknown';
     return shopPerformance.reduce((best, shop) => 
-      shop.followers > best.followers ? shop : best, shopPerformance[0] || { platform: 'Unknown' }
+      shop.followers > best.followers ? shop : best, shopPerformance[0]
     ).platform;
   }
 
   /**
    * Get inventory health status
    */
-  private static getInventoryHealth(insights: any): 'excellent' | 'good' | 'needs_attention' | 'critical' {
+  private static getInventoryHealth(insights: { outOfStock: number; lowStock: number; totalProducts: number }): 'excellent' | 'good' | 'needs_attention' | 'critical' {
     const { outOfStock, lowStock, totalProducts } = insights;
+    if (totalProducts === 0) return 'excellent';
+    
     const outOfStockPercent = (outOfStock / totalProducts) * 100;
     const lowStockPercent = (lowStock / totalProducts) * 100;
     
@@ -258,7 +291,6 @@ export class EnhancedDataSanitizationService {
    * Log data access for audit purposes
    */
   static logDataAccess(userId: number, dataType: string, sanitized: boolean = true) {
-    const { AuditLogService } = require('./auditLogService');
     AuditLogService.logDataAccess(userId, dataType, sanitized);
   }
 }

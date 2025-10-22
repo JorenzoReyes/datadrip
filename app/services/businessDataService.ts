@@ -1,11 +1,57 @@
 import { query } from '../utils/database';
 
 export interface BusinessData {
-  accounts: any[];
-  shops: any[];
-  products: any[];
-  recentSales: any[];
-  topProducts: any[];
+  accounts: Array<{
+    account_id: number;
+    name: string;
+    status: string;
+    created_at: string;
+  }>;
+  shops: Array<{
+    shop_id: number;
+    account_id: number;
+    name: string;
+    platform: string;
+    platform_shop_id: string;
+    followers_count: number;
+    products_count: number;
+    rating_value: number;
+    rating_count: number;
+    chat_performance_percent: number;
+    joined_at: string;
+    account_name: string;
+  }>;
+  products: Array<{
+    product_id: number;
+    name: string;
+    sku: string | null;
+    brand: string | null;
+    category: string | null;
+    subcategory: string | null;
+    price: number;
+    stock: number;
+    status: string;
+    sales_count: number;
+    sales_revenue: number;
+    actual_sales_revenue: number;
+    actual_sales_count: number;
+    total_sales_transactions: number;
+  }>;
+  recentSales: Array<{
+    sale_date: string;
+    daily_revenue: number;
+    daily_quantity: number;
+    daily_orders: number;
+  }>;
+  topProducts: Array<{
+    name: string;
+    stock: number;
+    price: number;
+    category: string | null;
+    actual_sales_count: number;
+    actual_sales_revenue: number;
+    total_transactions: number;
+  }>;
   totalProducts: number;
   totalShops: number;
   totalAccounts: number;
@@ -88,11 +134,11 @@ export class BusinessDataService {
       );
 
       return {
-        accounts,
-        shops,
-        products,
-        recentSales,
-        topProducts,
+        accounts: accounts as BusinessData['accounts'],
+        shops: shops as BusinessData['shops'],
+        products: products as BusinessData['products'],
+        recentSales: recentSales as BusinessData['recentSales'],
+        topProducts: topProducts as BusinessData['topProducts'],
         totalProducts: products.length,
         totalShops: shops.length,
         totalAccounts: accounts.length

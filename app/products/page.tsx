@@ -105,7 +105,7 @@ export default function ProductsPage() {
   }, [products]);
 
   // Filter, sort, and paginate products
-  const { filtered, paginated, totalPages, totalItems } = useMemo(() => {
+  const { paginated, totalPages, totalItems } = useMemo(() => {
     // First filter products
     const filteredProducts = products.filter((p) => {
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -155,7 +155,6 @@ export default function ProductsPage() {
     const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
 
     return {
-      filtered: sortedProducts,
       paginated: paginatedProducts,
       totalPages,
       totalItems
