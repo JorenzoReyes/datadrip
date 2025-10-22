@@ -77,17 +77,6 @@ export default function ProductsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  // Lazy load modals to keep initial bundle small
-  const AddProductModal = useMemo(
-    () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
-    []
-  );
-  const EditProductModal = useMemo(
-    () => dynamic(() => import('../components/EditProductModal'), { ssr: false }),
-    []
-  );
 
   // Extract unique categories from products
   const categories = useMemo(() => {
@@ -97,6 +86,12 @@ export default function ProductsPage() {
     });
     return ['All Categories', ...Array.from(uniqueCategories).sort()];
   }, [products]);
+
+  // Lazy load modal to keep initial bundle small
+  const AddProductModal = useMemo(
+    () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
+    []
+  );
 
   // Filter products based on search query and category
   const filtered = useMemo(() => {
@@ -108,38 +103,6 @@ export default function ProductsPage() {
       return matchQuery && matchCategory;
     });
   }, [products, query, category]);
-
-  // Handle saving edited product
-  const handleSaveProduct = async (updatedFields: Partial<Product>) => {
-    if (!editingProduct) return;
-
-    try {
-      const email = encodeURIComponent(user?.email || '');
-      const res = await fetch(`/api/products/${editingProduct.product_id}?email=${email}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedFields),
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.error || 'Failed to update product');
-      }
-
-      // Update the local products list
-      setProducts(products.map(p => 
-        p.product_id === editingProduct.product_id 
-          ? { ...p, ...updatedFields }
-          : p
-      ));
-
-      setEditingProduct(null);
-    } catch (error) {
-      console.error('Error updating product:', error);
-      throw error;
-    }
-  };
 
   // Handle adding new product
   const handleAddProduct = async (productData: {
@@ -172,35 +135,6 @@ export default function ProductsPage() {
     } catch (error) {
       console.error('Error adding product:', error);
       throw error;
-    }
-  };
-
-  // Handle archiving product
-  const handleArchiveProduct = async (productId: number) => {
-    // Show confirmation dialog
-    const confirmed = window.confirm('Are you sure you want to archive this product? It will be hidden from your product list.');
-    
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const email = encodeURIComponent(user?.email || '');
-      const res = await fetch(`/api/products/${productId}/archive?email=${email}`, {
-        method: 'PATCH',
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.error || 'Failed to archive product');
-      }
-
-      // Remove the archived product from the local products list
-      setProducts(products.filter(p => p.product_id !== productId));
-    } catch (error) {
-      console.error('Error archiving product:', error);
-      alert(error instanceof Error ? error.message : 'Failed to archive product');
     }
   };
 
@@ -411,21 +345,13 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-4">
-                        <button 
-                          onClick={() => setEditingProduct(p)}
-                          className="text-gray-700 hover:text-gray-900" 
-                          title="Edit"
-                        >
+                        <button className="text-gray-700 hover:text-gray-900" title="Edit">
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
                           </svg>
                         </button>
-                        <button 
-                          onClick={() => handleArchiveProduct(p.product_id)}
-                          className="text-red-600 hover:text-red-700" 
-                          title="Archive"
-                        >
+                        <button className="text-red-600 hover:text-red-700" title="Archive">
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="3 6 5 6 21 6" />
                             <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
@@ -446,13 +372,6 @@ export default function ProductsPage() {
         <AddProductModal 
           onClose={() => setShowAddModal(false)}
           onSave={handleAddProduct}
-        />
-      )}
-      {editingProduct && (
-        <EditProductModal 
-          product={editingProduct}
-          onClose={() => setEditingProduct(null)}
-          onSave={handleSaveProduct}
         />
       )}
     </div>

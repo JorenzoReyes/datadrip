@@ -98,7 +98,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get the first account owned by this user (or you could make account selection part of the form)
+    // Get the first account owned by this user
     const accounts = await query<{ account_id: number }>('SELECT account_id FROM accounts WHERE owner_user_id = $1', [owner.user_id]);
     
     if (accounts.length === 0) {
@@ -185,4 +185,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
