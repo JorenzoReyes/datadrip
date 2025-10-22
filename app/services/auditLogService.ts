@@ -119,6 +119,7 @@ export class AuditLogService {
   /**
    * Send to external logging service (implement based on your infrastructure)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private static async sendToExternalLoggingService(_entry: AuditLogEntry) {
     try {
       // Example: Send to AWS CloudWatch
@@ -144,6 +145,7 @@ export class AuditLogService {
   /**
    * Get audit logs for a user (admin function)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async getUserAuditLogs(userId: number, _limit: number = 100) {
     // This would query your audit log storage
     // For now, return empty array as we're using console logging
@@ -153,6 +155,7 @@ export class AuditLogService {
   /**
    * Get security events (admin function)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async getSecurityEvents(_limit: number = 100) {
     // This would query your audit log storage for security events
     return [];
