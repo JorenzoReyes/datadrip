@@ -15,6 +15,7 @@ export type Product = {
   brand: string | null;
   category: string | null;
   subcategory: string | null;
+  product_type: string | null;
   price: number;
   cost: number | null;
   currency: string;
@@ -190,6 +191,7 @@ export default function ProductsPage() {
     brand?: string;
     category?: string;
     subcategory?: string;
+    product_type?: string;
     price: number;
     stock: number;
   }) => {
@@ -442,6 +444,12 @@ export default function ProductsPage() {
                   Price
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
+                  Category
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
+                  Product Type
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
                   Stock
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
@@ -485,6 +493,15 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{p.category || 'Uncategorized'}</span>
+                        {p.subcategory && <span className="text-xs text-gray-500">{p.subcategory}</span>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      {p.product_type || '-'}
+                    </td>
                     <td className="px-4 py-3 text-sm text-header">
                       <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
                         {p.stock}

@@ -12,6 +12,7 @@ interface AddProductModalProps {
 		brand?: string;
 		category?: string;
 		subcategory?: string;
+		product_type?: string;
 		price: number;
 		stock: number;
 	}) => Promise<void>;
@@ -40,6 +41,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
+  const [product_type, setProduct_type] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -300,6 +302,12 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
       return;
     }
     
+    if (!category.trim()) {
+      setSubmitError('Category is required');
+      setLoading(false);
+      return;
+    }
+    
     if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
       setSubmitError('Valid price is required');
       setLoading(false);
@@ -320,6 +328,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
         brand: brand.trim() || undefined,
         category: category.trim() || undefined,
         subcategory: subcategory.trim() || undefined,
+        product_type: product_type.trim() || undefined,
         price: parseFloat(price),
         stock: parseInt(stock),
       });
@@ -392,13 +401,20 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
 									<span className="text-red-500">*</span> Category
 								</label>
-								<input
-									type="text"
+								<select
 									value={category}
-									onChange={(e) => setCategory(e.target.value)}
-									placeholder="Enter category (e.g., Electronics, Cosmetics, Food)"
-									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
-								/>
+									onChange={(e) => {
+										setCategory(e.target.value);
+										setSubcategory(''); // Reset subcategory when category changes
+										setProduct_type(''); // Reset product type when category changes
+									}}
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500"
+								>
+									<option value="">Select Category</option>
+									<option value="Electronics">Electronics</option>
+									<option value="Cosmetics">Cosmetics</option>
+									<option value="Food">Food</option>
+								</select>
 							</div>
 
 							{/* Subcategory */}
@@ -406,13 +422,232 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
 									Subcategory
 								</label>
-								<input
-									type="text"
+								<select
 									value={subcategory}
-									onChange={(e) => setSubcategory(e.target.value)}
-									placeholder="Enter subcategory (optional)"
-									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
-								/>
+									onChange={(e) => {
+										setSubcategory(e.target.value);
+										setProduct_type(''); // Reset product type when subcategory changes
+									}}
+									disabled={!category}
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+								>
+									<option value="">Select Subcategory</option>
+									{category === 'Electronics' && (
+										<>
+											<option value="TV & Video">TV & Video</option>
+											<option value="Audio">Audio</option>
+											<option value="Mobile">Mobile</option>
+											<option value="Computers">Computers</option>
+											<option value="Tablets">Tablets</option>
+											<option value="Cameras">Cameras</option>
+											<option value="Wearables">Wearables</option>
+											<option value="Accessories">Accessories</option>
+											<option value="Monitors">Monitors</option>
+											<option value="Networking">Networking</option>
+										</>
+									)}
+									{category === 'Cosmetics' && (
+										<>
+											<option value="Skincare">Skincare</option>
+											<option value="Makeup">Makeup</option>
+										</>
+									)}
+									{category === 'Food' && (
+										<>
+											<option value="Beverages">Beverages</option>
+											<option value="Snacks">Snacks</option>
+											<option value="Breakfast">Breakfast</option>
+											<option value="Supplements">Supplements</option>
+											<option value="Confectionery">Confectionery</option>
+											<option value="Sweeteners">Sweeteners</option>
+											<option value="Seasonings">Seasonings</option>
+										</>
+									)}
+								</select>
+							</div>
+
+							{/* Product Type */}
+							<div>
+								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+									Product Type
+								</label>
+								<select
+									value={product_type}
+									onChange={(e) => setProduct_type(e.target.value)}
+									disabled={!subcategory}
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+								>
+									<option value="">Select Product Type</option>
+									{/* Electronics Product Types */}
+									{subcategory === 'TV & Video' && (
+										<>
+											<option value="Smart TV">Smart TV</option>
+											<option value="LED TV">LED TV</option>
+											<option value="OLED TV">OLED TV</option>
+											<option value="Projector">Projector</option>
+										</>
+									)}
+									{subcategory === 'Audio' && (
+										<>
+											<option value="Headphones">Headphones</option>
+											<option value="Speakers">Speakers</option>
+											<option value="Earbuds">Earbuds</option>
+											<option value="Soundbar">Soundbar</option>
+											<option value="Microphone">Microphone</option>
+										</>
+									)}
+									{subcategory === 'Mobile' && (
+										<>
+											<option value="Smartphone">Smartphone</option>
+											<option value="Phone Case">Phone Case</option>
+											<option value="Screen Protector">Screen Protector</option>
+											<option value="Charger">Charger</option>
+										</>
+									)}
+									{subcategory === 'Computers' && (
+										<>
+											<option value="Laptop">Laptop</option>
+											<option value="Desktop">Desktop</option>
+											<option value="Keyboard">Keyboard</option>
+											<option value="Mouse">Mouse</option>
+											<option value="Webcam">Webcam</option>
+										</>
+									)}
+									{subcategory === 'Tablets' && (
+										<>
+											<option value="Tablet">Tablet</option>
+											<option value="Tablet Case">Tablet Case</option>
+											<option value="Stylus">Stylus</option>
+										</>
+									)}
+									{subcategory === 'Cameras' && (
+										<>
+											<option value="Action Camera">Action Camera</option>
+											<option value="DSLR">DSLR</option>
+											<option value="Mirrorless">Mirrorless</option>
+											<option value="Security Camera">Security Camera</option>
+										</>
+									)}
+									{subcategory === 'Wearables' && (
+										<>
+											<option value="Smart Watch">Smart Watch</option>
+											<option value="Fitness Tracker">Fitness Tracker</option>
+											<option value="Smart Ring">Smart Ring</option>
+										</>
+									)}
+									{subcategory === 'Accessories' && (
+										<>
+											<option value="Charger">Charger</option>
+											<option value="Cable">Cable</option>
+											<option value="Adapter">Adapter</option>
+											<option value="Stand">Stand</option>
+										</>
+									)}
+									{subcategory === 'Monitors' && (
+										<>
+											<option value="Gaming Monitor">Gaming Monitor</option>
+											<option value="4K Monitor">4K Monitor</option>
+											<option value="Ultrawide Monitor">Ultrawide Monitor</option>
+										</>
+									)}
+									{subcategory === 'Networking' && (
+										<>
+											<option value="Router">Router</option>
+											<option value="Modem">Modem</option>
+											<option value="Switch">Switch</option>
+											<option value="Access Point">Access Point</option>
+										</>
+									)}
+									
+									{/* Cosmetics Product Types */}
+									{subcategory === 'Skincare' && (
+										<>
+											<option value="Serum">Serum</option>
+											<option value="Cleanser">Cleanser</option>
+											<option value="Moisturizer">Moisturizer</option>
+											<option value="Sunscreen">Sunscreen</option>
+											<option value="Toner">Toner</option>
+											<option value="Face Mask">Face Mask</option>
+											<option value="Exfoliator">Exfoliator</option>
+											<option value="Eye Cream">Eye Cream</option>
+										</>
+									)}
+									{subcategory === 'Makeup' && (
+										<>
+											<option value="Lipstick">Lipstick</option>
+											<option value="Foundation">Foundation</option>
+											<option value="Mascara">Mascara</option>
+											<option value="Eyeshadow">Eyeshadow</option>
+											<option value="Concealer">Concealer</option>
+											<option value="Lip Gloss">Lip Gloss</option>
+											<option value="Blush">Blush</option>
+											<option value="Eyeliner">Eyeliner</option>
+											<option value="Highlighter">Highlighter</option>
+										</>
+									)}
+									
+									{/* Food Product Types */}
+									{subcategory === 'Beverages' && (
+										<>
+											<option value="Coffee">Coffee</option>
+											<option value="Tea">Tea</option>
+											<option value="Juice">Juice</option>
+											<option value="Energy Drink">Energy Drink</option>
+											<option value="Soda">Soda</option>
+											<option value="Water">Water</option>
+										</>
+									)}
+									{subcategory === 'Snacks' && (
+										<>
+											<option value="Protein Bar">Protein Bar</option>
+											<option value="Nuts">Nuts</option>
+											<option value="Crackers">Crackers</option>
+											<option value="Dried Fruit">Dried Fruit</option>
+											<option value="Chips">Chips</option>
+											<option value="Trail Mix">Trail Mix</option>
+										</>
+									)}
+									{subcategory === 'Breakfast' && (
+										<>
+											<option value="Granola">Granola</option>
+											<option value="Cereal">Cereal</option>
+											<option value="Oatmeal">Oatmeal</option>
+											<option value="Pancake Mix">Pancake Mix</option>
+										</>
+									)}
+									{subcategory === 'Supplements' && (
+										<>
+											<option value="Smoothie Mix">Smoothie Mix</option>
+											<option value="Protein Powder">Protein Powder</option>
+											<option value="Vitamins">Vitamins</option>
+											<option value="Superfood Powder">Superfood Powder</option>
+										</>
+									)}
+									{subcategory === 'Confectionery' && (
+										<>
+											<option value="Chocolate">Chocolate</option>
+											<option value="Candy">Candy</option>
+											<option value="Gummies">Gummies</option>
+											<option value="Cookies">Cookies</option>
+										</>
+									)}
+									{subcategory === 'Sweeteners' && (
+										<>
+											<option value="Honey">Honey</option>
+											<option value="Sugar">Sugar</option>
+											<option value="Stevia">Stevia</option>
+											<option value="Maple Syrup">Maple Syrup</option>
+										</>
+									)}
+									{subcategory === 'Seasonings' && (
+										<>
+											<option value="Spice Mix">Spice Mix</option>
+											<option value="Salt">Salt</option>
+											<option value="Pepper">Pepper</option>
+											<option value="Herbs">Herbs</option>
+										</>
+									)}
+								</select>
 							</div>
 
 							{/* Product Images */}

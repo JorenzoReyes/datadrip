@@ -9,6 +9,7 @@ type Product = {
   brand: string | null;
   category: string | null;
   subcategory: string | null;
+  product_type: string | null;
   price: number;
   cost: number | null;
   currency: string;
@@ -48,6 +49,7 @@ export async function GET(req: Request) {
         brand,
         category,
         subcategory,
+        product_type,
         price,
         cost,
         currency,
@@ -98,7 +100,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, brand, category, subcategory, price, stock } = body;
+    const { name, sku, description, brand, category, subcategory, product_type, price, stock } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -130,8 +132,8 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, status, is_archived)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', false)
+        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, product_type, price, stock, status, is_archived)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'active', false)
        RETURNING 
         product_id,
         sku,
@@ -140,6 +142,7 @@ export async function POST(req: Request) {
         brand,
         category,
         subcategory,
+        product_type,
         price,
         cost,
         currency,
@@ -160,6 +163,7 @@ export async function POST(req: Request) {
         brand && brand.trim() ? brand.trim() : null,
         category && category.trim() ? category.trim() : null,
         subcategory && subcategory.trim() ? subcategory.trim() : null,
+        product_type && product_type.trim() ? product_type.trim() : null,
         parseFloat(price),
         parseInt(stock)
       ]

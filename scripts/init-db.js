@@ -185,6 +185,7 @@ async function createTables(pool) {
       brand VARCHAR(100),
       category VARCHAR(100),
       subcategory VARCHAR(100),
+      product_type VARCHAR(100),
       price DECIMAL(12,2) NOT NULL DEFAULT 0,
       cost DECIMAL(12,2),
       currency CHAR(3) DEFAULT 'PHP',
