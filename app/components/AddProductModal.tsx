@@ -1270,13 +1270,19 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 									type="number"
 									value={packageWeight}
 									onChange={(e) => setPackageWeight(e.target.value)}
-									placeholder="0.01~300"
+									placeholder={packageWeightUnit === 'kg' ? "0.001~300" : "1~300000"}
+									min={packageWeightUnit === 'kg' ? "0.001" : "1"}
+									max={packageWeightUnit === 'kg' ? "300" : "300000"}
+									step={packageWeightUnit === 'kg' ? "0.001" : "1"}
 									className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
 								/>
 								<div className="relative">
 									<select
 										value={packageWeightUnit}
-										onChange={(e) => setPackageWeightUnit(e.target.value)}
+										onChange={(e) => {
+											setPackageWeightUnit(e.target.value);
+											setPackageWeight(''); // Reset weight when unit changes
+										}}
 										className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
 									>
 										<option value="kg">kg</option>
@@ -1297,6 +1303,8 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										value={packageLength}
 										onChange={(e) => setPackageLength(e.target.value)}
 										placeholder="0.01~300"
+										min="0.01"
+										step="0.01"
 										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
 									/>
 									<span className="text-[12px] text-subheader">×</span>
@@ -1305,6 +1313,8 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										value={packageWidth}
 										onChange={(e) => setPackageWidth(e.target.value)}
 										placeholder="0.01~300"
+										min="0.01"
+										step="0.01"
 										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
 									/>
 									<span className="text-[12px] text-subheader">×</span>
@@ -1313,6 +1323,8 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										value={packageHeight}
 										onChange={(e) => setPackageHeight(e.target.value)}
 										placeholder="0.01~300"
+										min="0.01"
+										step="0.01"
 										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
 									/>
 								</div>
