@@ -31,6 +31,7 @@ export type Product = {
   length_cm: number | null;
   width_cm: number | null;
   height_cm: number | null;
+  has_dangerous: boolean;
   status: string;
   images: string[] | null;
   promotion_image: string | null;
@@ -213,7 +214,8 @@ export default function ProductsPage() {
     weight_unit?: string;
     length_cm?: number;
     width_cm?: number;
-    height_cm?: number;
+		height_cm?: number;
+		has_dangerous?: boolean;
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');

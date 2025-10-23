@@ -26,6 +26,7 @@ interface AddProductModalProps {
 		length_cm?: number;
 		width_cm?: number;
 		height_cm?: number;
+		has_dangerous?: boolean;
 	}) => Promise<void>;
 	userEmail?: string;
 }
@@ -61,6 +62,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   const [packageLength, setPackageLength] = useState('');
   const [packageWidth, setPackageWidth] = useState('');
   const [packageHeight, setPackageHeight] = useState('');
+  const [hasDangerous, setHasDangerous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -446,6 +448,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         length_cm: packageLength && !isNaN(parseFloat(packageLength)) ? parseFloat(packageLength) : undefined,
         width_cm: packageWidth && !isNaN(parseFloat(packageWidth)) ? parseFloat(packageWidth) : undefined,
         height_cm: packageHeight && !isNaN(parseFloat(packageHeight)) ? parseFloat(packageHeight) : undefined,
+        has_dangerous: hasDangerous,
       });
       // onClose is called by the parent after successful save
     } catch (err) {
@@ -505,7 +508,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                     onChange={(e) => setProductName(e.target.value.slice(0, 255))}
                                     maxLength={255}
                                     placeholder="Ex. Nikon Coolpix A300 Digital Camera"
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none"
+                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 />
                                 <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">{productName.length}/255</span>
                             </div>
@@ -1311,12 +1314,24 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 								<div className="h-px w-full bg-gray-200" />
 								<div className="text-[12px] text-subheader">Dangerous Goods</div>
 								<div className="flex items-center gap-6 text-[12px] text-subheader">
-									<label className="inline-flex items-center gap-2">
-										<span className="inline-block h-3.5 w-3.5 rounded-full border border-gray-400" />
+									<label className="inline-flex items-center gap-2 cursor-pointer">
+										<input
+											type="radio"
+											name="dangerous"
+											checked={!hasDangerous}
+											onChange={() => setHasDangerous(false)}
+											className="h-3.5 w-3.5 text-primary-500 focus:ring-primary-500"
+										/>
 										<span>None</span>
 									</label>
-									<label className="inline-flex items-center gap-2">
-										<span className="inline-block h-3.5 w-3.5 rounded-full border border-gray-400" />
+									<label className="inline-flex items-center gap-2 cursor-pointer">
+										<input
+											type="radio"
+											name="dangerous"
+											checked={hasDangerous}
+											onChange={() => setHasDangerous(true)}
+											className="h-3.5 w-3.5 text-primary-500 focus:ring-primary-500"
+										/>
 										<span>Contains battery / flammables / liquid</span>
 									</label>
 								</div>
