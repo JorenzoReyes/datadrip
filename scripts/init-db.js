@@ -203,7 +203,6 @@ async function createTables(pool) {
       images JSONB,
       promotion_image TEXT,
       status VARCHAR(20) NOT NULL DEFAULT 'active',
-      is_archived BOOLEAN NOT NULL DEFAULT false,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -546,7 +545,6 @@ async function initializeDatabaseWithDocker() {
         images JSONB,
         promotion_image TEXT,
         status VARCHAR(20) NOT NULL DEFAULT 'active',
-        is_archived BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

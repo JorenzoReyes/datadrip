@@ -18,10 +18,12 @@ interface AddProductModalProps {
 		stock: number;
 		images?: string[];
 		promotion_image?: string;
+		status?: string;
 	}) => Promise<void>;
+	userEmail?: string;
 }
 
-export default function AddProductModal({ onClose, onSave }: AddProductModalProps) {
+export default function AddProductModal({ onClose, onSave, userEmail }: AddProductModalProps) {
 	const scrollRef = useRef<HTMLDivElement | null>(null);
 	const [showExample, setShowExample] = useState(false);
   const hideExampleTimer = useRef<number | null>(null);
@@ -244,7 +246,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
       formData.append('image', file);
       
       console.log('Calling /api/upload-image...');
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch(`/api/upload-image?email=${encodeURIComponent(userEmail || '')}`, {
         method: 'POST',
         body: formData,
       });
@@ -300,7 +302,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
       const formData = new FormData();
       formData.append('image', file);
       
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch(`/api/upload-image?email=${encodeURIComponent(userEmail || '')}`, {
         method: 'POST',
         body: formData,
       });
@@ -422,6 +424,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
         stock: parseInt(stock),
         images: productImages.length > 0 ? productImages : undefined,
         promotion_image: promoImage || undefined,
+        status: isAvailable ? 'active' : 'inactive',
       });
       // onClose is called by the parent after successful save
     } catch (err) {

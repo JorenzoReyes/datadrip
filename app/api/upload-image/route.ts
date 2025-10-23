@@ -2,10 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { queryOne } from '../../utils/database';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('Upload API called');
+    
+    // Get email from query parameters for authentication
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+    
+    if (!email) {
+      return NextResponse.json({ error: 'Missing email parameter' }, { status: 400 });
+    }
+
+    // Verify user exists and is authenticated
+    const owner = await queryOne<{ user_id: number }>('SELECT user_id FROM users WHERE email = $1', [email]);
+    
+    if (!owner) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('image') as File;
     

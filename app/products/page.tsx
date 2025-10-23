@@ -25,7 +25,6 @@ export type Product = {
   sales_count: number;
   sales_revenue: number;
   status: string;
-  is_archived: boolean;
   images: string[] | null;
   promotion_image: string | null;
   created_at: string;
@@ -200,6 +199,7 @@ export default function ProductsPage() {
     stock: number;
     images?: string[];
     promotion_image?: string;
+    status?: string;
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');
@@ -254,26 +254,26 @@ export default function ProductsPage() {
   };
 
   // Handle archiving product
-  const handleArchiveProduct = async (productId: number) => {
-    if (!confirm('Are you sure you want to archive this product?')) return;
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
 
     try {
       const email = encodeURIComponent(user?.email || '');
-      const res = await fetch(`/api/products/${productId}/archive?email=${email}`, {
-        method: 'PATCH',
+      const res = await fetch(`/api/products/${productId}?email=${email}`, {
+        method: 'DELETE',
       });
 
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.error || 'Failed to archive product');
+        throw new Error(json.error || 'Failed to delete product');
       }
 
       // Remove the product from the local products list
       setProducts(products.filter(p => p.product_id !== productId));
     } catch (error) {
-      console.error('Error archiving product:', error);
-      alert(error instanceof Error ? error.message : 'Failed to archive product');
+      console.error('Error deleting product:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete product');
     }
   };
 
@@ -535,9 +535,9 @@ export default function ProductsPage() {
                           </svg>
                         </button>
                         <button 
-                          onClick={() => handleArchiveProduct(p.product_id)}
+                          onClick={() => handleDeleteProduct(p.product_id)}
                           className="text-red-600 hover:text-red-700" 
-                          title="Archive"
+                          title="Delete"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="3 6 5 6 21 6" />
@@ -621,6 +621,7 @@ export default function ProductsPage() {
         <AddProductModal 
           onClose={() => setShowAddModal(false)}
           onSave={handleAddProduct}
+          userEmail={user?.email}
         />
       )}
       {editingProduct && (

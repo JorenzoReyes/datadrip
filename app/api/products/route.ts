@@ -19,7 +19,6 @@ type Product = {
   sales_count: number;
   sales_revenue: number;
   status: string;
-  is_archived: boolean;
   images: string[] | null;
   promotion_image: string | null;
   created_at: string;
@@ -62,14 +61,12 @@ export async function GET(req: Request) {
         sales_count,
         sales_revenue,
         status,
-        is_archived,
         images,
         promotion_image,
         created_at,
         updated_at
        FROM products
        WHERE owner_user_id = $1
-       AND is_archived = false
        ORDER BY created_at DESC`,
       [owner.user_id]
     );
@@ -106,7 +103,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image } = body;
+    const { name, sku, description, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -141,8 +138,8 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, is_archived)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'active', false)
+        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING 
         product_id,
         sku,
@@ -161,7 +158,6 @@ export async function POST(req: Request) {
         sales_count,
         sales_revenue,
         status,
-        is_archived,
         images,
         promotion_image,
         created_at,
@@ -180,7 +176,8 @@ export async function POST(req: Request) {
         special_price && !isNaN(parseFloat(special_price)) ? parseFloat(special_price) : null,
         parseInt(stock),
         images && Array.isArray(images) ? JSON.stringify(images) : null,
-        promotion_image && promotion_image.trim() ? promotion_image.trim() : null
+        promotion_image && promotion_image.trim() ? promotion_image.trim() : null,
+        status || 'active'
       ]
     );
 
