@@ -21,6 +21,11 @@ interface AddProductModalProps {
 		images?: string[];
 		promotion_image?: string;
 		status?: string;
+		weight_value?: number;
+		weight_unit?: string;
+		length_cm?: number;
+		width_cm?: number;
+		height_cm?: number;
 	}) => Promise<void>;
 	userEmail?: string;
 }
@@ -51,6 +56,11 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [product_type, setProduct_type] = useState('');
+  const [packageWeight, setPackageWeight] = useState('');
+  const [packageWeightUnit, setPackageWeightUnit] = useState('kg');
+  const [packageLength, setPackageLength] = useState('');
+  const [packageWidth, setPackageWidth] = useState('');
+  const [packageHeight, setPackageHeight] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -431,6 +441,11 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         images: productImages.length > 0 ? productImages : undefined,
         promotion_image: promoImage || undefined,
         status: isAvailable ? 'active' : 'inactive',
+        weight_value: packageWeight && !isNaN(parseFloat(packageWeight)) ? parseFloat(packageWeight) : undefined,
+        weight_unit: packageWeight && !isNaN(parseFloat(packageWeight)) ? packageWeightUnit : undefined,
+        length_cm: packageLength && !isNaN(parseFloat(packageLength)) ? parseFloat(packageLength) : undefined,
+        width_cm: packageWidth && !isNaN(parseFloat(packageWidth)) ? parseFloat(packageWidth) : undefined,
+        height_cm: packageHeight && !isNaN(parseFloat(packageHeight)) ? parseFloat(packageHeight) : undefined,
       });
       // onClose is called by the parent after successful save
     } catch (err) {
@@ -1239,19 +1254,56 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 							{/* Package Weight */}
 							<div className="grid grid-cols-[1fr_auto] items-center gap-2 md:max-w-md">
 								<label className="col-span-2 mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Weight</label>
-								<div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">0.01~300</div>
-								<div className="flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-2 text-[12px] text-subheader">
-									<span>kg</span>
-									<svg className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+								<input
+									type="number"
+									value={packageWeight}
+									onChange={(e) => setPackageWeight(e.target.value)}
+									placeholder="0.01~300"
+									className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+								/>
+								<div className="relative">
+									<select
+										value={packageWeightUnit}
+										onChange={(e) => setPackageWeightUnit(e.target.value)}
+										className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500"
+									>
+										<option value="kg">kg</option>
+										<option value="g">g</option>
+									</select>
+									<svg className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+										<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+									</svg>
 								</div>
 							</div>
 
 							{/* Dimensions */}
-							<div className="grid grid-cols-3 gap-3 md:max-w-3xl">
-								<label className="col-span-3 -mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Length(cm) * Width(cm) * Height(cm)</label>
-								<div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">0.01~300</div>
-								<div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">0.01~300</div>
-								<div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">0.01~300</div>
+							<div className="md:max-w-3xl">
+								<label className="mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Length(cm) × Width(cm) × Height(cm)</label>
+								<div className="flex items-center gap-2">
+									<input
+										type="number"
+										value={packageLength}
+										onChange={(e) => setPackageLength(e.target.value)}
+										placeholder="0.01~300"
+										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+									/>
+									<span className="text-[12px] text-subheader">×</span>
+									<input
+										type="number"
+										value={packageWidth}
+										onChange={(e) => setPackageWidth(e.target.value)}
+										placeholder="0.01~300"
+										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+									/>
+									<span className="text-[12px] text-subheader">×</span>
+									<input
+										type="number"
+										value={packageHeight}
+										onChange={(e) => setPackageHeight(e.target.value)}
+										placeholder="0.01~300"
+										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+									/>
+								</div>
 							</div>
 
 							{/* Dangerous Goods */}

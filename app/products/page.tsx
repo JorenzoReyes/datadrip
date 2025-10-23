@@ -26,6 +26,11 @@ export type Product = {
   reorder_level: number | null;
   sales_count: number;
   sales_revenue: number;
+  weight_value: number | null;
+  weight_unit: string | null;
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
   status: string;
   images: string[] | null;
   promotion_image: string | null;
@@ -204,6 +209,11 @@ export default function ProductsPage() {
     images?: string[];
     promotion_image?: string;
     status?: string;
+    weight_value?: number;
+    weight_unit?: string;
+    length_cm?: number;
+    width_cm?: number;
+    height_cm?: number;
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');
