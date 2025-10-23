@@ -26,6 +26,9 @@ type Product = {
   width_cm: number | null;
   height_cm: number | null;
   has_dangerous: boolean;
+  warranty_type: string | null;
+  warranty_period: string | null;
+  warranty_policy: string | null;
   status: string;
   images: string[] | null;
   promotion_image: string | null;
@@ -76,6 +79,9 @@ export async function GET(req: Request) {
         width_cm,
         height_cm,
         has_dangerous,
+        warranty_type,
+        warranty_period,
+        warranty_policy,
         status,
         images,
         promotion_image,
@@ -119,7 +125,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous } = body;
+    const { name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -154,8 +160,8 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
        RETURNING 
         product_id,
         sku,
@@ -181,6 +187,9 @@ export async function POST(req: Request) {
         width_cm,
         height_cm,
         has_dangerous,
+        warranty_type,
+        warranty_period,
+        warranty_policy,
         status,
         images,
         promotion_image,
@@ -209,7 +218,10 @@ export async function POST(req: Request) {
         length_cm && !isNaN(parseFloat(length_cm)) ? parseFloat(length_cm) : null,
         width_cm && !isNaN(parseFloat(width_cm)) ? parseFloat(width_cm) : null,
         height_cm && !isNaN(parseFloat(height_cm)) ? parseFloat(height_cm) : null,
-        has_dangerous || false
+        has_dangerous || false,
+        warranty_type && warranty_type.trim() ? warranty_type.trim() : null,
+        warranty_period && warranty_period.trim() ? warranty_period.trim() : null,
+        warranty_policy && warranty_policy.trim() ? warranty_policy.trim() : null
       ]
     );
 

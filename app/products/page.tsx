@@ -32,6 +32,9 @@ export type Product = {
   width_cm: number | null;
   height_cm: number | null;
   has_dangerous: boolean;
+  warranty_type: string | null;
+  warranty_period: string | null;
+  warranty_policy: string | null;
   status: string;
   images: string[] | null;
   promotion_image: string | null;
@@ -216,6 +219,9 @@ export default function ProductsPage() {
     width_cm?: number;
 		height_cm?: number;
 		has_dangerous?: boolean;
+		warranty_type?: string;
+		warranty_period?: string;
+		warranty_policy?: string;
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');

@@ -27,6 +27,9 @@ interface AddProductModalProps {
 		width_cm?: number;
 		height_cm?: number;
 		has_dangerous?: boolean;
+		warranty_type?: string;
+		warranty_period?: string;
+		warranty_policy?: string;
 	}) => Promise<void>;
 	userEmail?: string;
 }
@@ -63,6 +66,9 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   const [packageWidth, setPackageWidth] = useState('');
   const [packageHeight, setPackageHeight] = useState('');
   const [hasDangerous, setHasDangerous] = useState(false);
+  const [warrantyType, setWarrantyType] = useState('');
+  const [warrantyPeriod, setWarrantyPeriod] = useState('');
+  const [warrantyPolicy, setWarrantyPolicy] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -449,6 +455,9 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         width_cm: packageWidth && !isNaN(parseFloat(packageWidth)) ? parseFloat(packageWidth) : undefined,
         height_cm: packageHeight && !isNaN(parseFloat(packageHeight)) ? parseFloat(packageHeight) : undefined,
         has_dangerous: hasDangerous,
+        warranty_type: warrantyType.trim() || undefined,
+        warranty_period: warrantyPeriod.trim() || undefined,
+        warranty_policy: warrantyPolicy.trim() || undefined,
       });
       // onClose is called by the parent after successful save
     } catch (err) {
@@ -527,7 +536,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 											setSubcategory(''); // Reset subcategory when category changes
 											setProduct_type(''); // Reset product type when category changes
 										}}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none"
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
 									>
 										<option value="">Select option</option>
 										<option value="Electronics">Electronics</option>
@@ -553,7 +562,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 											setProduct_type(''); // Reset product type when subcategory changes
 										}}
 										disabled={!category}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none"
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer"
 									>
 										<option value="">Select option</option>
 									{category === 'Electronics' && (
@@ -604,7 +613,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										value={product_type}
 										onChange={(e) => setProduct_type(e.target.value)}
 										disabled={!subcategory}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none"
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer"
 									>
 										<option value="">Select option</option>
 									{/* Electronics Product Types */}
@@ -1090,7 +1099,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
           ) : (
             <button 
               onClick={() => setShowSpecialPrice(true)}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-blue-600 hover:underline cursor-pointer"
             >
               Add
             </button>
@@ -1152,7 +1161,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         <div className="flex items-center justify-center p-3">
           <button
             onClick={() => setIsAvailable(!isAvailable)}
-            className={`relative h-5 w-9 rounded-full transition-colors ${
+            className={`relative h-5 w-9 rounded-full transition-colors cursor-pointer ${
               isAvailable ? 'bg-green-500' : 'bg-gray-200'
             }`}
           >
@@ -1268,7 +1277,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 									<select
 										value={packageWeightUnit}
 										onChange={(e) => setPackageWeightUnit(e.target.value)}
-										className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500"
+										className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
 									>
 										<option value="kg">kg</option>
 										<option value="g">g</option>
@@ -1320,7 +1329,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 											name="dangerous"
 											checked={!hasDangerous}
 											onChange={() => setHasDangerous(false)}
-											className="h-3.5 w-3.5 text-primary-500 focus:ring-primary-500"
+											className="h-3.5 w-3.5 text-primary-500 focus:ring-primary-500 cursor-pointer"
 										/>
 										<span>None</span>
 									</label>
@@ -1330,7 +1339,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 											name="dangerous"
 											checked={hasDangerous}
 											onChange={() => setHasDangerous(true)}
-											className="h-3.5 w-3.5 text-primary-500 focus:ring-primary-500"
+											className="h-3.5 w-3.5 text-primary-500 focus:ring-primary-500 cursor-pointer"
 										/>
 										<span>Contains battery / flammables / liquid</span>
 									</label>
@@ -1341,20 +1350,100 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 							{/* Warranty */}
 							<div className="grid grid-cols-1 gap-3 md:max-w-xl">
 								<label className="mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Warranty Type</label>
-								<div className="flex items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">
-									<span>Select option</span>
-									<svg className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+								<div className="relative group">
+									<select
+										value={warrantyType}
+										onChange={(e) => setWarrantyType(e.target.value)}
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+									>
+										<option value="">Select option</option>
+										<option value="Local Manufacturer Warranty">Local Manufacturer Warranty</option>
+										<option value="International Manufacturer Warranty">International Manufacturer Warranty</option>
+										<option value="Local Supplier Warranty">Local Supplier Warranty</option>
+										<option value="Local Supplier Refund Warranty">Local Supplier Refund Warranty</option>
+										<option value="No Warranty">No Warranty</option>
+										<option value="International Seller Warranty">International Seller Warranty</option>
+									</select>
+									{warrantyType ? (
+										<button
+											type="button"
+											onClick={() => setWarrantyType('')}
+											className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+										>
+											<svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+												<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+											</svg>
+										</button>
+									) : (
+										<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+											<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+										</svg>
+									)}
 								</div>
+								
 								<div>
 									<label className="mb-1 block text-[12px] text-subheader">Warranty</label>
-									<div className="flex items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">
-										<span>Please input or select option</span>
-										<svg className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+									<div className="relative group">
+										<select
+											value={warrantyPeriod}
+											onChange={(e) => setWarrantyPeriod(e.target.value)}
+											className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Please input or select option</option>
+											<option value="1 week">1 week</option>
+											<option value="2 weeks">2 weeks</option>
+											<option value="1 month">1 month</option>
+											<option value="2 months">2 months</option>
+											<option value="3 months">3 months</option>
+											<option value="4 months">4 months</option>
+											<option value="5 months">5 months</option>
+											<option value="6 months">6 months</option>
+											<option value="7 months">7 months</option>
+											<option value="8 months">8 months</option>
+											<option value="9 months">9 months</option>
+											<option value="10 months">10 months</option>
+											<option value="11 months">11 months</option>
+											<option value="1 year">1 year</option>
+											<option value="15 months">15 months</option>
+											<option value="18 months">18 months</option>
+											<option value="2 years">2 years</option>
+											<option value="3 years">3 years</option>
+											<option value="4 years">4 years</option>
+											<option value="5 years">5 years</option>
+											<option value="6 years">6 years</option>
+											<option value="7 years">7 years</option>
+											<option value="10 years">10 years</option>
+											<option value="25 years">25 years</option>
+											<option value="30 years">30 years</option>
+											<option value="Life Time Warranty">Life Time Warranty</option>
+										</select>
+										{warrantyPeriod ? (
+											<button
+												type="button"
+												onClick={() => setWarrantyPeriod('')}
+												className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+											>
+												<svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+													<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+												</svg>
+											</button>
+										) : (
+											<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+												<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+											</svg>
+										)}
 									</div>
 								</div>
+								
 								<div>
 									<label className="mb-1 block text-[12px] text-subheader">Warranty Policy</label>
-									<div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader" />
+									<textarea
+										value={warrantyPolicy}
+										onChange={(e) => setWarrantyPolicy(e.target.value)}
+										placeholder="Enter warranty policy details..."
+										rows={3}
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+									/>
 								</div>
 							</div>
 						</div>
