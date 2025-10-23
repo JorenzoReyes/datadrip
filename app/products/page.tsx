@@ -12,6 +12,7 @@ export type Product = {
   sku: string | null;
   name: string;
   description: string | null;
+  highlights: string | null;
   brand: string | null;
   category: string | null;
   subcategory: string | null;
@@ -190,6 +191,7 @@ export default function ProductsPage() {
     name: string;
     sku?: string;
     description?: string;
+    highlights?: string;
     brand?: string;
     category?: string;
     subcategory?: string;

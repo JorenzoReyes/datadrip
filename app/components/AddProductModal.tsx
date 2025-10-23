@@ -9,6 +9,7 @@ interface AddProductModalProps {
 		name: string;
 		sku?: string;
 		description?: string;
+		highlights?: string;
 		brand?: string;
 		category?: string;
 		subcategory?: string;
@@ -43,6 +44,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   
   // Additional form fields for backend integration
   const [description, setDescription] = useState('');
+  const [highlights, setHighlights] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
@@ -415,6 +417,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         name: productName.trim(),
         sku: sellerSKU.trim() || undefined,
         description: description.trim() || undefined,
+        highlights: highlights.trim() || undefined,
         brand: brand.trim() || undefined,
         category: category.trim() || undefined,
         subcategory: subcategory.trim() || undefined,
@@ -1166,12 +1169,13 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 							{/* Product Highlights */}
 							<div>
 								<label className="mb-1 block text-[12px] text-subheader">Product Highlights</label>
-								<div className="rounded-md border border-gray-300 bg-white">
-									<div className="flex items-center gap-2 border-b border-gray-200 px-3 py-2 text-[12px] text-subheader">
-										<svg className="h-4 w-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-									</div>
-									<div className="min-h-[140px] px-3 py-2 text-[12px] text-subheader">Please input…</div>
-								</div>
+								<textarea
+									value={highlights}
+									onChange={(e) => setHighlights(e.target.value)}
+									placeholder="Enter product highlights..."
+									rows={6}
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+								/>
 							</div>
 
 							{/* What's in the box */}
