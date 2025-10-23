@@ -7,6 +7,7 @@ type Product = {
   name: string;
   description: string | null;
   highlights: string | null;
+  in_box: string | null;
   brand: string | null;
   category: string | null;
   subcategory: string | null;
@@ -50,6 +51,7 @@ export async function GET(req: Request) {
         name,
         description,
         highlights,
+        in_box,
         brand,
         category,
         subcategory,
@@ -105,7 +107,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, highlights, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status } = body;
+    const { name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -140,14 +142,15 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, highlights, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING 
         product_id,
         sku,
         name,
         description,
         highlights,
+        in_box,
         brand,
         category,
         subcategory,
@@ -172,6 +175,7 @@ export async function POST(req: Request) {
         sku && sku.trim() ? sku.trim() : null,
         description && description.trim() ? description.trim() : null,
         highlights && highlights.trim() ? highlights.trim() : null,
+        in_box && in_box.trim() ? in_box.trim() : null,
         brand && brand.trim() ? brand.trim() : null,
         category && category.trim() ? category.trim() : null,
         subcategory && subcategory.trim() ? subcategory.trim() : null,

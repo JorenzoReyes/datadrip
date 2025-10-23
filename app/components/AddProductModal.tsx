@@ -10,6 +10,7 @@ interface AddProductModalProps {
 		sku?: string;
 		description?: string;
 		highlights?: string;
+		in_box?: string;
 		brand?: string;
 		category?: string;
 		subcategory?: string;
@@ -45,6 +46,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   // Additional form fields for backend integration
   const [description, setDescription] = useState('');
   const [highlights, setHighlights] = useState('');
+  const [in_box, setIn_box] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
@@ -418,6 +420,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         sku: sellerSKU.trim() || undefined,
         description: description.trim() || undefined,
         highlights: highlights.trim() || undefined,
+        in_box: in_box.trim() || undefined,
         brand: brand.trim() || undefined,
         category: category.trim() || undefined,
         subcategory: subcategory.trim() || undefined,
@@ -1181,7 +1184,13 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 							{/* What's in the box */}
 							<div>
 								<label className="mb-1 block text-[12px] text-subheader">What&apos;s in the box</label>
-								<div className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-subheader">Indicates the items that customer will get when they receive this product. For example, for a smartphone, a customer may get: 1 x Phone, 1 x Cable, 1 x Headset</div>
+								<textarea
+									value={in_box}
+									onChange={(e) => setIn_box(e.target.value)}
+									placeholder="Enter what's included in the box..."
+									rows={4}
+									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+								/>
 							</div>
 						</div>
 					</section>
