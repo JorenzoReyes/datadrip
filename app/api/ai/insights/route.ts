@@ -8,7 +8,9 @@ export async function POST(req: Request) {
   try {
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'Missing GOOGLE_API_KEY' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'AI Insights feature is not configured. Please add GOOGLE_API_KEY environment variable to enable this feature. See README for setup instructions.' 
+      }, { status: 503 });
     }
 
     const { topic, customQuestion, history, businessContext, userId, model = 'gemini-2.5-flash' } = await req.json();
