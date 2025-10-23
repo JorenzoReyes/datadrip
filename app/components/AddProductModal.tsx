@@ -401,20 +401,25 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
 									<span className="text-red-500">*</span> Category
 								</label>
-								<select
-									value={category}
-									onChange={(e) => {
-										setCategory(e.target.value);
-										setSubcategory(''); // Reset subcategory when category changes
-										setProduct_type(''); // Reset product type when category changes
-									}}
-									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500"
-								>
-									<option value="">Select Category</option>
-									<option value="Electronics">Electronics</option>
-									<option value="Cosmetics">Cosmetics</option>
-									<option value="Food">Food</option>
-								</select>
+								<div className="relative">
+									<select
+										value={category}
+										onChange={(e) => {
+											setCategory(e.target.value);
+											setSubcategory(''); // Reset subcategory when category changes
+											setProduct_type(''); // Reset product type when category changes
+										}}
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none"
+									>
+										<option value="">Select option</option>
+										<option value="Electronics">Electronics</option>
+										<option value="Cosmetics">Cosmetics</option>
+										<option value="Food">Food</option>
+									</select>
+									<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+										<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+									</svg>
+								</div>
 							</div>
 
 							{/* Subcategory */}
@@ -422,16 +427,17 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
 									Subcategory
 								</label>
-								<select
-									value={subcategory}
-									onChange={(e) => {
-										setSubcategory(e.target.value);
-										setProduct_type(''); // Reset product type when subcategory changes
-									}}
-									disabled={!category}
-									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-								>
-									<option value="">Select Subcategory</option>
+								<div className="relative">
+									<select
+										value={subcategory}
+										onChange={(e) => {
+											setSubcategory(e.target.value);
+											setProduct_type(''); // Reset product type when subcategory changes
+										}}
+										disabled={!category}
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none"
+									>
+										<option value="">Select option</option>
 									{category === 'Electronics' && (
 										<>
 											<option value="TV & Video">TV & Video</option>
@@ -464,6 +470,10 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 										</>
 									)}
 								</select>
+								<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+									<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+								</svg>
+							</div>
 							</div>
 
 							{/* Product Type */}
@@ -471,13 +481,14 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
 									Product Type
 								</label>
-								<select
-									value={product_type}
-									onChange={(e) => setProduct_type(e.target.value)}
-									disabled={!subcategory}
-									className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-								>
-									<option value="">Select Product Type</option>
+								<div className="relative">
+									<select
+										value={product_type}
+										onChange={(e) => setProduct_type(e.target.value)}
+										disabled={!subcategory}
+										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none"
+									>
+										<option value="">Select option</option>
 									{/* Electronics Product Types */}
 									{subcategory === 'TV & Video' && (
 										<>
@@ -648,6 +659,10 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 										</>
 									)}
 								</select>
+								<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+									<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+								</svg>
+							</div>
 							</div>
 
 							{/* Product Images */}
