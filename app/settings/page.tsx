@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
+import { useIntegrationManagement } from '../contexts/integrations';
+import ConnectIntegrationModal from '../components/ConnectIntegrationModal';
+import Image from 'next/image';
 
 interface UserSettings {
   firstName: string;
@@ -218,8 +221,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveSection('account')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
                   activeSection === 'account'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-green-500 text-white'
+                    : 'text-gray-700 hover:bg-green-50'
                 }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,8 +235,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveSection('platforms')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
                   activeSection === 'platforms'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-green-500 text-white'
+                    : 'text-gray-700 hover:bg-green-50'
                 }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,9 +247,9 @@ export default function SettingsPage() {
             </nav>
 
             {/* Help Section */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2">Need Help?</h4>
-              <p className="text-xs text-gray-600">
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <h4 className="text-sm font-semibold text-green-900 mb-2">Need Help?</h4>
+              <p className="text-xs text-green-700">
                 Contact support if you need assistance with your account settings.
               </p>
             </div>
@@ -287,7 +290,7 @@ export default function SettingsPage() {
                   ) : (
                     <button
                       onClick={() => setEditingUserDetails(true)}
-                      className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -307,7 +310,7 @@ export default function SettingsPage() {
                           name="firstName"
                           value={formData.firstName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                           required
                         />
                       </div>
@@ -318,7 +321,7 @@ export default function SettingsPage() {
                           name="lastName"
                           value={formData.lastName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                           required
                         />
                       </div>
@@ -330,7 +333,7 @@ export default function SettingsPage() {
                         name="username"
                         value={formData.username}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         required
                       />
                     </div>
@@ -341,7 +344,7 @@ export default function SettingsPage() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         required
                       />
                     </div>
@@ -356,7 +359,7 @@ export default function SettingsPage() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -421,7 +424,7 @@ export default function SettingsPage() {
                   ) : (
                     <button
                       onClick={() => setEditingSecurity(true)}
-                      className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -440,7 +443,7 @@ export default function SettingsPage() {
                         name="currentPassword"
                         value={formData.currentPassword}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Enter current password"
                       />
                     </div>
@@ -451,7 +454,7 @@ export default function SettingsPage() {
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Enter new password"
                       />
                     </div>
@@ -462,7 +465,7 @@ export default function SettingsPage() {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Confirm new password"
                       />
                     </div>
@@ -477,7 +480,7 @@ export default function SettingsPage() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -521,10 +524,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === 'platforms' && (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Connect Platforms</h3>
-              <p className="text-gray-600">Platform integration features coming soon...</p>
-            </div>
+            <PlatformsSection user={user} />
           )}
 
           {/* Version Indicator */}
@@ -534,5 +534,273 @@ export default function SettingsPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+// PlatformsSection Component
+interface PlatformsSectionProps {
+  user: {
+    email: string;
+    fname?: string;
+    lname?: string;
+  };
+}
+
+function PlatformsSection({ user }: PlatformsSectionProps) {
+  const { integrations, platformTemplates, deleteIntegrationByUser, testConnection } = useIntegrationManagement();
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [testingIntegration, setTestingIntegration] = useState<string | null>(null);
+  const [disconnectingPlatform, setDisconnectingPlatform] = useState<string | null>(null);
+
+  // Get user's integrations
+  const userIntegrations = integrations.filter(integration => 
+    integration.createdBy === user.email
+  );
+
+  const handleTestConnection = async (integrationId: string) => {
+    setTestingIntegration(integrationId);
+    try {
+      const result = await testConnection(integrationId);
+      if (result.success) {
+        alert('Connection test successful!');
+      } else {
+        alert(`Connection test failed: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error testing connection:', error);
+      alert('Failed to test connection');
+    } finally {
+      setTestingIntegration(null);
+    }
+  };
+
+  const handleDisconnect = async (platform: string) => {
+    if (!confirm(`Are you sure you want to disconnect your ${platform} shop?`)) {
+      return;
+    }
+
+    setDisconnectingPlatform(platform);
+    try {
+      const result = await deleteIntegrationByUser(platform, user.email, user.email);
+      if (result.success) {
+        alert(`${platform} shop disconnected successfully`);
+      } else {
+        alert(`Failed to disconnect: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      alert('Failed to disconnect shop');
+    } finally {
+      setDisconnectingPlatform(null);
+    }
+  };
+
+  const getPlatformColor = (platform: string) => {
+    const template = platformTemplates.find(t => t.platform === platform);
+    return template?.color || '#6b7280';
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform) {
+      case 'shopee':
+        return '/shopee.png';
+      case 'lazada':
+        return '/lazada.png';
+      case 'tiktok':
+        return '/tiktok.svg';
+      default:
+        return '🔗';
+    }
+  };
+
+  return (
+    <>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Connect Your Shops</h2>
+        <p className="text-gray-600 mt-2">Connect your e-commerce platforms to sync sales data and manage your business</p>
+      </div>
+
+      {/* Platform Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {['shopee', 'lazada', 'tiktok'].map(platform => {
+          const integration = userIntegrations.find(i => i.platform === platform);
+          const isConnected = !!integration;
+          const isDisconnecting = disconnectingPlatform === platform;
+          const isTesting = testingIntegration === integration?.id;
+
+          return (
+            <div 
+              key={platform}
+              className="bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
+            >
+              <div className="flex flex-col items-center text-center">
+                {/* Platform Icon */}
+                <div 
+                  className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `${getPlatformColor(platform)}15` }}
+                >
+                  {getPlatformIcon(platform).startsWith('/') ? (
+                    <Image 
+                      src={getPlatformIcon(platform)} 
+                      alt={`${platform} icon`}
+                      width={48}
+                      height={48}
+                      className="object-contain"
+                    />
+                  ) : (
+                    <span className="text-4xl">{getPlatformIcon(platform)}</span>
+                  )}
+                </div>
+
+                {/* Platform Name */}
+                <h3 className="text-xl font-bold text-gray-900 capitalize mb-2">
+                  {platform}
+                </h3>
+
+                {/* Connection Status */}
+                {isConnected ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span className="text-sm text-green-600 font-medium">Connected</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Status: <span className="font-medium capitalize">{integration?.status}</span>
+                    </p>
+                    {integration?.lastSyncAt && (
+                      <p className="text-xs text-gray-500 mb-4">
+                        Last sync: {new Date(integration.lastSyncAt).toLocaleDateString()}
+                      </p>
+                    )}
+                    
+                    {/* Action Buttons for Connected Platform */}
+                    <div className="flex flex-col gap-2 w-full">
+                      <button
+                        onClick={() => handleTestConnection(integration!.id)}
+                        disabled={isTesting}
+                        className="w-full px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm disabled:opacity-50"
+                      >
+                        {isTesting ? 'Testing...' : 'Test Connection'}
+                      </button>
+                      <button
+                        onClick={() => handleDisconnect(platform)}
+                        disabled={isDisconnecting}
+                        className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm disabled:opacity-50"
+                      >
+                        {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                      <span className="text-sm text-gray-500 font-medium">Not Connected</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Connect your {platform} shop to start syncing data
+                    </p>
+                    <button
+                      onClick={() => setShowConnectModal(true)}
+                      className="w-full px-4 py-2 rounded-lg hover:opacity-90 transition-colors font-medium text-sm text-white"
+                      style={{ backgroundColor: getPlatformColor(platform) }}
+                    >
+                      Connect {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Connected Platforms Summary */}
+      {userIntegrations.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Connected Platforms</h3>
+          <div className="space-y-4">
+            {userIntegrations.map(integration => (
+              <div 
+                key={integration.id}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-12 h-12 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: `${getPlatformColor(integration.platform)}15` }}
+                  >
+                    {getPlatformIcon(integration.platform).startsWith('/') ? (
+                      <Image 
+                        src={getPlatformIcon(integration.platform)} 
+                        alt={`${integration.platform} icon`}
+                        width={32}
+                        height={32}
+                        className="object-contain"
+                      />
+                    ) : (
+                      <span className="text-2xl">{getPlatformIcon(integration.platform)}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{integration.name}</h4>
+                    <p className="text-sm text-gray-600">
+                      Platform: <span className="capitalize">{integration.platform}</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Sync: {integration.syncFrequency}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                    integration.status === 'active' ? 'bg-green-100 text-green-700' :
+                    integration.status === 'error' ? 'bg-red-100 text-red-700' :
+                    integration.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {integration.status}
+                  </span>
+                  {integration.lastErrorMessage && (
+                    <p className="text-xs text-red-600 mt-1">{integration.lastErrorMessage}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Help Section */}
+      <div className="bg-green-50 rounded-xl border border-green-200 p-6 mt-6">
+        <div className="flex gap-4">
+          <div className="flex-shrink-0">
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-green-900 mb-2">How to Connect Your Shops</h4>
+            <ul className="text-sm text-green-800 space-y-1">
+              <li>• Click &quot;Connect&quot; on the platform you want to integrate</li>
+              <li>• Enter your API credentials from your shop&apos;s settings</li>
+              <li>• Test the connection to ensure it&apos;s working properly</li>
+              <li>• Your sales data will automatically sync based on your chosen frequency</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Connect Integration Modal */}
+      {showConnectModal && (
+        <ConnectIntegrationModal
+          onClose={() => setShowConnectModal(false)}
+          onSuccess={() => {
+            setShowConnectModal(false);
+            alert('Shop connected successfully!');
+          }}
+        />
+      )}
+    </>
   );
 }
