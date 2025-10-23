@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       product_name: string;
       sku: string;
       brand: string;
-      category: string;
+      category1: string;
       total_quantity_sold: number;
       total_revenue: number;
       avg_price: number;
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         p.name as product_name,
         p.sku,
         p.brand,
-        p.category,
+        p.category1,
         SUM(ps.quantity_sold) as total_quantity_sold,
         SUM(ps.total_sales) as total_revenue,
         AVG(ps.unit_price) as avg_price,
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       WHERE ps.account_id = ANY($1)
         AND ps.sale_date >= '2025-10-01'
         ${platformFilter}
-      GROUP BY p.product_id, p.name, p.sku, p.brand, p.category${platform ? ', ps.platform' : ''}
+      GROUP BY p.product_id, p.name, p.sku, p.brand, p.category1${platform ? ', ps.platform' : ''}
       ORDER BY total_revenue DESC
       LIMIT $2`,
       queryParams

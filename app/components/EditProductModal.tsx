@@ -6,7 +6,11 @@ type Product = {
   product_id: number;
   name: string;
   brand: string | null;
-  category: string | null;
+  category1: string | null;
+  category2: string | null;
+  category3: string | null;
+  category4: string | null;
+  category5: string | null;
   price: number;
   stock: number;
 };
@@ -21,7 +25,11 @@ export default function EditProductModal({ product, onClose, onSave }: EditProdu
   const [formData, setFormData] = useState({
     name: product.name,
     brand: product.brand || '',
-    category: product.category || '',
+    category1: product.category1 || '',
+    category2: product.category2 || '',
+    category3: product.category3 || '',
+    category4: product.category4 || '',
+    category5: product.category5 || '',
     price: product.price.toString(),
     stock: product.stock.toString(),
   });
@@ -67,7 +75,11 @@ export default function EditProductModal({ product, onClose, onSave }: EditProdu
       await onSave({
         name: formData.name.trim(),
         brand: formData.brand.trim() || null,
-        category: formData.category.trim() || null,
+        category1: formData.category1.trim() || null,
+        category2: formData.category2.trim() || null,
+        category3: formData.category3.trim() || null,
+        category4: formData.category4.trim() || null,
+        category5: formData.category5.trim() || null,
         price,
         stock,
       });
@@ -137,16 +149,16 @@ export default function EditProductModal({ product, onClose, onSave }: EditProdu
 
             {/* Category */}
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                Category
+              <label htmlFor="category1" className="block text-sm font-medium text-gray-700 mb-1">
+                Category 1
               </label>
               <input
                 type="text"
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                id="category1"
+                value={formData.category1}
+                onChange={(e) => setFormData({ ...formData, category1: e.target.value })}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                placeholder="Enter category"
+                placeholder="Enter category 1"
               />
             </div>
 

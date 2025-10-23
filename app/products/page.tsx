@@ -15,9 +15,11 @@ export type Product = {
   highlights: string | null;
   in_box: string | null;
   brand: string | null;
-  category: string | null;
-  subcategory: string | null;
-  product_type: string | null;
+  category1: string | null;
+  category2: string | null;
+  category3: string | null;
+  category4: string | null;
+  category5: string | null;
   price: number;
   special_price: number | null;
   cost: number | null;
@@ -113,7 +115,7 @@ export default function ProductsPage() {
   const categories = useMemo(() => {
     const uniqueCategories = new Set<string>();
     products.forEach(p => {
-      if (p.category) uniqueCategories.add(p.category);
+      if (p.category1) uniqueCategories.add(p.category1);
     });
     return ['All Categories', ...Array.from(uniqueCategories).sort()];
   }, [products]);
@@ -125,7 +127,7 @@ export default function ProductsPage() {
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
                          p.brand?.toLowerCase().includes(query.toLowerCase()) ||
                          p.sku?.toLowerCase().includes(query.toLowerCase());
-      const matchCategory = category === 'All Categories' ? true : p.category === category;
+      const matchCategory = category === 'All Categories' ? true : p.category1 === category;
       return matchQuery && matchCategory;
     });
 
@@ -204,9 +206,11 @@ export default function ProductsPage() {
     highlights?: string;
     in_box?: string;
     brand?: string;
-    category?: string;
-    subcategory?: string;
-    product_type?: string;
+    category1?: string;
+    category2?: string;
+    category3?: string;
+    category4?: string;
+    category5?: string;
     price: number;
     special_price?: number;
     stock: number;
@@ -515,7 +519,7 @@ export default function ProductsPage() {
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-header">{p.name}</span>
                           <span className="text-xs text-subheader">
-                            {p.brand ? `${p.brand} • ` : ''}{p.category || 'Uncategorized'}
+                            {p.brand ? `${p.brand} • ` : ''}{p.category1 || 'Uncategorized'}
                           </span>
                         </div>
                       </div>
@@ -523,12 +527,12 @@ export default function ProductsPage() {
                     <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
                     <td className="px-4 py-3 text-sm text-header">
                       <div className="flex flex-col">
-                        <span className="font-medium">{p.category || 'Uncategorized'}</span>
-                        {p.subcategory && <span className="text-xs text-gray-500">{p.subcategory}</span>}
+                        <span className="font-medium">{p.category1 || 'Uncategorized'}</span>
+                        {p.category2 && <span className="text-xs text-gray-500">{p.category2}</span>}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-header">
-                      {p.product_type || '-'}
+                      {p.category3 || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-header">
                       <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>

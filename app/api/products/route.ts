@@ -9,9 +9,11 @@ type Product = {
   highlights: string | null;
   in_box: string | null;
   brand: string | null;
-  category: string | null;
-  subcategory: string | null;
-  product_type: string | null;
+  category1: string | null;
+  category2: string | null;
+  category3: string | null;
+  category4: string | null;
+  category5: string | null;
   price: number;
   special_price: number | null;
   cost: number | null;
@@ -62,9 +64,11 @@ export async function GET(req: Request) {
         highlights,
         in_box,
         brand,
-        category,
-        subcategory,
-        product_type,
+        category1,
+        category2,
+        category3,
+        category4,
+        category5,
         price,
         special_price,
         cost,
@@ -125,7 +129,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy } = body;
+    const { name, sku, description, highlights, in_box, brand, category1, category2, category3, category4, category5, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -153,7 +157,7 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log('Creating product:', { name, sku, brand, category, price, stock, images, promotion_image });
+    console.log('Creating product:', { name, sku, brand, category1, category2, category3, category4, category5, price, stock, images, promotion_image });
     console.log('Images being sent to database:', images);
     console.log('Promotion image being sent to database:', promotion_image);
     console.log('Images JSON stringified:', images && Array.isArray(images) ? JSON.stringify(images) : null);
@@ -161,8 +165,8 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category1, category2, category3, category4, category5, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
        RETURNING 
         product_id,
         sku,
@@ -171,9 +175,11 @@ export async function POST(req: Request) {
         highlights,
         in_box,
         brand,
-        category,
-        subcategory,
-        product_type,
+        category1,
+        category2,
+        category3,
+        category4,
+        category5,
         price,
         special_price,
         cost,
@@ -205,12 +211,14 @@ export async function POST(req: Request) {
         highlights && highlights.trim() ? highlights.trim() : null,
         in_box && in_box.trim() ? in_box.trim() : null,
         brand && brand.trim() ? brand.trim() : null,
-        category && category.trim() ? category.trim() : null,
-        subcategory && subcategory.trim() ? subcategory.trim() : null,
-        product_type && product_type.trim() ? product_type.trim() : null,
+        category1 && category1.trim() ? category1.trim() : null,
+        category2 && category2.trim() ? category2.trim() : null,
+        category3 && category3.trim() ? category3.trim() : null,
+        category4 && category4.trim() ? category4.trim() : null,
+        category5 && category5.trim() ? category5.trim() : null,
         parseFloat(price),
         special_price && !isNaN(parseFloat(special_price)) ? parseFloat(special_price) : null,
-        stock && stock.trim() && !isNaN(parseInt(stock)) ? parseInt(stock) : 0,
+        stock && !isNaN(parseInt(stock)) ? parseInt(stock) : 0,
         images && Array.isArray(images) ? JSON.stringify(images) : null,
         promotion_image && promotion_image.trim() ? promotion_image.trim() : null,
         status || 'active',

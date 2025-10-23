@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { getCategoryOptions, hasMoreChildren } from '../data/categories';
 
 interface AddProductModalProps {
 	onClose: () => void;
@@ -12,9 +13,11 @@ interface AddProductModalProps {
 		highlights?: string;
 		in_box?: string;
 		brand?: string;
-		category?: string;
-		subcategory?: string;
-		product_type?: string;
+		category1?: string;
+		category2?: string;
+		category3?: string;
+		category4?: string;
+		category5?: string;
 		price: number;
 		special_price?: number;
 		stock: number;
@@ -57,9 +60,11 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   const [highlights, setHighlights] = useState('');
   const [in_box, setIn_box] = useState('');
   const [brand, setBrand] = useState('');
-  const [category, setCategory] = useState('');
-  const [subcategory, setSubcategory] = useState('');
-  const [product_type, setProduct_type] = useState('');
+  const [category1, setCategory1] = useState('');
+  const [category2, setCategory2] = useState('');
+  const [category3, setCategory3] = useState('');
+  const [category4, setCategory4] = useState('');
+  const [category5, setCategory5] = useState('');
   const [packageWeight, setPackageWeight] = useState('');
   const [packageWeightUnit, setPackageWeightUnit] = useState('kg');
   const [packageLength, setPackageLength] = useState('');
@@ -292,7 +297,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
       }
       
       setProductImages((prev) => [...prev, result.url].slice(0, 8));
-      setHasHadImages(true);
+    setHasHadImages(true);
     } catch (error) {
       console.error('Upload error:', error);
       setErrorWithTimeout('productImages', error instanceof Error ? error.message : 'Upload failed');
@@ -397,6 +402,40 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
       errors.productName = 'Product name is required';
     }
     
+    // Category validation
+    if (!category1.trim()) {
+      errors.category1 = 'Category is required';
+    } else {
+      // Check if user has selected the deepest available category level
+      const selectedPath = [category1, category2, category3, category4, category5].filter(cat => cat.trim());
+      
+      // If the current path has more children available, user must select the next level
+      if (hasMoreChildren(selectedPath)) {
+        // Check if the next level is available and required
+        if (selectedPath.length === 1) {
+          const category2Options = getCategoryOptions(2, [category1]);
+          if (category2Options.length > 0 && !category2.trim()) {
+            errors.category2 = 'Please select a subcategory';
+          }
+        } else if (selectedPath.length === 2) {
+          const category3Options = getCategoryOptions(3, [category1, category2]);
+          if (category3Options.length > 0 && !category3.trim()) {
+            errors.category3 = 'Please select a subcategory';
+          }
+        } else if (selectedPath.length === 3) {
+          const category4Options = getCategoryOptions(4, [category1, category2, category3]);
+          if (category4Options.length > 0 && !category4.trim()) {
+            errors.category4 = 'Please select a subcategory';
+          }
+        } else if (selectedPath.length === 4) {
+          const category5Options = getCategoryOptions(5, [category1, category2, category3, category4]);
+          if (category5Options.length > 0 && !category5.trim()) {
+            errors.category5 = 'Please select a subcategory';
+          }
+        }
+      }
+    }
+    
     // Product images validation
     if (productImages.length === 0) {
       errors.productImages = 'At least 1 product image is required';
@@ -457,10 +496,10 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         console.error('Base64 images found:', productImages.filter(img => img.startsWith('data:')));
         setProductImages([]);
         setSubmitError('Please re-upload your images');
-        setLoading(false);
-        return;
-      }
-      
+      setLoading(false);
+      return;
+    }
+    
       await onSave({
         name: productName.trim(),
         sku: sellerSKU.trim() || undefined,
@@ -468,9 +507,11 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         highlights: highlights.trim() || undefined,
         in_box: in_box.trim() || undefined,
         brand: brand.trim() || undefined,
-        category: category.trim() || undefined,
-        subcategory: subcategory.trim() || undefined,
-        product_type: product_type.trim() || undefined,
+        category1: category1.trim() || undefined,
+        category2: category2.trim() || undefined,
+        category3: category3.trim() || undefined,
+        category4: category4.trim() || undefined,
+        category5: category5.trim() || undefined,
         price: parseFloat(price),
         special_price: specialPrice && specialPrice.trim() && !isNaN(parseFloat(specialPrice)) ? parseFloat(specialPrice) : undefined,
         stock: parseInt(stock),
@@ -562,274 +603,188 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                             )}
 							</div>
 
-							{/* Category */}
-							<div>
+							{/* Category 1 */}
+							<div className="space-y-1">
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-									<span className="text-red-500">*</span> Category
+									<span className="text-red-500">*</span> Category 1
 								</label>
 								<div className="relative">
-									<select
-										value={category}
-										onChange={(e) => {
-											setCategory(e.target.value);
-											setSubcategory(''); // Reset subcategory when category changes
-											setProduct_type(''); // Reset product type when category changes
+								<select
+										value={category1}
+									onChange={(e) => {
+											setCategory1(e.target.value);
+											setCategory2(''); // Reset dependent categories
+											setCategory3('');
+											setCategory4('');
+											setCategory5('');
+											// Clear error when user starts typing
+											if (validationErrors.category1 && e.target.value.trim()) {
+												setValidationErrors(prev => ({ ...prev, category1: '' }));
+											}
 										}}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer ${
+											validationErrors.category1 ? 'border-red-500' : 'border-gray-300 bg-white'
+										}`}
 									>
-										<option value="">Select option</option>
-										<option value="Electronics">Electronics</option>
-										<option value="Cosmetics">Cosmetics</option>
-										<option value="Food">Food</option>
-									</select>
+										<option value="">Select main category</option>
+										{(() => {
+											const options = getCategoryOptions(1);
+											console.log('Category 1 options:', options);
+											return options.map(cat => (
+												<option key={cat} value={cat}>{cat}</option>
+											));
+										})()}
+								</select>
 									<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
 										<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
 									</svg>
 								</div>
+								{validationErrors.category1 && (
+									<p className="text-xs text-red-500">{validationErrors.category1}</p>
+								)}
 							</div>
 
-							{/* Subcategory */}
-							<div>
-								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-									Subcategory
-								</label>
-								<div className="relative">
+							{/* Category 2 - Only show if Category 1 has children */}
+							{category1 && getCategoryOptions(2, [category1]).length > 0 && (
+								<div className="space-y-1">
+									<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+										Category 2
+									</label>
+									<div className="relative">
 									<select
-										value={subcategory}
+											value={category2}
 										onChange={(e) => {
-											setSubcategory(e.target.value);
-											setProduct_type(''); // Reset product type when subcategory changes
-										}}
-										disabled={!category}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer"
-									>
-										<option value="">Select option</option>
-									{category === 'Electronics' && (
-										<>
-											<option value="TV & Video">TV & Video</option>
-											<option value="Audio">Audio</option>
-											<option value="Mobile">Mobile</option>
-											<option value="Computers">Computers</option>
-											<option value="Tablets">Tablets</option>
-											<option value="Cameras">Cameras</option>
-											<option value="Wearables">Wearables</option>
-											<option value="Accessories">Accessories</option>
-											<option value="Monitors">Monitors</option>
-											<option value="Networking">Networking</option>
-										</>
+												setCategory2(e.target.value);
+												setCategory3(''); // Reset dependent categories
+												setCategory4('');
+												setCategory5('');
+												// Clear validation errors
+												if (validationErrors.category2) {
+													setValidationErrors(prev => ({ ...prev, category2: '' }));
+												}
+											}}
+											className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select subcategory</option>
+											{(() => {
+												const options = getCategoryOptions(2, [category1]);
+												console.log('Category 2 options for', category1, ':', options);
+												return options.map(cat => (
+													<option key={cat} value={cat}>{cat}</option>
+												));
+											})()}
+									</select>
+										<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+											<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+										</svg>
+									</div>
+									{validationErrors.category2 && (
+										<p className="text-xs text-red-500">{validationErrors.category2}</p>
 									)}
-									{category === 'Cosmetics' && (
-										<>
-											<option value="Skincare">Skincare</option>
-											<option value="Makeup">Makeup</option>
-										</>
-									)}
-									{category === 'Food' && (
-										<>
-											<option value="Beverages">Beverages</option>
-											<option value="Snacks">Snacks</option>
-											<option value="Breakfast">Breakfast</option>
-											<option value="Supplements">Supplements</option>
-											<option value="Confectionery">Confectionery</option>
-											<option value="Sweeteners">Sweeteners</option>
-											<option value="Seasonings">Seasonings</option>
-										</>
-									)}
-								</select>
-								<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
-									<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
-								</svg>
-							</div>
-							</div>
+								</div>
+							)}
 
-							{/* Product Type */}
-							<div>
-								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-									Product Type
-								</label>
-								<div className="relative">
+							{/* Category 3 - Only show if Category 2 has children */}
+							{category2 && getCategoryOptions(3, [category1, category2]).length > 0 && (
+								<div className="space-y-1">
+									<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+										Category 3
+									</label>
+									<div className="relative">
 									<select
-										value={product_type}
-										onChange={(e) => setProduct_type(e.target.value)}
-										disabled={!subcategory}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer"
-									>
-										<option value="">Select option</option>
-									{/* Electronics Product Types */}
-									{subcategory === 'TV & Video' && (
-										<>
-											<option value="Smart TV">Smart TV</option>
-											<option value="LED TV">LED TV</option>
-											<option value="OLED TV">OLED TV</option>
-											<option value="Projector">Projector</option>
-										</>
+											value={category3}
+											onChange={(e) => {
+												setCategory3(e.target.value);
+												setCategory4(''); // Reset dependent categories
+												setCategory5('');
+												// Clear validation errors
+												if (validationErrors.category3) {
+													setValidationErrors(prev => ({ ...prev, category3: '' }));
+												}
+											}}
+											className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select subcategory</option>
+											{getCategoryOptions(3, [category1, category2]).map(cat => (
+												<option key={cat} value={cat}>{cat}</option>
+											))}
+									</select>
+										<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+											<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+										</svg>
+									</div>
+									{validationErrors.category3 && (
+										<p className="text-xs text-red-500">{validationErrors.category3}</p>
 									)}
-									{subcategory === 'Audio' && (
-										<>
-											<option value="Headphones">Headphones</option>
-											<option value="Speakers">Speakers</option>
-											<option value="Earbuds">Earbuds</option>
-											<option value="Soundbar">Soundbar</option>
-											<option value="Microphone">Microphone</option>
-										</>
+								</div>
+							)}
+
+							{/* Category 4 - Only show if Category 3 has children */}
+							{category3 && getCategoryOptions(4, [category1, category2, category3]).length > 0 && (
+								<div className="space-y-1">
+									<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+										Category 4
+									</label>
+									<div className="relative">
+										<select
+											value={category4}
+											onChange={(e) => {
+												setCategory4(e.target.value);
+												setCategory5(''); // Reset dependent categories
+												// Clear validation errors
+												if (validationErrors.category4) {
+													setValidationErrors(prev => ({ ...prev, category4: '' }));
+												}
+											}}
+											className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select subcategory</option>
+											{getCategoryOptions(4, [category1, category2, category3]).map(cat => (
+												<option key={cat} value={cat}>{cat}</option>
+											))}
+										</select>
+										<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+											<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+										</svg>
+									</div>
+									{validationErrors.category4 && (
+										<p className="text-xs text-red-500">{validationErrors.category4}</p>
 									)}
-									{subcategory === 'Mobile' && (
-										<>
-											<option value="Smartphone">Smartphone</option>
-											<option value="Phone Case">Phone Case</option>
-											<option value="Screen Protector">Screen Protector</option>
-											<option value="Charger">Charger</option>
-										</>
+								</div>
+							)}
+
+							{/* Category 5 - Only show if Category 4 has children */}
+							{category4 && getCategoryOptions(5, [category1, category2, category3, category4]).length > 0 && (
+								<div className="space-y-1">
+									<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+										Category 5
+									</label>
+									<div className="relative">
+										<select
+											value={category5}
+											onChange={(e) => {
+												setCategory5(e.target.value);
+												// Clear validation errors
+												if (validationErrors.category5) {
+													setValidationErrors(prev => ({ ...prev, category5: '' }));
+												}
+											}}
+											className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select subcategory</option>
+											{getCategoryOptions(5, [category1, category2, category3, category4]).map(cat => (
+												<option key={cat} value={cat}>{cat}</option>
+											))}
+									</select>
+										<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+											<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+										</svg>
+									</div>
+									{validationErrors.category5 && (
+										<p className="text-xs text-red-500">{validationErrors.category5}</p>
 									)}
-									{subcategory === 'Computers' && (
-										<>
-											<option value="Laptop">Laptop</option>
-											<option value="Desktop">Desktop</option>
-											<option value="Keyboard">Keyboard</option>
-											<option value="Mouse">Mouse</option>
-											<option value="Webcam">Webcam</option>
-										</>
-									)}
-									{subcategory === 'Tablets' && (
-										<>
-											<option value="Tablet">Tablet</option>
-											<option value="Tablet Case">Tablet Case</option>
-											<option value="Stylus">Stylus</option>
-										</>
-									)}
-									{subcategory === 'Cameras' && (
-										<>
-											<option value="Action Camera">Action Camera</option>
-											<option value="DSLR">DSLR</option>
-											<option value="Mirrorless">Mirrorless</option>
-											<option value="Security Camera">Security Camera</option>
-										</>
-									)}
-									{subcategory === 'Wearables' && (
-										<>
-											<option value="Smart Watch">Smart Watch</option>
-											<option value="Fitness Tracker">Fitness Tracker</option>
-											<option value="Smart Ring">Smart Ring</option>
-										</>
-									)}
-									{subcategory === 'Accessories' && (
-										<>
-											<option value="Charger">Charger</option>
-											<option value="Cable">Cable</option>
-											<option value="Adapter">Adapter</option>
-											<option value="Stand">Stand</option>
-										</>
-									)}
-									{subcategory === 'Monitors' && (
-										<>
-											<option value="Gaming Monitor">Gaming Monitor</option>
-											<option value="4K Monitor">4K Monitor</option>
-											<option value="Ultrawide Monitor">Ultrawide Monitor</option>
-										</>
-									)}
-									{subcategory === 'Networking' && (
-										<>
-											<option value="Router">Router</option>
-											<option value="Modem">Modem</option>
-											<option value="Switch">Switch</option>
-											<option value="Access Point">Access Point</option>
-										</>
-									)}
-									
-									{/* Cosmetics Product Types */}
-									{subcategory === 'Skincare' && (
-										<>
-											<option value="Serum">Serum</option>
-											<option value="Cleanser">Cleanser</option>
-											<option value="Moisturizer">Moisturizer</option>
-											<option value="Sunscreen">Sunscreen</option>
-											<option value="Toner">Toner</option>
-											<option value="Face Mask">Face Mask</option>
-											<option value="Exfoliator">Exfoliator</option>
-											<option value="Eye Cream">Eye Cream</option>
-										</>
-									)}
-									{subcategory === 'Makeup' && (
-										<>
-											<option value="Lipstick">Lipstick</option>
-											<option value="Foundation">Foundation</option>
-											<option value="Mascara">Mascara</option>
-											<option value="Eyeshadow">Eyeshadow</option>
-											<option value="Concealer">Concealer</option>
-											<option value="Lip Gloss">Lip Gloss</option>
-											<option value="Blush">Blush</option>
-											<option value="Eyeliner">Eyeliner</option>
-											<option value="Highlighter">Highlighter</option>
-										</>
-									)}
-									
-									{/* Food Product Types */}
-									{subcategory === 'Beverages' && (
-										<>
-											<option value="Coffee">Coffee</option>
-											<option value="Tea">Tea</option>
-											<option value="Juice">Juice</option>
-											<option value="Energy Drink">Energy Drink</option>
-											<option value="Soda">Soda</option>
-											<option value="Water">Water</option>
-										</>
-									)}
-									{subcategory === 'Snacks' && (
-										<>
-											<option value="Protein Bar">Protein Bar</option>
-											<option value="Nuts">Nuts</option>
-											<option value="Crackers">Crackers</option>
-											<option value="Dried Fruit">Dried Fruit</option>
-											<option value="Chips">Chips</option>
-											<option value="Trail Mix">Trail Mix</option>
-										</>
-									)}
-									{subcategory === 'Breakfast' && (
-										<>
-											<option value="Granola">Granola</option>
-											<option value="Cereal">Cereal</option>
-											<option value="Oatmeal">Oatmeal</option>
-											<option value="Pancake Mix">Pancake Mix</option>
-										</>
-									)}
-									{subcategory === 'Supplements' && (
-										<>
-											<option value="Smoothie Mix">Smoothie Mix</option>
-											<option value="Protein Powder">Protein Powder</option>
-											<option value="Vitamins">Vitamins</option>
-											<option value="Superfood Powder">Superfood Powder</option>
-										</>
-									)}
-									{subcategory === 'Confectionery' && (
-										<>
-											<option value="Chocolate">Chocolate</option>
-											<option value="Candy">Candy</option>
-											<option value="Gummies">Gummies</option>
-											<option value="Cookies">Cookies</option>
-										</>
-									)}
-									{subcategory === 'Sweeteners' && (
-										<>
-											<option value="Honey">Honey</option>
-											<option value="Sugar">Sugar</option>
-											<option value="Stevia">Stevia</option>
-											<option value="Maple Syrup">Maple Syrup</option>
-										</>
-									)}
-									{subcategory === 'Seasonings' && (
-										<>
-											<option value="Spice Mix">Spice Mix</option>
-											<option value="Salt">Salt</option>
-											<option value="Pepper">Pepper</option>
-											<option value="Herbs">Herbs</option>
-										</>
-									)}
-								</select>
-								<svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
-									<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
-								</svg>
-							</div>
-							</div>
+								</div>
+							)}
 
 							{/* Product Images */}
 							<div className="space-y-1">
@@ -1275,9 +1230,9 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
 											<div className="text-xs text-gray-700">
 												Enter short major highlights of the product, to make the purchase decision for the customer easier.
-											</div>
+									</div>
 											<div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
-										</div>
+								</div>
 									</div>
 								</div>
 								<textarea
