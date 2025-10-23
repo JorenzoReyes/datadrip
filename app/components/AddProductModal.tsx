@@ -1159,7 +1159,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 						<div className="space-y-4">
 							{/* Main Description */}
 							<div>
-								<label className="mb-1 block text-[12px] text-subheader">Description</label>
+								<label className="mb-1 block text-[12px] text-subheader">Main Description</label>
 								<textarea
 									value={description}
 									onChange={(e) => setDescription(e.target.value)}
@@ -1171,7 +1171,21 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
 							{/* Product Highlights */}
 							<div>
-								<label className="mb-1 block text-[12px] text-subheader">Product Highlights</label>
+								<div className="mb-1 flex items-center gap-1">
+									<label className="text-[12px] text-subheader">Product Highlights</label>
+									<div className="group relative">
+										<svg className="h-3.5 w-3.5 text-gray-400 cursor-help" viewBox="0 0 24 24" fill="currentColor">
+											<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+											<text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontWeight="bold">i</text>
+										</svg>
+										<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+											<div className="text-xs text-gray-700">
+												Enter short major highlights of the product, to make the purchase decision for the customer easier.
+											</div>
+											<div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
+										</div>
+									</div>
+								</div>
 								<textarea
 									value={highlights}
 									onChange={(e) => setHighlights(e.target.value)}
@@ -1183,7 +1197,21 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
 							{/* What's in the box */}
 							<div>
-								<label className="mb-1 block text-[12px] text-subheader">What&apos;s in the box</label>
+								<div className="mb-1 flex items-center gap-1">
+									<label className="text-[12px] text-subheader">What&apos;s in the box</label>
+									<div className="group relative">
+										<svg className="h-3.5 w-3.5 text-gray-400 cursor-help" viewBox="0 0 24 24" fill="currentColor">
+											<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+											<text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontWeight="bold">i</text>
+										</svg>
+										<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+											<div className="text-xs text-gray-700">
+												Indicates the items that customer will get when they receive this product. For example, for a smartphone, a customer may get: 1 x Phone, 1 x Cable, 1 x Headset
+											</div>
+											<div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
+										</div>
+									</div>
+								</div>
 								<textarea
 									value={in_box}
 									onChange={(e) => setIn_box(e.target.value)}
