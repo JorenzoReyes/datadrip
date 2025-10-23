@@ -3,7 +3,30 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
+import dynamic from 'next/dynamic';
 import { useAuth } from '../contexts/auth';
+
+// --- Product type definition ---
+export type Product = {
+  product_id: number;
+  sku: string | null;
+  name: string;
+  description: string | null;
+  brand: string | null;
+  category: string | null;
+  subcategory: string | null;
+  price: number;
+  cost: number | null;
+  currency: string;
+  stock: number;
+  reorder_level: number | null;
+  sales_count: number;
+  sales_revenue: number;
+  status: string;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+};
 
 export default function ProductsPage() {
   const { user, isLoading } = useAuth();
@@ -16,44 +39,235 @@ export default function ProductsPage() {
     }
   }, [user, isLoading, router]);
 
+  // Fetch products from the database
+  useEffect(() => {
+    async function loadProducts() {
+      if (!user?.email) return;
+      
+      try {
+        setLoadingProducts(true);
+        const email = encodeURIComponent(user.email);
+        const res = await fetch(`/api/products?email=${email}`, { cache: 'no-store' });
+        const json = await res.json();
+        
+        if (json.error) {
+          console.error('Error loading products:', json.error);
+          setProducts([]);
+        } else {
+          setProducts(json.products || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch products:', e);
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    
+    if (user) {
+      loadProducts();
+    }
+  }, [user]);
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('All Categories');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
+  // Pagination and sorting state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price' | 'created_at'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const itemsPerPage = 10;
 
-  // --- Local UI state & demo data (must be declared before any early returns) ---
-  type Product = {
-    id: string;
-    name: string;
-    price: number;
-    stock: number;
-    status: 'Available' | 'Draft' | 'Archived';
-    category: string;
-  };
-
-  const demoProducts: Product[] = useMemo(
-    () =>
-      Array.from({ length: 8 }).map((_, i) => ({
-        id: `p-${i + 1}`,
-        name: 'Lorem Ipsum',
-        price: 250,
-        stock: 3024,
-        status: 'Available',
-        category: ['All', 'Beverages', 'Snacks', 'Household'][(i % 3) + 1] || 'Beverages',
-      })),
+  // Lazy load modals to keep initial bundle small
+  const AddProductModal = useMemo(
+    () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
+    []
+  );
+  const EditProductModal = useMemo(
+    () => dynamic(() => import('../components/EditProductModal'), { ssr: false }),
     []
   );
 
-  const categories = ['All Categories', 'Beverages', 'Snacks', 'Household'];
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState(categories[0]);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
+  // Extract unique categories from products
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    products.forEach(p => {
+      if (p.category) uniqueCategories.add(p.category);
+    });
+    return ['All Categories', ...Array.from(uniqueCategories).sort()];
+  }, [products]);
 
-  const filtered = useMemo(() => {
-    return demoProducts.filter((p) => {
-      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase());
+  // Filter, sort, and paginate products
+  const { paginated, totalPages, totalItems } = useMemo(() => {
+    // First filter products
+    const filteredProducts = products.filter((p) => {
+      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
+                         p.brand?.toLowerCase().includes(query.toLowerCase()) ||
+                         p.sku?.toLowerCase().includes(query.toLowerCase());
       const matchCategory = category === 'All Categories' ? true : p.category === category;
       return matchQuery && matchCategory;
     });
-  }, [demoProducts, query, category]);
+
+    // Then sort products
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'stock':
+          aValue = a.stock;
+          bValue = b.stock;
+          break;
+        case 'price':
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Calculate pagination
+    const totalItems = sortedProducts.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
+
+    return {
+      paginated: paginatedProducts,
+      totalPages,
+      totalItems
+    };
+  }, [products, query, category, sortBy, sortOrder, currentPage, itemsPerPage]);
+
+  // Handle sorting
+  const handleSort = (newSortBy: 'name' | 'stock' | 'price' | 'created_at') => {
+    if (sortBy === newSortBy) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, category, sortBy, sortOrder]);
+
+  // Handle adding new product
+  const handleAddProduct = async (productData: {
+    name: string;
+    sku?: string;
+    description?: string;
+    brand?: string;
+    category?: string;
+    subcategory?: string;
+    price: number;
+    stock: number;
+  }) => {
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products?email=${email}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to add product');
+      }
+
+      // Add the new product to the local products list
+      setProducts([json.product, ...products]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      throw error;
+    }
+  };
+
+  // Handle updating product
+  const handleUpdateProduct = async (updatedData: Partial<Product>) => {
+    if (!editingProduct) return;
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${editingProduct.product_id}?email=${email}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to update product');
+      }
+
+      // Update the product in the local products list
+      setProducts(products.map(p => 
+        p.product_id === editingProduct.product_id ? { ...p, ...json.product } : p
+      ));
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  };
+
+  // Handle archiving product
+  const handleArchiveProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to archive this product?')) return;
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${productId}/archive?email=${email}`, {
+        method: 'PATCH',
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to archive product');
+      }
+
+      // Remove the product from the local products list
+      setProducts(products.filter(p => p.product_id !== productId));
+    } catch (error) {
+      console.error('Error archiving product:', error);
+      alert(error instanceof Error ? error.message : 'Failed to archive product');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -153,7 +367,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Add product button */}
-            <button className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
+            <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
               Add Products
             </button>
 
@@ -173,14 +387,39 @@ export default function ProductsPage() {
                 </svg>
               </button>
               {filterOpen && (
-                <div className="absolute right-0 z-10 mt-2 w-48 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
-                  <button className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50">
-                    Status: Available
-                    <span className="text-xs text-gray-500">(demo)</span>
+                <div className="absolute right-0 z-10 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
+                  <div className="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider">Sort by</div>
+                  <button 
+                    onClick={() => handleSort('name')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'name' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
-                  <button className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50">
-                    Price: Low → High
-                    <span className="text-xs text-gray-500">(demo)</span>
+                  <button 
+                    onClick={() => handleSort('stock')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'stock' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Stock {sortBy === 'stock' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button 
+                    onClick={() => handleSort('price')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'price' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button 
+                    onClick={() => handleSort('created_at')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'created_at' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Date Added {sortBy === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
                 </div>
               )}
@@ -214,51 +453,160 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-gray-50">
-              {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-100/70">
-                  <td className="px-4 py-3">
-                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label={`Select ${p.name}`} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-md bg-gray-300" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-header">{p.name}</span>
-                        <span className="text-xs text-subheader">{p.category}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-header">₱{p.price.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-sm text-header">{p.stock}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-4">
-                      <button className="text-gray-700 hover:text-gray-900" title="Edit">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
-                        </svg>
-                      </button>
-                      <button className="text-red-600 hover:text-red-700" title="Delete">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                        </svg>
-                      </button>
-                    </div>
+              {loadingProducts ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                    Loading products...
                   </td>
                 </tr>
-              ))}
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                    {products.length === 0 ? 'No products found. Click "Add Products" to get started.' : 'No products match your search criteria.'}
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((p) => (
+                  <tr key={p.product_id} className="hover:bg-gray-100/70">
+                    <td className="px-4 py-3">
+                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label={`Select ${p.name}`} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-md bg-gray-300 flex items-center justify-center text-xs text-gray-600">
+                          {p.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-header">{p.name}</span>
+                          <span className="text-xs text-subheader">
+                            {p.brand ? `${p.brand} • ` : ''}{p.category || 'Uncategorized'}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
+                        {p.stock}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+                        p.status === 'active' 
+                          ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+                          : 'bg-gray-50 text-gray-700 ring-gray-600/20'
+                      }`}>
+                        {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-4">
+                        <button 
+                          onClick={() => setEditingProduct(p)}
+                          className="text-gray-700 hover:text-gray-900" 
+                          title="Edit"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
+                          </svg>
+                        </button>
+                        <button 
+                          onClick={() => handleArchiveProduct(p.product_id)}
+                          className="text-red-600 hover:text-red-700" 
+                          title="Archive"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} products
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              {/* Page numbers */}
+              <div className="flex space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current page
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          page === currentPage
+                            ? 'bg-emerald-700 text-white'
+                            : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return (
+                      <span key={page} className="px-2 py-2 text-sm text-gray-500">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </main>
+      {showAddModal && (
+        <AddProductModal 
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddProduct}
+        />
+      )}
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSave={handleUpdateProduct}
+        />
+      )}
     </div>
   );
 }

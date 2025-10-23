@@ -3,8 +3,8 @@
   "version": "0.6.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:init": "node scripts/init-db.js",
@@ -26,17 +26,20 @@
     "db:seed:roles": "node scripts/seed-roles.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@types/pg": "^8.10.9",
+    "bcryptjs": "^2.4.3",
     "next": "15.5.0",
     "pg": "^8.11.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
-    "recharts": "^2.12.7"
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
