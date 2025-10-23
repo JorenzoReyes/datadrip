@@ -70,6 +70,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   const [warrantyPeriod, setWarrantyPeriod] = useState('');
   const [warrantyPolicy, setWarrantyPolicy] = useState('');
   const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const setErrorWithTimeout = (key: string, message: string) => {
@@ -240,6 +241,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     
     // Clear previous errors
     setErrors(prev => ({ ...prev, productImages: '' }));
+    setValidationErrors(prev => ({ ...prev, productImages: '' }));
     
     // Validate file
     console.log('Validating file...');
@@ -387,35 +389,61 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     }, 200); // small grace period to allow moving from link to popup
   };
 
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
+    
+    // Product name validation
+    if (!productName.trim()) {
+      errors.productName = 'Product name is required';
+    }
+    
+    // Product images validation
+    if (productImages.length === 0) {
+      errors.productImages = 'At least 1 product image is required';
+    }
+    
+    // Brand validation
+    if (!brand.trim()) {
+      errors.brand = 'Brand is required';
+    }
+    
+    // Price validation
+    if (!price.trim() || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+      errors.price = 'Valid price is required';
+    }
+    
+    // Package weight validation
+    if (!packageWeight.trim() || isNaN(parseFloat(packageWeight)) || parseFloat(packageWeight) <= 0) {
+      errors.packageWeight = 'Package weight is required';
+    }
+    
+    // Package dimensions validation
+    if (!packageLength.trim() || isNaN(parseFloat(packageLength)) || parseFloat(packageLength) <= 0) {
+      errors.packageLength = 'Package length is required';
+    }
+    
+    if (!packageWidth.trim() || isNaN(parseFloat(packageWidth)) || parseFloat(packageWidth) <= 0) {
+      errors.packageWidth = 'Package width is required';
+    }
+    
+    if (!packageHeight.trim() || isNaN(parseFloat(packageHeight)) || parseFloat(packageHeight) <= 0) {
+      errors.packageHeight = 'Package height is required';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
+    }
+    
     setSubmitError(null);
     setLoading(true);
-
-    // Validate required fields
-    if (!productName.trim()) {
-      setSubmitError('Product name is required');
-      setLoading(false);
-      return;
-    }
-    
-    if (!category.trim()) {
-      setSubmitError('Category is required');
-      setLoading(false);
-      return;
-    }
-    
-    if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
-      setSubmitError('Valid price is required');
-      setLoading(false);
-      return;
-    }
-    
-    if (!stock || isNaN(parseInt(stock)) || parseInt(stock) < 0) {
-      setSubmitError('Valid stock is required');
-      setLoading(false);
-      return;
-    }
     
     try {
       console.log('Submitting product with images:', productImages);
@@ -506,7 +534,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 						<h4 className="mb-4 text-[18px] font-semibold text-header">Basic Information</h4>
 						<div className="space-y-4">
 							{/* Product Name */}
-							<div>
+							<div className="space-y-1">
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
 									<span className="text-red-500">*</span> Product Name
 								</label>
@@ -514,13 +542,24 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                 <input
                                     type="text"
                                     value={productName}
-                                    onChange={(e) => setProductName(e.target.value.slice(0, 255))}
+                                    onChange={(e) => {
+                                      setProductName(e.target.value.slice(0, 255));
+                                      // Clear error when user starts typing
+                                      if (validationErrors.productName && e.target.value.trim()) {
+                                        setValidationErrors(prev => ({ ...prev, productName: '' }));
+                                      }
+                                    }}
                                     maxLength={255}
                                     placeholder="Ex. Nikon Coolpix A300 Digital Camera"
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className={`w-full rounded-md border px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                                      validationErrors.productName ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                                 />
                                 <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">{productName.length}/255</span>
                             </div>
+                            {validationErrors.productName && (
+                              <p className="text-xs text-red-500">{validationErrors.productName}</p>
+                            )}
 							</div>
 
 							{/* Category */}
@@ -793,7 +832,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 							</div>
 
 							{/* Product Images */}
-							<div>
+							<div className="space-y-1">
                                 <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                                     <span className="text-red-500">*</span> Product Images
                                     <span className="relative inline-flex group">
@@ -807,7 +846,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                         </div>
                                     </span>
                                 </label>
-                                <div className={`rounded-md border p-3 ${errors.productImages ? 'border-red-500 border-dashed bg-red-50' : 'border-gray-200 bg-white'}`}>
+                                <div className={`rounded-md border p-3 ${validationErrors.productImages ? 'border-red-500 border-dashed bg-red-50' : 'border-gray-200 bg-white'}`}>
                                     <div className="flex flex-wrap items-center gap-3">
                                         {productImages.map((src, idx) => (
                                             <div key={idx} className="group relative h-[60px] w-[60px] overflow-hidden rounded-md bg-gray-200 hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer">
@@ -818,6 +857,10 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                                         e.stopPropagation(); 
                                                         const newImages = productImages.filter((_, i) => i !== idx);
                                                         setProductImages(newImages);
+                                                        // Clear validation error when images are removed (if there are still images)
+                                                        if (newImages.length > 0 && validationErrors.productImages) {
+                                                            setValidationErrors(prev => ({ ...prev, productImages: '' }));
+                                                        }
                                                         if (newImages.length === 0 && hasHadImages) {
                                                             setErrorWithTimeout('productImages', 'Image is missing. Please upload at least 1 image.');
                                                         }
@@ -837,8 +880,8 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                             </button>
                                         )}
                                     </div>
-                                    {errors.productImages && (
-                                        <div className="mt-2 text-xs text-red-600">{errors.productImages}</div>
+                                    {validationErrors.productImages && (
+                                        <div className="mt-2 text-xs text-red-600">{validationErrors.productImages}</div>
                                     )}
                                 </div>
 							</div>
@@ -966,15 +1009,26 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 					<section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
 						<h4 className="mb-4 text-[18px] font-semibold text-header">Product Specification</h4>
 						<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-							<div>
+							<div className="space-y-1">
 								<label className="mb-1 block text-xs text-subheader"><span className="text-red-500">*</span> Brand</label>
 								<input
 									type="text"
 									value={brand}
-									onChange={(e) => setBrand(e.target.value)}
+									onChange={(e) => {
+										setBrand(e.target.value);
+										// Clear error when user starts typing
+										if (validationErrors.brand && e.target.value.trim()) {
+											setValidationErrors(prev => ({ ...prev, brand: '' }));
+										}
+									}}
 									placeholder="Enter brand name"
-									className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+									className={`w-full rounded-lg border px-3 py-2 text-sm text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+										validationErrors.brand ? 'border-red-500' : 'border-gray-300'
+									}`}
 								/>
+								{validationErrors.brand && (
+									<p className="text-xs text-red-500">{validationErrors.brand}</p>
+								)}
 							</div>
 							<div>
 								<label className="mb-1 block text-xs text-subheader">Type</label>
@@ -1028,13 +1082,21 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
       {/* Data Row */}
        <div className="grid grid-cols-[1fr_1fr_1.1fr_1.8fr_0.6fr] border-t border-gray-200">
          {/* Price */}
-         <div className="border-r border-gray-200 p-3 flex justify-center">
-           <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
+         <div className="border-r border-gray-200 p-3 flex justify-center relative">
+           <div className={`flex items-center rounded-md border px-2 py-1 w-full max-w-[120px] ${
+             validationErrors.price ? 'border-red-500' : 'border-gray-300 bg-white'
+           }`}>
              <span className="text-sm text-subheader">₱</span>
              <input
                type="text"
                value={price}
-               onChange={(e) => handleNumberChange(e.target.value, setPrice)}
+               onChange={(e) => {
+                 handleNumberChange(e.target.value, setPrice);
+                 // Clear error when user starts typing
+                 if (validationErrors.price && e.target.value.trim() && !isNaN(parseFloat(e.target.value)) && parseFloat(e.target.value) > 0) {
+                   setValidationErrors(prev => ({ ...prev, price: '' }));
+                 }
+               }}
                className="flex-1 border-none bg-transparent text-center text-sm text-header focus:outline-none min-w-0"
                style={{ width: 'calc(100% - 20px)' }}
                placeholder="0.00"
@@ -1060,6 +1122,11 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                </button>
              </div>
            </div>
+           {validationErrors.price && (
+             <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-red-500 whitespace-nowrap">
+               {validationErrors.price}
+             </div>
+           )}
          </div>
 
         {/* Special Price */}
@@ -1264,17 +1331,25 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
 						<div className="space-y-4">
 							{/* Package Weight */}
-							<div className="grid grid-cols-[1fr_auto] items-center gap-2 md:max-w-md">
+							<div className="grid grid-cols-[1fr_auto] items-center gap-2 md:max-w-md space-y-1">
 								<label className="col-span-2 mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Weight</label>
 								<input
 									type="number"
 									value={packageWeight}
-									onChange={(e) => setPackageWeight(e.target.value)}
+									onChange={(e) => {
+										setPackageWeight(e.target.value);
+										// Clear error when user starts typing
+										if (validationErrors.packageWeight && e.target.value.trim() && !isNaN(parseFloat(e.target.value)) && parseFloat(e.target.value) > 0) {
+											setValidationErrors(prev => ({ ...prev, packageWeight: '' }));
+										}
+									}}
 									placeholder={packageWeightUnit === 'kg' ? "0.001~300" : "1~300000"}
 									min={packageWeightUnit === 'kg' ? "0.001" : "1"}
 									max={packageWeightUnit === 'kg' ? "300" : "300000"}
 									step={packageWeightUnit === 'kg' ? "0.001" : "1"}
-									className="rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+									className={`rounded-md border px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+										validationErrors.packageWeight ? 'border-red-500' : 'border-gray-300 bg-white'
+									}`}
 								/>
 								<div className="relative">
 									<select
@@ -1292,42 +1367,78 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
 									</svg>
 								</div>
+								{validationErrors.packageWeight && (
+									<p className="text-xs text-red-500">{validationErrors.packageWeight}</p>
+								)}
 							</div>
 
 							{/* Dimensions */}
-							<div className="md:max-w-3xl">
+							<div className="md:max-w-3xl space-y-1">
 								<label className="mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Length(cm) × Width(cm) × Height(cm)</label>
 								<div className="flex items-center gap-2">
 									<input
 										type="number"
 										value={packageLength}
-										onChange={(e) => setPackageLength(e.target.value)}
+										onChange={(e) => {
+											setPackageLength(e.target.value);
+											// Clear error when user starts typing
+											if (validationErrors.packageLength && e.target.value.trim() && !isNaN(parseFloat(e.target.value)) && parseFloat(e.target.value) > 0) {
+												setValidationErrors(prev => ({ ...prev, packageLength: '' }));
+											}
+										}}
 										placeholder="0.01~300"
 										min="0.01"
 										step="0.01"
-										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+										className={`flex-1 rounded-md border px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+											validationErrors.packageLength ? 'border-red-500' : 'border-gray-300 bg-white'
+										}`}
 									/>
 									<span className="text-[12px] text-subheader">×</span>
 									<input
 										type="number"
 										value={packageWidth}
-										onChange={(e) => setPackageWidth(e.target.value)}
+										onChange={(e) => {
+											setPackageWidth(e.target.value);
+											// Clear error when user starts typing
+											if (validationErrors.packageWidth && e.target.value.trim() && !isNaN(parseFloat(e.target.value)) && parseFloat(e.target.value) > 0) {
+												setValidationErrors(prev => ({ ...prev, packageWidth: '' }));
+											}
+										}}
 										placeholder="0.01~300"
 										min="0.01"
 										step="0.01"
-										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+										className={`flex-1 rounded-md border px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+											validationErrors.packageWidth ? 'border-red-500' : 'border-gray-300 bg-white'
+										}`}
 									/>
 									<span className="text-[12px] text-subheader">×</span>
 									<input
 										type="number"
 										value={packageHeight}
-										onChange={(e) => setPackageHeight(e.target.value)}
+										onChange={(e) => {
+											setPackageHeight(e.target.value);
+											// Clear error when user starts typing
+											if (validationErrors.packageHeight && e.target.value.trim() && !isNaN(parseFloat(e.target.value)) && parseFloat(e.target.value) > 0) {
+												setValidationErrors(prev => ({ ...prev, packageHeight: '' }));
+											}
+										}}
 										placeholder="0.01~300"
 										min="0.01"
 										step="0.01"
-										className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+										className={`flex-1 rounded-md border px-3 py-2 text-[12px] text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+											validationErrors.packageHeight ? 'border-red-500' : 'border-gray-300 bg-white'
+										}`}
 									/>
 								</div>
+								{validationErrors.packageLength && (
+									<p className="text-xs text-red-500">{validationErrors.packageLength}</p>
+								)}
+								{validationErrors.packageWidth && (
+									<p className="text-xs text-red-500">{validationErrors.packageWidth}</p>
+								)}
+								{validationErrors.packageHeight && (
+									<p className="text-xs text-red-500">{validationErrors.packageHeight}</p>
+								)}
 							</div>
 
 							{/* Dangerous Goods */}

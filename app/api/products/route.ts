@@ -136,8 +136,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Valid price is required' }, { status: 400 });
     }
 
-    if (stock === undefined || stock === null || isNaN(parseInt(stock)) || parseInt(stock) < 0) {
-      return NextResponse.json({ error: 'Valid stock is required' }, { status: 400 });
+    // Stock is now optional - only validate if provided
+    if (stock !== undefined && stock !== null && stock !== '' && (isNaN(parseInt(stock)) || parseInt(stock) < 0)) {
+      return NextResponse.json({ error: 'Invalid stock value' }, { status: 400 });
     }
 
     // Check if SKU already exists (if provided)
@@ -209,7 +210,7 @@ export async function POST(req: Request) {
         product_type && product_type.trim() ? product_type.trim() : null,
         parseFloat(price),
         special_price && !isNaN(parseFloat(special_price)) ? parseFloat(special_price) : null,
-        parseInt(stock),
+        stock && stock.trim() && !isNaN(parseInt(stock)) ? parseInt(stock) : 0,
         images && Array.isArray(images) ? JSON.stringify(images) : null,
         promotion_image && promotion_image.trim() ? promotion_image.trim() : null,
         status || 'active',
