@@ -14,6 +14,7 @@ interface AddProductModalProps {
 		subcategory?: string;
 		product_type?: string;
 		price: number;
+		special_price?: number;
 		stock: number;
 		images?: string[];
 		promotion_image?: string;
@@ -417,6 +418,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
         subcategory: subcategory.trim() || undefined,
         product_type: product_type.trim() || undefined,
         price: parseFloat(price),
+        special_price: specialPrice && specialPrice.trim() && !isNaN(parseFloat(specialPrice)) ? parseFloat(specialPrice) : undefined,
         stock: parseInt(stock),
         images: productImages.length > 0 ? productImages : undefined,
         promotion_image: promoImage || undefined,

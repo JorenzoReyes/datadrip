@@ -17,6 +17,7 @@ export type Product = {
   subcategory: string | null;
   product_type: string | null;
   price: number;
+  special_price: number | null;
   cost: number | null;
   currency: string;
   stock: number;
@@ -195,6 +196,7 @@ export default function ProductsPage() {
     subcategory?: string;
     product_type?: string;
     price: number;
+    special_price?: number;
     stock: number;
     images?: string[];
     promotion_image?: string;

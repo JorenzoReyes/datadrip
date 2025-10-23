@@ -11,6 +11,7 @@ type Product = {
   subcategory: string | null;
   product_type: string | null;
   price: number;
+  special_price: number | null;
   cost: number | null;
   currency: string;
   stock: number;
@@ -53,6 +54,7 @@ export async function GET(req: Request) {
         subcategory,
         product_type,
         price,
+        special_price,
         cost,
         currency,
         stock,
@@ -104,7 +106,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, brand, category, subcategory, product_type, price, stock, images, promotion_image } = body;
+    const { name, sku, description, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -139,8 +141,8 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, product_type, price, stock, images, promotion_image, status, is_archived)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'active', false)
+        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, is_archived)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'active', false)
        RETURNING 
         product_id,
         sku,
@@ -151,6 +153,7 @@ export async function POST(req: Request) {
         subcategory,
         product_type,
         price,
+        special_price,
         cost,
         currency,
         stock,
@@ -174,6 +177,7 @@ export async function POST(req: Request) {
         subcategory && subcategory.trim() ? subcategory.trim() : null,
         product_type && product_type.trim() ? product_type.trim() : null,
         parseFloat(price),
+        special_price && !isNaN(parseFloat(special_price)) ? parseFloat(special_price) : null,
         parseInt(stock),
         images && Array.isArray(images) ? JSON.stringify(images) : null,
         promotion_image && promotion_image.trim() ? promotion_image.trim() : null
