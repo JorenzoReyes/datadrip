@@ -15,6 +15,7 @@ interface AddProductModalProps {
 		product_type?: string;
 		price: number;
 		stock: number;
+		images?: string[];
 	}) => Promise<void>;
 }
 
@@ -130,28 +131,37 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
 
   const validateImageDimensions = (file: File, type: 'product' | 'promo'): Promise<string | null> => {
     return new Promise((resolve) => {
+      console.log('Starting dimension validation for:', file.name);
       const img = new window.Image();
       img.onload = () => {
         const { width, height } = img;
+        console.log('Image dimensions:', width, 'x', height);
         
         if (type === 'product') {
           if (width < 330 || height < 330 || width > 6500 || height > 6500) {
+            console.log('Product image dimension validation failed');
             resolve('Image size must be between 330x330 and 6500x6500 pixels');
             return;
           }
         } else if (type === 'promo') {
           if (width < 330 || height < 330) {
+            console.log('Promo image dimension validation failed - too small');
             resolve('Minimum resolution is 330 x 330 pixels');
             return;
           }
           if (width !== height) {
+            console.log('Promo image dimension validation failed - not square');
             resolve('The aspect ratio (W x H) must be 1:1');
             return;
           }
         }
+        console.log('Dimension validation passed');
         resolve(null);
       };
-      img.onerror = () => resolve('Invalid image file');
+      img.onerror = () => {
+        console.log('Image load error during dimension validation');
+        resolve('Invalid image file');
+      };
       img.src = URL.createObjectURL(file);
     });
   };
@@ -194,31 +204,71 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
   };
 
   const handleAddProductImage = async () => {
+    console.log('handleAddProductImage called');
     if (productImages.length >= 8) return;
     const files = await handlePickFiles('image/*', false);
+    console.log('Files picked:', files);
     if (!files || files.length === 0) return;
     const file = files[0];
+    console.log('Selected file:', file.name, file.size, file.type);
     
     // Clear previous errors
     setErrors(prev => ({ ...prev, productImages: '' }));
     
     // Validate file
+    console.log('Validating file...');
     const fileError = validateImage(file, 'product');
     if (fileError) {
+      console.log('File validation failed:', fileError);
       setErrorWithTimeout('productImages', fileError);
       return;
     }
     
     // Validate dimensions
+    console.log('Validating dimensions...');
     const dimensionError = await validateImageDimensions(file, 'product');
     if (dimensionError) {
+      console.log('Dimension validation failed:', dimensionError);
       setErrorWithTimeout('productImages', dimensionError);
       return;
     }
     
-    const url = URL.createObjectURL(file);
-    setProductImages((prev) => [...prev, url].slice(0, 8));
-    setHasHadImages(true);
+    console.log('All validations passed, starting upload...');
+    
+    // Upload file directly to server
+    try {
+      console.log('Starting upload for file:', file.name, file.size);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      console.log('Calling /api/upload-image...');
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      console.log('Upload response status:', response.status);
+      console.log('Upload response headers:', response.headers);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Upload failed with response:', errorText);
+        throw new Error(`Upload failed: ${response.status} ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Image uploaded successfully:', result);
+      
+      if (!result.url) {
+        throw new Error('No URL returned from upload');
+      }
+      
+      setProductImages((prev) => [...prev, result.url].slice(0, 8));
+      setHasHadImages(true);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setErrorWithTimeout('productImages', error instanceof Error ? error.message : 'Upload failed');
+    }
   };
 
   const handleSetPromoImage = async () => {
@@ -243,8 +293,29 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
       return;
     }
     
-    const url = URL.createObjectURL(file);
-    setPromoImage(url);
+    // Upload file directly to server
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      
+      const result = await response.json();
+      console.log('Promo image uploaded successfully:', result.url);
+      
+      setPromoImage(result.url);
+    } catch (error) {
+      console.error('Promo image upload error:', error);
+      setErrorWithTimeout('promoImage', error instanceof Error ? error.message : 'Upload failed');
+    }
   };
 
   const handleSetVideo = async () => {
@@ -321,6 +392,21 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
     }
     
     try {
+      console.log('Submitting product with images:', productImages);
+      console.log('First image type:', productImages[0]?.substring(0, 50));
+      console.log('All images:', productImages.map(img => img.substring(0, 50)));
+      
+      // Validate that images are URLs, not base64
+      const hasBase64Images = productImages.some(img => img.startsWith('data:'));
+      if (hasBase64Images) {
+        console.error('Base64 images detected, clearing them');
+        console.error('Base64 images found:', productImages.filter(img => img.startsWith('data:')));
+        setProductImages([]);
+        setSubmitError('Please re-upload your images');
+        setLoading(false);
+        return;
+      }
+      
       await onSave({
         name: productName.trim(),
         sku: sellerSKU.trim() || undefined,
@@ -331,6 +417,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
         product_type: product_type.trim() || undefined,
         price: parseFloat(price),
         stock: parseInt(stock),
+        images: productImages.length > 0 ? productImages : undefined,
       });
       // onClose is called by the parent after successful save
     } catch (err) {
@@ -702,7 +789,10 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
                                             </div>
                                         ))}
                                         {productImages.length < 8 && (
-                                            <button type="button" onClick={handleAddProductImage} className="flex h-[60px] w-[60px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer group">
+                                            <button type="button" onClick={() => {
+                                              console.log('Upload button clicked!');
+                                              handleAddProductImage();
+                                            }} className="flex h-[60px] w-[60px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer group">
                                                 <svg className="h-5 w-5 text-gray-500 group-hover:text-blue-400 group-hover:drop-shadow-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
                                             </button>
                                         )}

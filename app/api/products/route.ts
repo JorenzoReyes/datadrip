@@ -19,6 +19,7 @@ type Product = {
   sales_revenue: number;
   status: string;
   is_archived: boolean;
+  images: string[] | null;
   created_at: string;
   updated_at: string;
 };
@@ -59,6 +60,7 @@ export async function GET(req: Request) {
         sales_revenue,
         status,
         is_archived,
+        images,
         created_at,
         updated_at
        FROM products
@@ -100,7 +102,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, brand, category, subcategory, product_type, price, stock } = body;
+    const { name, sku, description, brand, category, subcategory, product_type, price, stock, images } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -127,13 +129,15 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log('Creating product:', { name, sku, brand, category, price, stock });
+    console.log('Creating product:', { name, sku, brand, category, price, stock, images });
+    console.log('Images being sent to database:', images);
+    console.log('Images JSON stringified:', images && Array.isArray(images) ? JSON.stringify(images) : null);
 
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, product_type, price, stock, status, is_archived)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'active', false)
+        (owner_user_id, account_id, name, sku, description, brand, category, subcategory, product_type, price, stock, images, status, is_archived)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'active', false)
        RETURNING 
         product_id,
         sku,
@@ -152,6 +156,7 @@ export async function POST(req: Request) {
         sales_revenue,
         status,
         is_archived,
+        images,
         created_at,
         updated_at`,
       [
@@ -165,7 +170,8 @@ export async function POST(req: Request) {
         subcategory && subcategory.trim() ? subcategory.trim() : null,
         product_type && product_type.trim() ? product_type.trim() : null,
         parseFloat(price),
-        parseInt(stock)
+        parseInt(stock),
+        images && Array.isArray(images) ? JSON.stringify(images) : null
       ]
     );
 
