@@ -200,19 +200,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update user data
-      const updatedUser = { ...user, ...userData };
-      
-      // Update localStorage
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      // Update state
-      setUser(updatedUser);
-      
-      return true;
+      // Call the API endpoint to update user data
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.user_id,
+          fname: userData.fname,
+          lname: userData.lname,
+          email: userData.email,
+          username: userData.username
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const updatedUser = data.user;
+        
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Update state
+        setUser(updatedUser);
+        
+        return true;
+      } else {
+        const errorData = await response.json();
+        console.error('API error:', errorData.error);
+        return false;
+      }
     } catch (error) {
       console.error('Error updating user:', error);
       return false;
