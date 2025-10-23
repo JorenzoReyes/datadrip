@@ -16,6 +16,7 @@ interface AddProductModalProps {
 		price: number;
 		stock: number;
 		images?: string[];
+		promotion_image?: string;
 	}) => Promise<void>;
 }
 
@@ -418,6 +419,7 @@ export default function AddProductModal({ onClose, onSave }: AddProductModalProp
         price: parseFloat(price),
         stock: parseInt(stock),
         images: productImages.length > 0 ? productImages : undefined,
+        promotion_image: promoImage || undefined,
       });
       // onClose is called by the parent after successful save
     } catch (err) {

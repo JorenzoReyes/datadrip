@@ -26,6 +26,7 @@ export type Product = {
   status: string;
   is_archived: boolean;
   images: string[] | null;
+  promotion_image: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -196,6 +197,7 @@ export default function ProductsPage() {
     price: number;
     stock: number;
     images?: string[];
+    promotion_image?: string;
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');
