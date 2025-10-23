@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+
+import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
 import ReactMarkdown from 'react-markdown';
 
@@ -27,7 +28,7 @@ interface ChatMessage {
 }
 
 export default function InsightsPage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -37,17 +38,17 @@ export default function InsightsPage() {
     }
   }, [user, isLoading, router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
+  
 
   // Local state for embedded insights and chat
   const [insights, setInsights] = useState<Insight[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedInsight, setSelectedInsight] = useState<string>('');
-  const [chatHeight, setChatHeight] = useState(256);
+  const [customQuestion, setCustomQuestion] = useState<string>('');
+  const [inputMode, setInputMode] = useState<'dropdown' | 'custom'>('dropdown');
+  const [selectedModel, setSelectedModel] = useState<'gemini-2.5-flash' | 'gemini-2.5-pro'>('gemini-2.5-flash');
+  const [chatHeight, setChatHeight] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -123,33 +124,79 @@ export default function InsightsPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInsight) return;
+    
+    // Check if we have either a selected insight or custom question
+    if (inputMode === 'dropdown' && !selectedInsight) return;
+    if (inputMode === 'custom' && !customQuestion.trim()) return;
 
-    const selectedOption = insightOptions.find(option => option.value === selectedInsight);
-    if (!selectedOption) return;
+    let userMessage: ChatMessage;
+    let topicToSend: string;
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: `Requested: ${selectedOption.shortLabel}`,
-      timestamp: new Date()
-    };
+    if (inputMode === 'dropdown') {
+      const selectedOption = insightOptions.find(option => option.value === selectedInsight);
+      if (!selectedOption) return;
+      
+      userMessage = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: `Requested: ${selectedOption.shortLabel}`,
+        timestamp: new Date()
+      };
+      topicToSend = selectedInsight;
+    } else {
+      userMessage = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: customQuestion,
+        timestamp: new Date()
+      };
+      topicToSend = 'custom';
+    }
 
     setMessages(prev => [...prev, userMessage]);
     setSelectedInsight('');
+    setCustomQuestion('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(selectedInsight);
+    try {
+      const response = await fetch('/api/ai/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: topicToSend,
+          customQuestion: inputMode === 'custom' ? customQuestion : undefined,
+          history: messages.map(m => ({ type: m.type, content: m.content })),
+          userId: user?.user_id,
+          model: selectedModel,
+          businessContext: {
+            // Additional context can be added here if needed
+            userEmail: user?.email,
+            userName: user?.fname + ' ' + user?.lname,
+          }
+        })
+      });
+
+      const data = await response.json();
+      const content = data?.content || (inputMode === 'dropdown' ? generateAIResponse(selectedInsight) : 'Sorry, I could not generate a response for your custom question.');
+
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: aiResponse,
+        content,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMessage]);
+    } catch {
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: 'Sorry, I could not reach the insight service. ' + (inputMode === 'dropdown' ? 'Showing a generated summary instead.\n\n' + generateAIResponse(selectedInsight) : 'Please try again later.'),
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const generateAIResponse = (selected: string): string => {
@@ -241,7 +288,9 @@ export default function InsightsPage() {
     );
   }
 
-  const canView = (user.permissions || []).includes('view_insights');
+  const roles = user.roles || (user.role ? [user.role] : []);
+  const isAdmin = roles.includes('admin') || roles.includes('system_admin');
+  const canView = !isAdmin; // allow all authenticated non-admin users
   if (!canView) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -252,45 +301,7 @@ export default function InsightsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition">
-                DataDrip
-              </Link>
-              <nav className="hidden md:flex space-x-6">
-                <a href="/dashboard" className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/inventory" className="text-subheader hover:text-header transition">Inventory</a>
-                <a href="/insights" className="text-header font-medium">Insights</a>
-              </nav>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/settings')}
-                className="p-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition"
-                title="Settings"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-medium">U</span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium"
-                title="Logout"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header active="insights" />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -347,7 +358,12 @@ export default function InsightsPage() {
           {/* Embedded chat */}
           <section data-embedded-chat className="bg-white rounded-lg p-4 border border-primary-200 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-header font-medium">💬 Chat with AI</h3>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-header font-medium">💬 Chat with AI</h3>
+                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                  Powered by: Gemini 2.5
+                </span>
+              </div>
               <div className="text-xs text-subheader">Resizable</div>
             </div>
 
@@ -390,27 +406,105 @@ export default function InsightsPage() {
               title="Drag to resize chat height"
             />
 
-            <form onSubmit={handleSendMessage} className="flex space-x-2 mt-4">
-              <select
-                value={selectedInsight}
-                onChange={(e) => setSelectedInsight(e.target.value)}
-                className="flex-1 bg-white text-header text-sm rounded-lg px-3 py-2 border border-gray-300 focus:border-primary-500 focus:outline-none"
-              >
-                <option value="">Select an insight type...</option>
-                {insightOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.shortLabel}
-                  </option>
-                ))}
-              </select>
+            {/* Input Mode Toggle */}
+            <div className="flex space-x-2 mb-3">
               <button
-                type="submit"
-                disabled={!selectedInsight}
-                className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm transition disabled:cursor-not-allowed"
+                type="button"
+                onClick={() => setInputMode('dropdown')}
+                className={`px-3 py-1 rounded-lg text-sm transition ${
+                  inputMode === 'dropdown' 
+                    ? 'bg-primary-500 text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
               >
-                Generate
+                Quick Insights
               </button>
+              <button
+                type="button"
+                onClick={() => setInputMode('custom')}
+                className={`px-3 py-1 rounded-lg text-sm transition ${
+                  inputMode === 'custom' 
+                    ? 'bg-primary-500 text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Ask Anything
+              </button>
+            </div>
+
+            <form onSubmit={handleSendMessage} className="space-y-3">
+              {inputMode === 'dropdown' ? (
+                <div className="flex space-x-2">
+                  <select
+                    value={selectedInsight}
+                    onChange={(e) => setSelectedInsight(e.target.value)}
+                    className="flex-1 bg-white text-header text-sm rounded-lg px-3 py-2 border border-gray-300 focus:border-primary-500 focus:outline-none"
+                  >
+                    <option value="">Select an insight type...</option>
+                    {insightOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.shortLabel}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="submit"
+                    disabled={!selectedInsight}
+                    className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg text-sm transition disabled:cursor-not-allowed"
+                  >
+                    Generate
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    value={customQuestion}
+                    onChange={(e) => setCustomQuestion(e.target.value)}
+                    placeholder="Ask me anything about your shop performance, sales, inventory, customers, etc..."
+                    className="w-full bg-white text-header text-sm rounded-lg px-3 py-2 border border-gray-300 focus:border-primary-500 focus:outline-none resize-none"
+                    rows={3}
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={!customQuestion.trim()}
+                      className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm transition disabled:cursor-not-allowed"
+                    >
+                      Ask Gemini
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
+
+            {/* Model Selection and Disclaimer */}
+            <div className="mt-4 space-y-3">
+              {/* Model Selection */}
+              <div className="flex items-center space-x-3">
+                <label className="text-sm text-header font-medium">AI Model:</label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value as 'gemini-2.5-flash' | 'gemini-2.5-pro')}
+                  className="text-sm bg-white text-header rounded-lg px-3 py-1 border border-gray-300 focus:border-primary-500 focus:outline-none"
+                >
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (Advanced)</option>
+                </select>
+              </div>
+
+              {/* Disclaimer */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-start space-x-2">
+                  <span className="text-yellow-600 text-sm">⚠️</span>
+                  <div className="text-xs text-yellow-800">
+                    <strong>AI Disclaimer:</strong> Responses may not be 100% accurate as this is an AI system that can make mistakes. 
+                    Please verify important business decisions with your own analysis and data.
+                    <br />
+                    <strong>Current Model:</strong> {selectedModel === 'gemini-2.5-flash' ? 'Gemini 2.5 Flash (Fast)' : 'Gemini 2.5 Pro (Advanced)'}
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
         </div>
       </main>

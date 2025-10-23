@@ -1,10 +1,10 @@
 {
   "name": "datadrip",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:init": "node scripts/init-db.js",
@@ -17,16 +17,24 @@
     "docker:dev:down": "docker-compose -f docker-compose.dev.yml down",
     "docker:prod": "docker-compose up --build",
     "docker:prod:down": "docker-compose down",
+    "jenkins:up": "docker-compose up jenkins -d",
+    "jenkins:down": "docker-compose stop jenkins",
+    "jenkins:setup": "bash scripts/setup-jenkins.sh",
+    "jenkins:setup:complete": "bash scripts/setup-jenkins-complete.sh",
+    "jenkins:plugins": "bash scripts/install-jenkins-plugins.sh",
+    "jenkins:logs": "docker logs datadrip-jenkins -f",
     "db:seed:roles": "node scripts/seed-roles.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@types/pg": "^8.10.9",
     "next": "15.5.0",
     "pg": "^8.11.3",
     "railway": "^2.0.17",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

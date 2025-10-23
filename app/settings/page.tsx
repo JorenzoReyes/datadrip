@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+
+import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
 import { useIntegrationManagement } from '../contexts/integrations';
 
@@ -329,7 +330,7 @@ interface UserSettings {
 }
 
 export default function SettingsPage() {
-  const { user, isLoading: authLoading, logout, updateUser } = useAuth();
+  const { user, isLoading: authLoading, updateUser } = useAuth();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<'details' | 'platforms'>('details');
   const [isLoading, setIsLoading] = useState(false);
@@ -457,10 +458,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
 
   if (authLoading) {
     return (
@@ -478,7 +475,9 @@ export default function SettingsPage() {
     );
   }
 
-  const canView = (user.permissions || []).includes('view_settings');
+  const roles = user.roles || (user.role ? [user.role] : []);
+  const isAdmin = roles.includes('admin') || roles.includes('system_admin');
+  const canView = !isAdmin; // allow all authenticated non-admin users
   if (!canView) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -489,34 +488,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition">
-                DataDrip
-              </Link>
-              <nav className="hidden md:flex space-x-6">
-                <a href={user.role === 'admin' || user.role === 'system_admin' ? '/admin/manage-users' : '/dashboard'} className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/inventory" className="text-subheader hover:text-header transition">Inventory</a>
-                <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
-              </nav>
-              <span className="text-primary-500 font-bold">SETTINGS</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-subheader">{user.email}</span>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium"
-                title="Logout"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header active="settings" />
 
         <div className="flex justify-center">
           <div className="flex max-w-7xl w-full">
@@ -547,6 +519,7 @@ export default function SettingsPage() {
                   >
                     🔗 Connect Platforms
                   </button>
+
                 </nav>
 
                 {/* Additional Info */}

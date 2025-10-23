@@ -54,6 +54,14 @@ This project is deployed to three environments on Railway:
    docker exec -it datadrip-postgres-1 psql -U postgres -d datadrip
    ```
 
+### Access Local PostgreSQL (without Docker)
+
+If you are running the local PostgreSQL instance on your machine (default port 5432), you can connect with:
+
+```bash
+psql -h localhost -p 5432 -U postgres -d datadrip
+```
+
 ### Quick Start without Docker
 
 1. **Clone and install dependencies**
@@ -175,7 +183,7 @@ NEXT_TELEMETRY_DISABLED=1 # Disable Next.js telemetry
 
 The project includes a seeding script that populates:
 - Roles: `business_owner`, `admin`, `system_admin`
-- Permissions: `create`, `read`, `update`, `deactivate`, page/view permissions (dashboard, inventory, insights, settings, admin pages)
+- Permissions: `create`, `read`, `update`, `deactivate`, page/view permissions (dashboard, products, insights, settings, admin pages)
 - Demo users: `user@example.com`, `admin@example.com`, `system.admin@example.com`
 - Mappings: `user_roles` and `role_permissions`
 
@@ -416,34 +424,47 @@ The Dockerfile uses a multi-stage build process:
 - PostgreSQL integration
 
 ### Docker Compose Services
-- **app**: Next.js application (port 3000)
-- **postgres**: PostgreSQL database (port 5432)
-- **volumes**: Persistent data storage
 
-### Syncing Code Changes to Docker
+#### Development (`docker-compose.dev.yml`)
+- **app**: Next.js application (host port 3000 → container port 3000)
+- **postgres**: PostgreSQL database (host port 5433 → container port 5432)
+  - Inside Docker network: containers connect to `postgres:5432`
+  - From host machine: connect to `localhost:5433`
+- **volumes**: Persistent data storage with hot reloading enabled
 
-Due to Windows Docker limitations with file watching, code changes require manual syncing:
+#### Production (`docker-compose.yml`)
+- **app**: Next.js application (host port 3000 → container port 3000)
+- **postgres**: PostgreSQL database (host port 5432 → container port 5432)
+- **jenkins**: CI/CD automation (host port 8081 → container port 8080)
 
-#### Method 1: Restart Container (Recommended)
+### Hot Reloading in Docker (Windows)
+
+**✅ Hot reloading is now enabled!** The development setup includes:
+- Webpack polling for file change detection
+- Volume mounting for instant code sync
+- Auto-rebuild on file changes (1-2 second delay)
+
+#### Usage:
 ```bash
-# Stop and restart to sync all changes
-docker-compose -f docker-compose.dev.yml down
-docker-compose -f docker-compose.dev.yml up -d
+# Start development environment
+npm run docker:dev
+# or
+docker-compose -f docker-compose.dev.yml up
+
+# Make code changes - they will auto-reload!
+# Just refresh your browser to see updates
+
+# Stop when done
+npm run docker:dev:down
 ```
 
-#### Method 2: Rebuild Container (For Major Changes)
-```bash
-# Rebuild and restart (takes longer but ensures everything is fresh)
-docker-compose -f docker-compose.dev.yml down
-docker-compose -f docker-compose.dev.yml up --build -d
-```
+#### Port Configuration:
+- **Local PostgreSQL**: `localhost:5432` (if installed locally)
+- **Docker PostgreSQL (dev)**: `localhost:5433` (mapped from container's 5432)
+- **Docker PostgreSQL (prod)**: `localhost:5432`
+- **Next.js App**: `localhost:3000`
 
-#### Method 3: Manual Browser Refresh (Quick Changes)
-- Make your code changes
-- Refresh the browser manually
-- Changes will be reflected (volume mounting works)
-
-**Note:** Volume mounting works correctly, but Next.js file watching doesn't detect changes on Windows Docker. Restarting the container ensures all changes are properly synced.
+**Note:** Inside Docker containers, the app connects to `postgres:5432` (internal Docker network). From your host machine, use `localhost:5433` for dev or `localhost:5432` for production.
 
 ## Health Check
 The application includes a comprehensive health check endpoint at `/api/health` that reports:
