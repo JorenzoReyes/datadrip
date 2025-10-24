@@ -956,4 +956,3 @@ function PlatformsSection({ user }: PlatformsSectionProps) {
     </>
   );
 }
->>>>>>> b571501f0c6c518976b0e90187f29e4b555eca9a
