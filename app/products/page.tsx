@@ -285,7 +285,34 @@ export default function ProductsPage() {
   };
 
   // Handle updating product
-  const handleUpdateProduct = async (updatedData: Partial<Product>) => {
+  const handleUpdateProduct = async (updatedData: {
+    name: string;
+    sku?: string;
+    description?: string;
+    highlights?: string;
+    in_box?: string;
+    brand?: string;
+    category?: string;
+    subcategory?: string;
+    product_type?: string;
+    price: number;
+    special_price?: number;
+    stock: number;
+    images?: string[];
+    videos?: string[];
+    promotion_image?: string;
+    status?: string;
+    weight_value?: number;
+    weight_unit?: string;
+    length_cm?: number;
+    width_cm?: number;
+    height_cm?: number;
+    has_dangerous?: boolean;
+    warranty_type?: string;
+    warranty_period?: string;
+    warranty_policy?: string;
+    attributes?: {[key: string]: unknown};
+  }) => {
     if (!editingProduct) return;
 
     try {
