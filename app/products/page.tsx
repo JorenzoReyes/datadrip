@@ -300,7 +300,7 @@ export default function ProductsPage() {
     stock: number;
     images?: string[];
     videos?: string[];
-    promotion_image?: string;
+    promotion_image?: string | null;
     status?: string;
     weight_value?: number;
     weight_unit?: string;
