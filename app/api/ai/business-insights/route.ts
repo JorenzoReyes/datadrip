@@ -98,7 +98,7 @@ export async function POST(req: Request) {
       }, { status: 503 });
     }
 
-    const { userId } = await req.json();
+    const { userId, timeline } = await req.json();
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
@@ -177,12 +177,23 @@ export async function POST(req: Request) {
       inventoryForecast
     };
 
+    // Create timeline context text
+    const timelineText = timeline ? `
+CURRENT TIMELINE CONTEXT:
+- Selected Period: ${timeline.label}
+- Type: ${timeline.type}
+- Date Range: ${timeline.startDate} to ${timeline.endDate}
+- Month: ${timeline.month} ${timeline.year}
+
+IMPORTANT: Generate insights based on the above timeline period. Focus on performance, trends, and opportunities within this specific time frame.` : '';
+
     // Compress data to reduce tokens
     const businessDataText = JSON.stringify(completeDataForAI);
     console.log('📊 Business data size:', businessDataText.length, 'chars (~' + Math.ceil(businessDataText.length / 4) + ' tokens estimated)');
 
     const prompt = `Generate 8-10 SMART business insights as JSON from this data:
 ${businessDataText}
+${timelineText}
 
 JSON format:
 {"insights":[{"type":"promotion|inventory|trend|feedback|forecast","title":"Title","description":"Details (max 140 chars)","confidence":70-95,"priority":"high|medium|low","suggestedAction":"Action (max 120 chars)","timeline":"Immediate|Next 7 days|Next 2 weeks|Next month","supportingData":"Data"}]}
@@ -192,7 +203,8 @@ Rules:
 2. Use ₱ with comma separators: ₱1,234,567 (NOT ₱1234567)
 3. At least 2 insights must be type "forecast" using salesForecast/inventoryForecast
 4. Be specific with numbers, products, and actionable steps
-5. Return ONLY JSON (no markdown)
+5. Focus insights on the timeline period specified above
+6. Return ONLY JSON (no markdown)
 
 Good example:
 {"type":"forecast","title":"URGENT: Gaming Laptop, 4K TV Need Restock","description":"Gaming Laptop 16GB (15 units), 4K TV (8 units) low stock","confidence":92,"priority":"high","suggestedAction":"Order 147x Gaming Laptop, 80x 4K TV","timeline":"Immediate","supportingData":"₱6,772,393 revenue at risk"}

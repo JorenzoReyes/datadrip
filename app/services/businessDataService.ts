@@ -332,4 +332,156 @@ export class BusinessDataService {
       throw new Error('Failed to sync product sales data');
     }
   }
+
+  /**
+   * Get user business data for a specific time period
+   */
+  static async getUserBusinessDataForPeriod(userId: number, startDate: string, endDate: string): Promise<BusinessData> {
+    try {
+      // Get user's accounts (limited columns for security)
+      const accounts = await query(
+        'SELECT account_id, name, status, created_at FROM accounts WHERE owner_user_id = $1',
+        [userId]
+      );
+
+      // Get user's shops with account names (limited columns for security)
+      const shops = await query(
+        `SELECT s.shop_id, s.account_id, s.name, s.platform, s.platform_shop_id, 
+                s.followers_count, s.products_count, s.rating_value, s.rating_count, 
+                s.chat_performance_percent, s.joined_at, a.name as account_name 
+         FROM shops s 
+         JOIN accounts a ON s.account_id = a.account_id 
+         WHERE a.owner_user_id = $1`,
+        [userId]
+      );
+
+      // Get user's products with sales data for the specific period
+      const products = await query(
+        `SELECT 
+          p.product_id, p.name, p.sku, p.brand, p.category, p.subcategory, 
+          p.price, p.stock, p.status, p.sales_count, p.sales_revenue,
+          COALESCE(SUM(ps.total_sales), 0) as actual_sales_revenue,
+          COALESCE(SUM(ps.quantity_sold), 0) as actual_sales_count,
+          COALESCE(COUNT(ps.sale_id), 0) as total_sales_transactions
+         FROM products p
+         LEFT JOIN product_sales ps ON p.product_id = ps.product_id 
+           AND ps.sale_date >= $2::date AND ps.sale_date <= $3::date
+         WHERE p.owner_user_id = $1
+         GROUP BY p.product_id, p.name, p.sku, p.brand, p.category, p.subcategory, 
+                  p.price, p.stock, p.status, p.sales_count, p.sales_revenue
+         ORDER BY actual_sales_revenue DESC`,
+        [userId, startDate, endDate]
+      );
+
+      // Get sales data for the specific period
+      const recentSales = await query(
+        `SELECT 
+          DATE(sale_date) as sale_date,
+          SUM(total_sales) as daily_revenue,
+          SUM(quantity_sold) as daily_quantity,
+          COUNT(DISTINCT order_id) as daily_orders
+         FROM product_sales ps
+         JOIN products p ON ps.product_id = p.product_id
+         WHERE p.owner_user_id = $1 
+         AND ps.sale_date >= $2::date
+         AND ps.sale_date <= $3::date
+         GROUP BY DATE(sale_date)
+         ORDER BY sale_date DESC`,
+        [userId, startDate, endDate]
+      );
+
+      // Get top selling products for the specific period
+      const topProducts = await query(
+        `SELECT 
+          p.name,
+          p.stock,
+          p.price,
+          p.category,
+          COALESCE(SUM(ps.quantity_sold), 0) as actual_sales_count,
+          COALESCE(SUM(ps.total_sales), 0) as actual_sales_revenue,
+          COALESCE(COUNT(ps.sale_id), 0) as total_transactions
+         FROM products p
+         LEFT JOIN product_sales ps ON p.product_id = ps.product_id 
+           AND ps.sale_date >= $2::date AND ps.sale_date <= $3::date
+         WHERE p.owner_user_id = $1
+         GROUP BY p.product_id, p.name, p.stock, p.price, p.category
+         ORDER BY actual_sales_revenue DESC
+         LIMIT 10`,
+        [userId, startDate, endDate]
+      );
+
+      return {
+        accounts: accounts as BusinessData['accounts'],
+        shops: shops as BusinessData['shops'],
+        products: products as BusinessData['products'],
+        recentSales: recentSales as BusinessData['recentSales'],
+        topProducts: topProducts as BusinessData['topProducts'],
+        totalProducts: products.length,
+        totalShops: shops.length,
+        totalAccounts: accounts.length
+      };
+    } catch (error) {
+      console.error('Error fetching user business data for period:', error);
+      throw new Error('Failed to fetch business data for period');
+    }
+  }
+
+  /**
+   * Get sales by platform for a specific time period
+   */
+  static async getSalesByPlatformForPeriod(userId: number, startDate: string, endDate: string) {
+    try {
+      const salesByPlatform = await query(
+        `SELECT 
+          platform,
+          SUM(total_sales) as total_revenue,
+          SUM(quantity_sold) as total_quantity,
+          COUNT(DISTINCT order_id) as total_orders
+         FROM product_sales ps
+         JOIN products p ON ps.product_id = p.product_id
+         WHERE p.owner_user_id = $1 
+         AND ps.sale_date >= $2::date
+         AND ps.sale_date <= $3::date
+         GROUP BY platform
+         ORDER BY total_revenue DESC`,
+        [userId, startDate, endDate]
+      );
+
+      return salesByPlatform;
+    } catch (error) {
+      console.error('Error fetching sales by platform for period:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get top products by platform for a specific time period
+   */
+  static async getTopProductsByPlatformForPeriod(userId: number, platform: string, startDate: string, endDate: string, limit: number = 5) {
+    try {
+      const topProducts = await query(
+        `SELECT 
+          p.name,
+          p.category,
+          SUM(ps.total_sales) as revenue,
+          SUM(ps.quantity_sold) as quantity_sold,
+          COUNT(DISTINCT ps.order_id) as orders
+         FROM products p
+         JOIN product_sales ps ON p.product_id = ps.product_id
+         WHERE p.owner_user_id = $1 
+         AND ps.platform = $2
+         AND ps.sale_date >= $3::date
+         AND ps.sale_date <= $4::date
+         GROUP BY p.product_id, p.name, p.category
+         ORDER BY revenue DESC
+         LIMIT $5`,
+        [userId, platform, startDate, endDate, limit]
+      );
+
+      return topProducts;
+    } catch (error) {
+      console.error('Error fetching top products by platform for period:', error);
+      return [];
+    }
+  }
 }
