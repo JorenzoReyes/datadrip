@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
         // Fetch top selling products
         const platformParam = selectedPlatform === 'all' ? '' : `&platform=${selectedPlatform}`;
-        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30${platformParam}`, { cache: 'no-store' });
+        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=${dateRange}${platformParam}`, { cache: 'no-store' });
         const topProductsJson = await topProductsRes.json();
         setTopProducts(topProductsJson.topProducts || []);
 
@@ -264,9 +264,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
-        {/* Sales Report Title */}
-        <h3 className="text-xl font-bold font-title text-header mb-6">Shop Metrics</h3>
 
         {/* Sales Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

@@ -284,3 +284,13 @@ jmeter.log
 *.crt
 *.p12
 *.pfx
+
+# User uploaded files (exclude from git)
+public/uploads/
+uploads/
+# Don't ignore static assets in public root
+!public/*.jpg
+!public/*.jpeg
+!public/*.png
+!public/*.gif
+!public/*.webp
