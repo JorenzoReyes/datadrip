@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
         // Fetch top selling products
         const platformParam = selectedPlatform === 'all' ? '' : `&platform=${selectedPlatform}`;
-        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=${dateRange}${platformParam}`, { cache: 'no-store' });
+        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30${platformParam}`, { cache: 'no-store' });
         const topProductsJson = await topProductsRes.json();
         setTopProducts(topProductsJson.topProducts || []);
 
