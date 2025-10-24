@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query, queryOne } from '../../../utils/database';
+import { EnhancedDataSanitizationService } from '../../../services/enhancedDataSanitizationService';
 
 export async function GET(req: Request) {
   try {
@@ -38,22 +39,20 @@ export async function GET(req: Request) {
       [accountIds]
     );
 
-    // Daily sales for the past 7 days from product_sales table (using seeded data range)
-    // Since the dashboard shows October 14, 2025, we'll show the 7 days before that
+    // Daily sales for the past 7 days from daily_sales_aggregated table
+    // Get the last 7 days of aggregated data with platform breakdown
     const dailySales = await query<{
       sale_date: string;
-      platform: string;
       total_sales: number;
+      platform_breakdown: { tiktok?: number; shopee?: number; lazada?: number };
     }>(
-      `SELECT sale_date, 
-              platform,
-              SUM(total_sales) as total_sales
-       FROM product_sales
+      `SELECT sale_date::text, 
+              total_sales,
+              platform_breakdown
+       FROM daily_sales_aggregated
        WHERE account_id = ANY($1) 
-         AND sale_date >= '2025-10-08'::date
-         AND sale_date <= '2025-10-14'::date
-       GROUP BY sale_date, platform
-       ORDER BY sale_date, platform`,
+       ORDER BY sale_date DESC
+       LIMIT 7`,
       [accountIds]
     );
 
@@ -78,7 +77,18 @@ export async function GET(req: Request) {
       shopee: Number(totalsRows.find(r => r.platform === 'shopee')?.total || 0)
     };
 
-    return NextResponse.json({ shops, dailySales, totals });
+    // Log data access for audit
+    EnhancedDataSanitizationService.logDataAccess(owner.user_id, 'dashboard_metrics', false);
+
+    // Mask financial data for dashboard display (round to nearest 1000)
+    const maskedTotals = {
+      all: Math.round(totals.all / 1000) * 1000,
+      tiktok: Math.round(totals.tiktok / 1000) * 1000,
+      lazada: Math.round(totals.lazada / 1000) * 1000,
+      shopee: Math.round(totals.shopee / 1000) * 1000
+    };
+
+    return NextResponse.json({ shops, dailySales, totals: maskedTotals });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to load metrics';
     return NextResponse.json({ error: message }, { status: 500 });

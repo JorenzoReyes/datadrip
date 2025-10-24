@@ -204,7 +204,7 @@ async function seedDirect() {
 
     for (const product of electronicsProducts) {
       try {
-        // First get the user_id
+        // First get the user_id and account_id
         const userResult = await pool.query('SELECT user_id FROM users WHERE email = $1', ['electronics.owner@example.com']);
         if (userResult.rows.length === 0) {
           console.error('Electronics owner not found');
@@ -212,17 +212,25 @@ async function seedDirect() {
         }
         const userId = userResult.rows[0].user_id;
 
+        // Get the account_id for this user
+        const accountResult = await pool.query('SELECT account_id FROM accounts WHERE owner_user_id = $1', [userId]);
+        if (accountResult.rows.length === 0) {
+          console.error('Electronics account not found');
+          continue;
+        }
+        const accountId = accountResult.rows[0].account_id;
+
         // Check if product already exists
         const existingProduct = await pool.query('SELECT product_id FROM products WHERE sku = $1', [product.sku]);
         if (existingProduct.rows.length > 0) {
           continue; // Skip if already exists
         }
 
-        // Insert the product
+        // Insert the product with account_id
         await pool.query(`
-          INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, 'Electronics', $6, $7, $8, '{"color":"black","warranty":"1 year"}', $9::jsonb)
-        `, [userId, product.name, product.sku, `${product.name} - High quality ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, weight_value, weight_unit, length_cm, width_cm, height_cm)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Electronics', $7, $8, $9, '{"color":"black","warranty":"1 year"}', $10::jsonb, 500, 'g', 20.5, 15.0, 8.0)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - High quality ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -249,7 +257,7 @@ async function seedDirect() {
 
     for (const product of cosmeticsProducts) {
       try {
-        // First get the user_id
+        // First get the user_id and account_id
         const userResult = await pool.query('SELECT user_id FROM users WHERE email = $1', ['cosmetics.owner@example.com']);
         if (userResult.rows.length === 0) {
           console.error('Cosmetics owner not found');
@@ -257,17 +265,25 @@ async function seedDirect() {
         }
         const userId = userResult.rows[0].user_id;
 
+        // Get the account_id for this user
+        const accountResult = await pool.query('SELECT account_id FROM accounts WHERE owner_user_id = $1', [userId]);
+        if (accountResult.rows.length === 0) {
+          console.error('Cosmetics account not found');
+          continue;
+        }
+        const accountId = accountResult.rows[0].account_id;
+
         // Check if product already exists
         const existingProduct = await pool.query('SELECT product_id FROM products WHERE sku = $1', [product.sku]);
         if (existingProduct.rows.length > 0) {
           continue; // Skip if already exists
         }
 
-        // Insert the product
+        // Insert the product with account_id
         await pool.query(`
-          INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, 'Cosmetics', $6, $7, $8, '{"skin_type":"all","cruelty_free":true}', $9::jsonb)
-        `, [userId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, weight_value, weight_unit, length_cm, width_cm, height_cm)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Cosmetics', $7, $8, $9, '{"skin_type":"all","cruelty_free":true}', $10::jsonb, 100, 'g', 8.0, 4.0, 12.0)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -294,7 +310,7 @@ async function seedDirect() {
 
     for (const product of foodProducts) {
       try {
-        // First get the user_id
+        // First get the user_id and account_id
         const userResult = await pool.query('SELECT user_id FROM users WHERE email = $1', ['food.owner@example.com']);
         if (userResult.rows.length === 0) {
           console.error('Food owner not found');
@@ -302,17 +318,25 @@ async function seedDirect() {
         }
         const userId = userResult.rows[0].user_id;
 
+        // Get the account_id for this user
+        const accountResult = await pool.query('SELECT account_id FROM accounts WHERE owner_user_id = $1', [userId]);
+        if (accountResult.rows.length === 0) {
+          console.error('Food account not found');
+          continue;
+        }
+        const accountId = accountResult.rows[0].account_id;
+
         // Check if product already exists
         const existingProduct = await pool.query('SELECT product_id FROM products WHERE sku = $1', [product.sku]);
         if (existingProduct.rows.length > 0) {
           continue; // Skip if already exists
         }
 
-        // Insert the product
+        // Insert the product with account_id
         await pool.query(`
-          INSERT INTO products (owner_user_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, 'Food & Drinks', $6, $7, $8, '{"organic":true,"gluten_free":true}', $9::jsonb)
-        `, [userId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, weight_value, weight_unit, length_cm, width_cm, height_cm)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Food & Drinks', $7, $8, $9, '{"organic":true,"gluten_free":true}', $10::jsonb, 1000, 'g', 25.0, 15.0, 10.0)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -481,7 +505,7 @@ async function seedDirect() {
         SELECT 
           account_id,
           sale_date,
-          SUM(total_sales) as total_sales,
+          SUM(platform_total) as total_sales,
           COUNT(DISTINCT order_id) as total_orders,
           jsonb_object_agg(platform, platform_total)
         FROM (
@@ -489,9 +513,10 @@ async function seedDirect() {
             account_id,
             sale_date,
             platform,
-            SUM(total_sales) as platform_total
+            SUM(total_sales) as platform_total,
+            order_id
           FROM product_sales
-          GROUP BY account_id, sale_date, platform
+          GROUP BY account_id, sale_date, platform, order_id
         ) platform_sales
         GROUP BY account_id, sale_date
         ON CONFLICT (account_id, sale_date) DO UPDATE SET
@@ -684,7 +709,7 @@ function seedDocker() {
     ];
 
     for (const product of electronicsDockerProducts) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Electronics','${product.category}',${product.price},${product.stock},'{\\\"color\\\":\\\"black\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,weight_value,weight_unit,length_cm,width_cm,height_cm) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Electronics','${product.category}',${product.price},${product.stock},'{\\\"color\\\":\\\"black\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,500,'g',20.5,15.0,8.0 FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
     // Cosmetics products (15 total)
     const cosmeticsDockerProducts = [
@@ -706,7 +731,7 @@ function seedDocker() {
     ];
 
     for (const product of cosmeticsDockerProducts) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Cosmetics','${product.category}',${product.price},${product.stock},'{\\\"skin_type\\\":\\\"all\\\",\\\"cruelty_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,weight_value,weight_unit,length_cm,width_cm,height_cm) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Cosmetics','${product.category}',${product.price},${product.stock},'{\\\"skin_type\\\":\\\"all\\\",\\\"cruelty_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,100,'g',8.0,4.0,12.0 FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Food & Drinks products (15 total)
@@ -729,7 +754,7 @@ function seedDocker() {
     ];
 
     for (const product of foodDockerProducts) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Food & Drinks','${product.category}',${product.price},${product.stock},'{\\\"organic\\\":true,\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,weight_value,weight_unit,length_cm,width_cm,height_cm) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Food & Drinks','${product.category}',${product.price},${product.stock},'{\\\"organic\\\":true,\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,1000,'g',25.0,15.0,10.0 FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
     // Accounts for demo owners
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Electra Shop','active' FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });

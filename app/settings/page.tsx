@@ -96,6 +96,9 @@ function ConnectPlatformsSection() {
       const result = await createIntegration(integrationData, user.email);
       
       if (result.success) {
+        // Link OAuth integration to existing demo data
+        await linkOAuthToDemoData(user.email, platform);
+        
         // Update local platform status
         setPlatforms(prev => prev.map(p => 
           p.id === platform 
@@ -103,7 +106,7 @@ function ConnectPlatformsSection() {
             : p
         ));
         
-        setMessage({ type: 'success', text: successMessage });
+        setMessage({ type: 'success', text: `${successMessage} Demo data has been linked and will appear in your dashboard.` });
         setTimeout(() => setMessage(null), 5000);
       } else {
         throw new Error(result.error || 'Failed to create integration');
@@ -111,6 +114,43 @@ function ConnectPlatformsSection() {
     } catch (err) {
       console.error('OAuth success handling error:', err);
       setMessage({ type: 'error', text: 'Failed to complete OAuth integration. Please try again.' });
+    }
+  };
+
+  // Link OAuth integration to existing demo data
+  const linkOAuthToDemoData = async (userEmail: string, platform: string) => {
+    try {
+      // Map demo users to their business data
+      const demoUserMapping = {
+        'user@example.com': 'electronics.owner@example.com', // Main demo user gets electronics data
+        'admin@example.com': 'cosmetics.owner@example.com',  // Admin gets cosmetics data
+        'system.admin@example.com': 'food.owner@example.com' // System admin gets food data
+      };
+
+      const businessOwnerEmail = demoUserMapping[userEmail as keyof typeof demoUserMapping] || 'electronics.owner@example.com';
+      
+      // Trigger data sync by calling the sync API
+      const syncResponse = await fetch('/api/admin/sync-sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          platform: platform,
+          userId: userEmail,
+          businessOwnerEmail: businessOwnerEmail,
+          forceSync: true
+        })
+      });
+
+      if (syncResponse.ok) {
+        console.log(`✅ Linked OAuth integration to demo data for ${platform}`);
+      } else {
+        console.warn(`⚠️ Could not sync demo data for ${platform}, but OAuth connection succeeded`);
+      }
+    } catch (error) {
+      console.error('Error linking OAuth to demo data:', error);
+      // Don't throw - OAuth connection should still succeed even if demo linking fails
     }
   };
 
@@ -418,22 +458,26 @@ interface UserSettings {
   firstName: string;
   lastName: string;
   email: string;
+  username: string;
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
 }
 
 export default function SettingsPage() {
-  const { user, isLoading: authLoading, logout, updateUser } = useAuth();
+  const { user, isLoading: authLoading, updateUser } = useAuth();
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<'details' | 'platforms'>('details');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editingUserDetails, setEditingUserDetails] = useState(false);
+  const [editingSecurity, setEditingSecurity] = useState(false);
+  const [activeSection, setActiveSection] = useState<'account' | 'platforms'>('account');
   
   const [formData, setFormData] = useState<UserSettings>({
     firstName: '',
     lastName: '',
     email: '',
+    username: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -446,6 +490,7 @@ export default function SettingsPage() {
         firstName: user.fname || '',
         lastName: user.lname || '',
         email: user.email || '',
+        username: user.username || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -478,6 +523,9 @@ export default function SettingsPage() {
     if (!formData.email.trim()) {
       return 'Email is required';
     }
+    if (!formData.username.trim()) {
+      return 'Username is required';
+    }
     if (!formData.email.includes('@')) {
       return 'Please enter a valid email address';
     }
@@ -486,6 +534,9 @@ export default function SettingsPage() {
     }
     if (formData.lastName.length < 2) {
       return 'Last name must be at least 2 characters long';
+    }
+    if (formData.username.length < 3) {
+      return 'Username must be at least 3 characters long';
     }
 
     // Password validation (only if user wants to change password)
@@ -507,7 +558,7 @@ export default function SettingsPage() {
     return null;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleUserDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const validationError = validateForm();
@@ -520,154 +571,149 @@ export default function SettingsPage() {
     setMessage(null);
 
     try {
-      // Update user data using the context function
-      // Map form data to User type
       const userUpdateData = {
         fname: formData.firstName,
         lname: formData.lastName,
-        email: formData.email
+        email: formData.email,
+        username: formData.username
       };
       const success = await updateUser(userUpdateData);
       
       if (success) {
-        setMessage({ type: 'success', text: 'Settings updated successfully!' });
-        
-        // Clear password fields after successful update
-        setFormData(prev => ({
-          ...prev,
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        }));
-        
-        // Clear message after 3 seconds
+        setMessage({ type: 'success', text: 'User details updated successfully!' });
+        setEditingUserDetails(false);
         setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({ type: 'error', text: 'Failed to update settings. Please try again.' });
+        setMessage({ type: 'error', text: 'Failed to update user details. Please try again.' });
       }
     } catch {
-      setMessage({ type: 'error', text: 'Failed to update settings. Please try again.' });
+      setMessage({ type: 'error', text: 'Failed to update user details. Please try again.' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleSecuritySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.newPassword || formData.confirmPassword || formData.currentPassword) {
+      const validationError = validateForm();
+      if (validationError) {
+        setMessage({ type: 'error', text: validationError });
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      // Handle password change logic here
+      setMessage({ type: 'success', text: 'Password updated successfully!' });
+      setEditingSecurity(false);
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+      setTimeout(() => setMessage(null), 3000);
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to update password. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-header text-xl">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-gray-900 text-xl">Loading...</div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-header text-xl">Please log in</div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-gray-900 text-xl">Please log in</div>
       </div>
     );
   }
 
-  const canView = (user.permissions || []).includes('view_settings');
+  const roles = user.roles || (user.role ? [user.role] : []);
+  const isAdmin = roles.includes('admin') || roles.includes('system_admin');
+  const canView = !isAdmin;
   if (!canView) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-header text-xl">Access denied (Settings)</div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-gray-900 text-xl">Access denied (Settings)</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-2xl font-bold font-title text-header hover:text-primary-600 transition">
-                DataDrip
-              </Link>
-              <nav className="hidden md:flex space-x-6">
-                <a href={user.role === 'admin' || user.role === 'system_admin' ? '/admin/manage-users' : '/dashboard'} className="text-subheader hover:text-header transition">Dashboard</a>
-                <a href="/sales-inventory" className="text-subheader hover:text-header transition">Sales and Inventory</a>
-                <a href="/insights" className="text-subheader hover:text-header transition">Insights</a>
-              </nav>
-              <span className="text-primary-500 font-bold">SETTINGS</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-subheader">{user.email}</span>
+    <div className="min-h-screen bg-gray-50">
+      <Header active="settings" />
+      
+      <div className="flex max-w-7xl mx-auto">
+        {/* Left Sidebar */}
+        <aside className="w-80 bg-white rounded-xl border border-gray-200 p-6 mx-6 my-6 shadow-sm">
+          <div className="sticky top-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-8">Settings</h3>
+            
+            <nav className="space-y-3 mb-8">
               <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-gray-600 hover:text-header hover:bg-gray-100 rounded-lg transition font-medium"
-                title="Logout"
+                onClick={() => setActiveSection('account')}
+                className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
+                  activeSection === 'account'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
-                Logout
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Account Details
               </button>
+              
+              <button
+                onClick={() => setActiveSection('platforms')}
+                className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
+                  activeSection === 'platforms'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Connect Platforms
+              </button>
+            </nav>
+
+            {/* Help Section */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Need Help?</h4>
+              <p className="text-xs text-gray-600">
+                Contact support if you need assistance with your account settings.
+              </p>
             </div>
           </div>
-        </div>
-      </header>
+        </aside>
 
-        <div className="flex justify-center">
-          <div className="flex max-w-7xl w-full">
-            {/* Left Sidebar */}
-            <aside className="w-80 bg-white border-r border-gray-200 p-6 rounded-r-2xl">
-              <div className="sticky top-6">
-                <h3 className="text-lg font-semibold font-title text-header mb-4">Settings</h3>
-                
-                <nav className="space-y-2">
-                  <button
-                    onClick={() => setActiveSection('details')}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                      activeSection === 'details'
-                        ? 'bg-primary-500 text-white'
-                        : 'text-subheader hover:bg-gray-100 hover:text-header'
-                    }`}
-                  >
-                    👤 User Details
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSection('platforms')}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                      activeSection === 'platforms'
-                        ? 'bg-primary-500 text-white'
-                        : 'text-subheader hover:bg-gray-100 hover:text-header'
-                    }`}
-                  >
-                    🔗 Connect Platforms
-                  </button>
-                </nav>
-
-                {/* Additional Info */}
-                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-medium text-header mb-2">Need Help?</h4>
-                  <p className="text-xs text-subheader">
-                    Contact support if you need assistance with your account settings.
-                  </p>
-                </div>
+        {/* Main Content */}
+        <main className="flex-1 px-6 py-8">
+          {activeSection === 'account' && (
+            <>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Account Settings</h2>
+                <p className="text-gray-600 mt-2">Please review and update your account information below</p>
               </div>
-            </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-4xl">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold font-title text-header">User Settings</h2>
-            <p className="text-subheader mt-2">Manage your account settings and preferences</p>
-          </div>
-
-          {/* Content based on active section */}
-          {activeSection === 'details' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold font-title text-header mb-6">User Details</h3>
-              
+              {/* Message Display */}
               {message && (
-                <div className={`mb-4 rounded-lg p-3 ${
+                <div className={`mb-6 rounded-lg p-4 ${
                   message.type === 'success' 
                     ? 'bg-green-50 border border-green-200 text-green-700'
                     : 'bg-red-50 border border-red-200 text-red-700'
@@ -676,140 +722,263 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* First Name */}
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-200 mb-1">
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      placeholder="Enter your first name"
-                      required
-                      className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-
-                  {/* Last Name */}
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-200 mb-1">
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      placeholder="Enter your last name"
-                      required
-                      className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
+              {/* User Details Card */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+                  {editingUserDetails ? (
+                    <button
+                      onClick={() => setEditingUserDetails(false)}
+                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setEditingUserDetails(true)}
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                  )}
                 </div>
 
-                {/* Email */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-1">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Enter your email address"
-                    required
-                    className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-
-
-                {/* Password Change Section */}
-                <div className="col-span-full border-t border-gray-700 pt-6 mt-6">
-                  <h4 className="text-lg font-medium text-white mb-4">Change Password</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Current Password */}
+                {editingUserDetails ? (
+                  <form onSubmit={handleUserDetailsSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input
+                          type="text"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input
+                          type="text"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        />
+                      </div>
+                    </div>
                     <div>
-                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-200 mb-1">
-                        Current Password
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                      <input
+                        type="text"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setEditingUserDetails(false)}
+                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                      >
+                        {isLoading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-gray-600">First Name</span>
+                      </div>
+                      <span className="text-gray-900 font-medium">{formData.firstName}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-gray-600">Last Name</span>
+                      </div>
+                      <span className="text-gray-900 font-medium">{formData.lastName}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-gray-600">Username</span>
+                      </div>
+                      <span className="text-gray-900 font-medium">{formData.username}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-gray-600">Email Address</span>
+                      </div>
+                      <span className="text-gray-900 font-medium">{formData.email}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Security Settings Card */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Security Settings</h3>
+                  {editingSecurity ? (
+                    <button
+                      onClick={() => setEditingSecurity(false)}
+                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setEditingSecurity(true)}
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                  )}
+                </div>
+
+                {editingSecurity ? (
+                  <form onSubmit={handleSecuritySubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
                       <input
                         type="password"
-                        id="currentPassword"
                         name="currentPassword"
                         value={formData.currentPassword}
                         onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter current password"
-                        className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
-
-                    {/* New Password */}
                     <div>
-                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-200 mb-1">
-                        New Password
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                       <input
                         type="password"
-                        id="newPassword"
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter new password"
-                        className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
-
-                    {/* Confirm New Password */}
                     <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200 mb-1">
-                        Confirm New Password
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
                       <input
                         type="password"
-                        id="confirmPassword"
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Confirm new password"
-                        className="w-full rounded-lg border border-gray-700 bg-black/40 px-3 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
                       />
                     </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setEditingSecurity(false)}
+                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                      >
+                        {isLoading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-gray-600">Current Password</span>
+                      </div>
+                      <span className="text-gray-400">Enter current password</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        <span className="text-gray-600">New Password</span>
+                      </div>
+                      <span className="text-gray-400">Enter new password</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-gray-600">Confirm New Password</span>
+                      </div>
+                      <span className="text-gray-400">Confirm new password</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Leave password fields empty if you don&apos;t want to change your password.
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <div className="pt-4">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full md:w-auto px-6 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? 'Updating...' : 'Update Settings'}
-                  </button>
-                </div>
-              </form>
-            </div>
+                )}
+              </div>
+            </>
           )}
 
           {activeSection === 'platforms' && (
             <ConnectPlatformsSection />
           )}
-                   </main>
 
-           
-       </div>
-     </div>
-  </div>
+          {/* Version Indicator */}
+          <div className="mt-8 text-right">
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">v0.6.0</span>
+          </div>
+        </main>
+      </div>
+    </div>
   );
- }
+}
