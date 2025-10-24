@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, PieChart, Pie } from 'recharts';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
@@ -23,6 +23,8 @@ export default function DashboardPage() {
   }[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [weeklyTotals, setWeeklyTotals] = useState<{ all: number; tiktok: number; lazada: number; shopee: number }>({ all: 0, tiktok: 0, lazada: 0, shopee: 0 });
+  const [revenueByCategory, setRevenueByCategory] = useState<{ category: string; revenue: number; percentage: number }[]>([]);
+  const [aovTrend, setAovTrend] = useState<{ date: string; tiktok?: number; shopee?: number; lazada?: number }[]>([]);
   
   // Week selection state
   type WeekOption = { label: string; startDate: Date; endDate: Date };
@@ -111,6 +113,20 @@ export default function DashboardPage() {
         const weeklyProductsRes = await fetch(`/api/products/top-weekly?email=${email}&startDate=${startDateStrForProducts}&endDate=${endDateStrForProducts}`, { cache: 'no-store' });
         const weeklyProductsJson = await weeklyProductsRes.json();
         setTopWeeklyProducts(weeklyProductsJson.topProducts || []);
+
+        // Fetch revenue by category data for current week
+        const selectedWeekForCharts = availableWeeks[selectedWeekIndex];
+        const startDateStrForCharts = selectedWeekForCharts.startDate.toISOString().split('T')[0];
+        const endDateStrForCharts = selectedWeekForCharts.endDate.toISOString().split('T')[0];
+        
+        const categoryRes = await fetch(`/api/products/revenue-by-category?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}&platform=${selectedPlatform}`, { cache: 'no-store' });
+        const categoryJson = await categoryRes.json();
+        setRevenueByCategory(categoryJson.revenueByCategory || []);
+
+        // Fetch AOV trend data for current week
+        const aovRes = await fetch(`/api/products/aov-trend?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}&platform=${selectedPlatform}`, { cache: 'no-store' });
+        const aovJson = await aovRes.json();
+        setAovTrend(aovJson.aovTrend || []);
 
         // Process daily sales data for the line chart from product_sales
         // Note: We calculate our own weekly totals from the daily sales data
@@ -422,6 +438,140 @@ export default function DashboardPage() {
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   No sales data available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+          {/* Revenue by Product Category - Donut Chart */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-base font-semibold font-title text-header mb-4">Revenue by Product Category (Current Week)</h4>
+            <div className="h-64">
+              {revenueByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={revenueByCategory}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="revenue"
+                      nameKey="category"
+                    >
+                      {revenueByCategory.map((entry, index) => {
+                        const colors = [
+                          '#EE4D2D', '#0F146D', '#000000', '#059669', '#DC2626', 
+                          '#7C3AED', '#EA580C', '#0891B2', '#BE185D', '#65A30D'
+                        ];
+                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                      })}
+                    </Pie>
+                    <Tooltip 
+                      content={({ active, payload }: { active?: boolean; payload?: { payload: { category: string; revenue: number; percentage: number } }[] }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div style={{
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              padding: '12px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              fontSize: '12px'
+                            }}>
+                              <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{data.category}</p>
+                              <p style={{ margin: '0 0 2px 0' }}>₱{Math.round(data.revenue).toLocaleString()}</p>
+                              <p style={{ margin: '0' }}>{data.percentage.toFixed(1)}%</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No category data available
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Average Order Value Trend - Line Chart */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-base font-semibold font-title text-header mb-4">Average Order Value Trend (Current Week)</h4>
+            <div className="h-64">
+              {aovTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={aovTrend}>
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value: string) => {
+                        const date = new Date(value);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                      }}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value: number) => `₱${value.toFixed(0)}`}
+                    />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [`₱${value.toFixed(2)}`, name]}
+                      labelFormatter={(label: string) => {
+                        const date = new Date(label);
+                        return `Date: ${date.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          timeZone: 'Asia/Manila'
+                        })}`;
+                      }}
+                      contentStyle={{ 
+                        fontSize: '12px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="tiktok" 
+                      name="TikTok" 
+                      stroke="#000000" 
+                      strokeWidth={2}
+                      dot={{ fill: '#000000', r: 4 }}
+                      activeDot={{ r: 6, stroke: '#000000', strokeWidth: 2 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="shopee" 
+                      name="Shopee" 
+                      stroke="#EE4D2D" 
+                      strokeWidth={2}
+                      dot={{ fill: '#EE4D2D', r: 4 }}
+                      activeDot={{ r: 6, stroke: '#EE4D2D', strokeWidth: 2 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="lazada" 
+                      name="Lazada" 
+                      stroke="#0F146D" 
+                      strokeWidth={2}
+                      dot={{ fill: '#0F146D', r: 4 }}
+                      activeDot={{ r: 6, stroke: '#0F146D', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No AOV data available
                 </div>
               )}
             </div>
