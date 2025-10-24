@@ -307,51 +307,27 @@ export default function DashboardPage() {
                     />
                     <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip 
-                      content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
-                        if (!active || !payload || payload.length === 0) return null;
-                        
-                        const data = payload[0].payload;
-                        const platform = data.platform as string;
-                        const platformColors: { [key: string]: string } = {
-                          'tiktok': '#000000',
-                          'shopee': '#EE4D2D', 
-                          'lazada': '#0F146D'
-                        };
-                        const platformColor = platformColors[platform] || '#1f2937';
-                        
-                        return (
-                          <div style={{
-                            backgroundColor: '#ffffff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                            padding: '12px',
-                            fontSize: '12px'
-                          }}>
-                            <div style={{
-                              fontWeight: 'bold',
-                              color: platformColor,
-                              fontSize: '13px',
-                              marginBottom: '8px'
-                            }}>
-                              {label}
-                            </div>
-                            {payload.map((entry: any, index: number) => {
-                              if (entry.value === 0) return null;
-                              const productNameKey = `${entry.dataKey}Name`;
-                              const productName = data[productNameKey] || 'Product';
-                              return (
-                                <div key={index} style={{
-                                  color: platformColor,
-                                  fontWeight: '600',
-                                  marginBottom: '4px'
-                                }}>
-                                  {productName}: ₱{Math.round(entry.value as number).toLocaleString()}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
+                      formatter={(value: number, name: string, props: { payload: Record<string, unknown> }) => {
+                        if (value === 0) return null;
+                        const productNameKey = `${name}Name`;
+                        const productName = props.payload[productNameKey] || 'Product';
+                        return [`₱${Math.round(value).toLocaleString()}`, productName];
+                      }}
+                      contentStyle={{ 
+                        fontSize: '12px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      labelStyle={{ 
+                        fontWeight: 'bold',
+                        color: '#1f2937',
+                        fontSize: '13px'
+                      }}
+                      itemStyle={{ 
+                        color: '#059669',
+                        fontWeight: '600'
                       }}
                     />
                     {/* Product 1 - Base color (darkest/most saturated) */}
