@@ -19,6 +19,7 @@ interface AddProductModalProps {
 		special_price?: number;
 		stock: number;
 		images?: string[];
+		videos?: string[];
 		promotion_image?: string;
 		status?: string;
 		weight_value?: number;
@@ -30,6 +31,7 @@ interface AddProductModalProps {
 		warranty_type?: string;
 		warranty_period?: string;
 		warranty_policy?: string;
+		attributes?: {[key: string]: unknown};
 	}) => Promise<void>;
 	userEmail?: string;
 }
@@ -40,6 +42,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   const hideExampleTimer = useRef<number | null>(null);
   const [productName, setProductName] = useState('');
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [productVideos, setProductVideos] = useState<string[]>([]);
   const [promoImage, setPromoImage] = useState<string | null>(null);
   const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -69,6 +72,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
   const [warrantyType, setWarrantyType] = useState('');
   const [warrantyPeriod, setWarrantyPeriod] = useState('');
   const [warrantyPolicy, setWarrantyPolicy] = useState('');
+  const [attributes, setAttributes] = useState<{[key: string]: unknown}>({});
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -91,6 +95,45 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
       });
       delete errorTimeouts.current[key];
     }, 3000);
+  };
+
+  const updateAttribute = (key: string, value: unknown) => {
+    setAttributes(prev => ({ ...prev, [key]: value }));
+  };
+
+  const validateVideoFile = async (file: File): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        // Validate dimensions (minimum 480x480)
+        if (video.videoWidth < 480 || video.videoHeight < 480) {
+          const error = 'Video dimensions must be at least 480x480 pixels.';
+          setErrorWithTimeout('video', error);
+          reject(new Error(error));
+          return;
+        }
+        
+        // Validate duration (maximum 60 seconds)
+        if (video.duration > 60) {
+          const error = 'Video duration must be 60 seconds or less.';
+          setErrorWithTimeout('video', error);
+          reject(new Error(error));
+          return;
+        }
+        
+        resolve();
+      };
+      
+      video.onerror = () => {
+        const error = 'Unable to read video file. Please try a different file.';
+        setErrorWithTimeout('video', error);
+        reject(new Error(error));
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
   };
 
   // Helper functions for number inputs
@@ -193,42 +236,6 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     });
   };
 
-  const validateVideo = (file: File): string | null => {
-    // File size check
-    if (file.size > 100 * 1024 * 1024) { // 100MB
-      return 'File size must be less than 100MB';
-    }
-
-    // File type check
-    if (file.type !== 'video/mp4') {
-      return 'Only MP4 files are allowed';
-    }
-
-    return null;
-  };
-
-  const validateVideoDimensions = (file: File): Promise<string | null> => {
-    return new Promise((resolve) => {
-      const video = document.createElement('video');
-      video.onloadedmetadata = () => {
-        const { videoWidth, videoHeight, duration } = video;
-        
-        if (videoWidth < 480 || videoHeight < 480) {
-          resolve('Minimum size: 480x480 px');
-          return;
-        }
-        
-        if (duration > 60) {
-          resolve('Max video length: 60 seconds');
-          return;
-        }
-        
-        resolve(null);
-      };
-      video.onerror = () => resolve('Invalid video file');
-      video.src = URL.createObjectURL(file);
-    });
-  };
 
   const handleAddProductImage = async () => {
     console.log('handleAddProductImage called');
@@ -299,6 +306,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     }
   };
 
+
   const handleSetPromoImage = async () => {
     const files = await handlePickFiles('image/*', false);
     if (!files || files.length === 0) return;
@@ -354,21 +362,62 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     // Clear previous errors
     setErrors(prev => ({ ...prev, video: '' }));
     
-    // Validate file
-    const fileError = validateVideo(file);
-    if (fileError) {
-      setErrorWithTimeout('video', fileError);
+    // Validate file type - only MP4 allowed
+    if (file.type !== 'video/mp4') {
+      const error = 'Invalid file type. Only MP4 files are allowed.';
+      setErrorWithTimeout('video', error);
       return;
     }
     
-    // Validate dimensions and duration
-    const dimensionError = await validateVideoDimensions(file);
-    if (dimensionError) {
-      setErrorWithTimeout('video', dimensionError);
+    // Validate file size (max 100MB)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      const error = 'File too large. Maximum size is 100MB.';
+      setErrorWithTimeout('video', error);
       return;
     }
     
-    setVideoFileName(file.name);
+    // Validate video dimensions and duration
+    try {
+      await validateVideoFile(file);
+    } catch {
+      return; // Validation failed, error already shown
+    }
+    
+    // Upload file directly to server
+    try {
+      console.log('Starting video upload for file:', file.name, file.size);
+      const formData = new FormData();
+      formData.append('video', file);
+      
+      console.log('Calling /api/upload-video...');
+      const response = await fetch(`/api/upload-video?email=${encodeURIComponent(userEmail || '')}`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      console.log('Video upload response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Video upload failed with response:', errorText);
+        throw new Error(`Upload failed: ${response.status} ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Video uploaded successfully:', result);
+      
+      if (!result.url) {
+        throw new Error('No URL returned from video upload');
+      }
+      
+      // Store the video URL in the videos array (single video)
+      setProductVideos([result.url]);
+      setVideoFileName(file.name);
+    } catch (error) {
+      console.error('Video upload error:', error);
+      setErrorWithTimeout('video', error instanceof Error ? error.message : 'Video upload failed');
+    }
   };
 
   const keepExample = () => {
@@ -405,6 +454,21 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     // Brand validation
     if (!brand.trim()) {
       errors.brand = 'Brand is required';
+    }
+    
+    // Category validation
+    if (!category.trim()) {
+      errors.category = 'Category is required';
+    }
+    
+    // Subcategory validation
+    if (!subcategory.trim()) {
+      errors.subcategory = 'Subcategory is required';
+    }
+    
+    // Product type validation
+    if (!product_type.trim()) {
+      errors.product_type = 'Product type is required';
     }
     
     // Price validation
@@ -475,6 +539,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         special_price: specialPrice && specialPrice.trim() && !isNaN(parseFloat(specialPrice)) ? parseFloat(specialPrice) : undefined,
         stock: parseInt(stock),
         images: productImages.length > 0 ? productImages : undefined,
+        videos: productVideos.length > 0 ? productVideos : undefined,
         promotion_image: promoImage || undefined,
         status: isAvailable ? 'active' : 'inactive',
         weight_value: packageWeight && !isNaN(parseFloat(packageWeight)) ? parseFloat(packageWeight) : undefined,
@@ -486,6 +551,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         warranty_type: warrantyType.trim() || undefined,
         warranty_period: warrantyPeriod.trim() || undefined,
         warranty_policy: warrantyPolicy.trim() || undefined,
+        attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
       });
       // onClose is called by the parent after successful save
     } catch (err) {
@@ -574,8 +640,14 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 											setCategory(e.target.value);
 											setSubcategory(''); // Reset subcategory when category changes
 											setProduct_type(''); // Reset product type when category changes
+											setAttributes({}); // Reset attributes when category changes
+											if (validationErrors.category) {
+												setValidationErrors(prev => ({ ...prev, category: '' }));
+											}
 										}}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer ${
+											validationErrors.category ? 'border-red-500' : 'border-gray-300'
+										} bg-white`}
 									>
 										<option value="">Select option</option>
 										<option value="Electronics">Electronics</option>
@@ -586,12 +658,15 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
 									</svg>
 								</div>
+								{validationErrors.category && (
+									<p className="text-xs text-red-500 mt-1">{validationErrors.category}</p>
+								)}
 							</div>
 
 							{/* Subcategory */}
 							<div>
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-									Subcategory
+									<span className="text-red-500">*</span> Subcategory
 								</label>
 								<div className="relative">
 									<select
@@ -599,9 +674,14 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 										onChange={(e) => {
 											setSubcategory(e.target.value);
 											setProduct_type(''); // Reset product type when subcategory changes
+											if (validationErrors.subcategory) {
+												setValidationErrors(prev => ({ ...prev, subcategory: '' }));
+											}
 										}}
 										disabled={!category}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer"
+										className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer ${
+											validationErrors.subcategory ? 'border-red-500' : 'border-gray-300'
+										} bg-white`}
 									>
 										<option value="">Select option</option>
 									{category === 'Electronics' && (
@@ -640,19 +720,29 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 									<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
 								</svg>
 							</div>
+							{validationErrors.subcategory && (
+								<p className="text-xs text-red-500 mt-1">{validationErrors.subcategory}</p>
+							)}
 							</div>
 
 							{/* Product Type */}
 							<div>
 								<label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-									Product Type
+									<span className="text-red-500">*</span> Product Type
 								</label>
 								<div className="relative">
 									<select
 										value={product_type}
-										onChange={(e) => setProduct_type(e.target.value)}
+										onChange={(e) => {
+											setProduct_type(e.target.value);
+											if (validationErrors.product_type) {
+												setValidationErrors(prev => ({ ...prev, product_type: '' }));
+											}
+										}}
 										disabled={!subcategory}
-										className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer"
+										className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer ${
+											validationErrors.product_type ? 'border-red-500' : 'border-gray-300'
+										} bg-white`}
 									>
 										<option value="">Select option</option>
 									{/* Electronics Product Types */}
@@ -829,6 +919,9 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 									<path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
 								</svg>
 							</div>
+							{validationErrors.product_type && (
+								<p className="text-xs text-red-500 mt-1">{validationErrors.product_type}</p>
+							)}
 							</div>
 
 							{/* Product Images */}
@@ -885,6 +978,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                     )}
                                 </div>
 							</div>
+
 
 							{/* Buyer Promotion Image */}
 							<div>
@@ -980,7 +1074,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                 <button
                                                     title="Remove"
-                                                    onClick={(e)=>{e.stopPropagation(); setVideoFileName(null);}}
+                                                    onClick={(e)=>{e.stopPropagation(); setVideoFileName(null); setProductVideos([]);}}
                                                     className="invisible absolute inset-0 flex items-center justify-center bg-black/60 text-white group-hover:visible"
                                                 >
                                                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
@@ -1030,35 +1124,91 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 									<p className="text-xs text-red-500">{validationErrors.brand}</p>
 								)}
 							</div>
-							<div>
-								<label className="mb-1 block text-xs text-subheader">Type</label>
-								<div className="flex items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-subheader">
-									<span>Please select or search option</span>
-									<svg className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+
+							{/* Dynamic Attributes based on Category */}
+							{category === 'Cosmetics' && (
+								<>
+									<div className="space-y-1">
+										<label className="mb-1 block text-xs text-subheader">Skin Type</label>
+										<select
+											value={String(attributes.skin_type || '')}
+											onChange={(e) => updateAttribute('skin_type', e.target.value)}
+											className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select skin type</option>
+											<option value="all">All</option>
+											<option value="dry">Dry</option>
+											<option value="oily">Oily</option>
+											<option value="combination">Combination</option>
+										</select>
+									</div>
+									<div className="space-y-1">
+										<label className="mb-1 block text-xs text-subheader">Cruelty Free</label>
+										<select
+											value={attributes.cruelty_free === true ? 'true' : attributes.cruelty_free === false ? 'false' : ''}
+											onChange={(e) => updateAttribute('cruelty_free', e.target.value === 'true')}
+											className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select option</option>
+											<option value="true">Yes</option>
+											<option value="false">No</option>
+										</select>
+									</div>
+								</>
+							)}
+
+							{category === 'Food' && (
+								<>
+									<div className="space-y-1">
+										<label className="mb-1 block text-xs text-subheader">Organic</label>
+										<select
+											value={attributes.organic === true ? 'true' : attributes.organic === false ? 'false' : ''}
+											onChange={(e) => updateAttribute('organic', e.target.value === 'true')}
+											className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select option</option>
+											<option value="true">Yes</option>
+											<option value="false">No</option>
+										</select>
+									</div>
+									<div className="space-y-1">
+										<label className="mb-1 block text-xs text-subheader">Gluten Free</label>
+										<select
+											value={attributes.gluten_free === true ? 'true' : attributes.gluten_free === false ? 'false' : ''}
+											onChange={(e) => updateAttribute('gluten_free', e.target.value === 'true')}
+											className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+										>
+											<option value="">Select option</option>
+											<option value="true">Yes</option>
+											<option value="false">No</option>
+										</select>
+									</div>
+								</>
+							)}
+
+							{category === 'Electronics' && (
+								<div className="space-y-1">
+									<label className="mb-1 block text-xs text-subheader">Color</label>
+									<input
+										type="text"
+										value={String(attributes.color || '')}
+										onChange={(e) => {
+											const value = e.target.value;
+											const capitalizedValue = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+											updateAttribute('color', capitalizedValue);
+										}}
+										placeholder="Enter color"
+										className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
+									/>
 								</div>
-							</div>
-							<div>
-								<label className="mb-1 block text-xs text-subheader"><span className="text-red-500">*</span> Model</label>
-								<div className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-subheader">Input here</div>
-							</div>
-							<div>
-								<label className="mb-1 block text-xs text-subheader">Ingredients</label>
-								<div className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-subheader">Please input or select option</div>
-							</div>
+							)}
 						</div>
 					</section>
 
 					{/* Price, Stock & Variants */}
 					<section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
-						<h4 className="mb-4 text-[18px] font-semibold text-header">Price, Stock, & Variants</h4>
+						<h4 className="mb-4 text-[18px] font-semibold text-header">Price & Stock</h4>
 						<div className="space-y-4">
-							<div className="text-xs text-subheader">You can add variants to a product that has more than one option, such as size or color.</div>
-							
-							{/* Add Variation Button */}
-							<button className="flex h-[34px] items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-subheader hover:bg-gray-50">
-								<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-								Add Variation (0/2)
-							</button>
 
 							{/* Price & Stock Table */}
 							<div>
@@ -1320,14 +1470,6 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 					{/* Shipping & Warranty */}
 					<section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
 						<h4 className="mb-2 text-[18px] font-semibold text-header">Shipping & Warranty</h4>
-						<p className="mb-3 text-[12px] text-subheader">Switch to enter different package dimensions & weight for variations</p>
-						<div className="mb-4 flex items-center gap-2 text-[12px] text-subheader">
-							{/* Toggle mimic */}
-							<div className="relative h-5 w-9 rounded-full bg-gray-200">
-								<div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow" />
-							</div>
-							<span>Switch on if you need different dimension & weight for different product variants</span>
-						</div>
 
 						<div className="space-y-4">
 							{/* Package Weight */}
@@ -1472,7 +1614,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
 							{/* Warranty */}
 							<div className="grid grid-cols-1 gap-3 md:max-w-xl">
-								<label className="mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Warranty Type</label>
+								<label className="mb-1 block text-[12px] text-subheader">Warranty Type</label>
 								<div className="relative group">
 									<select
 										value={warrantyType}

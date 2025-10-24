@@ -31,7 +31,9 @@ type Product = {
   warranty_policy: string | null;
   status: string;
   images: string[] | null;
+  videos: string[] | null;
   promotion_image: string | null;
+  attributes: {[key: string]: unknown} | null;
   created_at: string;
   updated_at: string;
 };
@@ -84,7 +86,9 @@ export async function GET(req: Request) {
         warranty_policy,
         status,
         images,
+        videos,
         promotion_image,
+        attributes,
         created_at,
         updated_at
        FROM products
@@ -125,7 +129,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy } = body;
+    const { name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, videos, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy, attributes } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -161,8 +165,8 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, videos, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy, attributes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
        RETURNING 
         product_id,
         sku,
@@ -193,7 +197,9 @@ export async function POST(req: Request) {
         warranty_policy,
         status,
         images,
+        videos,
         promotion_image,
+        attributes,
         created_at,
         updated_at`,
       [
@@ -210,8 +216,9 @@ export async function POST(req: Request) {
         product_type && product_type.trim() ? product_type.trim() : null,
         parseFloat(price),
         special_price && !isNaN(parseFloat(special_price)) ? parseFloat(special_price) : null,
-        stock && stock.trim() && !isNaN(parseInt(stock)) ? parseInt(stock) : 0,
+        stock && !isNaN(parseInt(stock)) ? parseInt(stock) : 0,
         images && Array.isArray(images) ? JSON.stringify(images) : null,
+        videos && Array.isArray(videos) ? JSON.stringify(videos) : null,
         promotion_image && promotion_image.trim() ? promotion_image.trim() : null,
         status || 'active',
         weight_value && !isNaN(parseFloat(weight_value)) ? parseFloat(weight_value) : null,
@@ -222,7 +229,8 @@ export async function POST(req: Request) {
         has_dangerous || false,
         warranty_type && warranty_type.trim() ? warranty_type.trim() : null,
         warranty_period && warranty_period.trim() ? warranty_period.trim() : null,
-        warranty_policy && warranty_policy.trim() ? warranty_policy.trim() : null
+        warranty_policy && warranty_policy.trim() ? warranty_policy.trim() : null,
+        attributes && Object.keys(attributes).length > 0 ? JSON.stringify(attributes) : null
       ]
     );
 
