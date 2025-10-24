@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface RedirectToShopModalProps {
   onClose: () => void;
@@ -64,10 +65,12 @@ export default function RedirectToShopModal({ onClose, onConfirm, platform }: Re
             style={{ backgroundColor: `${getPlatformColor(platform)}15` }}
           >
             {getPlatformIcon(platform).startsWith('/') ? (
-              <img 
+              <Image 
                 src={getPlatformIcon(platform)} 
                 alt={`${platform} icon`}
-                className="w-12 h-12 object-contain"
+                width={48}
+                height={48}
+                className="object-contain"
               />
             ) : (
               <span className="text-4xl">{getPlatformIcon(platform)}</span>
@@ -94,10 +97,10 @@ export default function RedirectToShopModal({ onClose, onConfirm, platform }: Re
               <div className="text-left">
                 <h4 className="text-sm font-semibold text-blue-900 mb-1">What happens next?</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• You'll be redirected to {platform.charAt(0).toUpperCase() + platform.slice(1)}</li>
+                  <li>• You&apos;ll be redirected to {platform.charAt(0).toUpperCase() + platform.slice(1)}</li>
                   <li>• Log in with your shop credentials</li>
                   <li>• Authorize the connection</li>
-                  <li>• You'll be redirected back here</li>
+                  <li>• You&apos;ll be redirected back here</li>
                 </ul>
               </div>
             </div>
