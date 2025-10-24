@@ -49,7 +49,7 @@ interface EditProductModalProps {
     stock: number;
     images?: string[];
     videos?: string[];
-    promotion_image?: string;
+    promotion_image?: string | null;
     status?: string;
     weight_value?: number;
     weight_unit?: string;
@@ -105,6 +105,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+
 
   const setErrorWithTimeout = (key: string, message: string) => {
     // Clear existing timeout for this key
@@ -206,8 +207,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
     setLoading(true);
     
-    try {
-      await onSave({
+    const productData = {
         name: productName.trim(),
         sku: sellerSKU.trim() || undefined,
         description: description.trim() || undefined,
@@ -220,9 +220,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
         price: parseFloat(price),
         special_price: showSpecialPrice && specialPrice ? parseFloat(specialPrice) : undefined,
         stock: parseInt(stock) || 0,
-        images: productImages.length > 0 ? productImages : undefined,
-        videos: productVideos.length > 0 ? productVideos : undefined,
-        promotion_image: promoImage || undefined,
+        images: productImages,
+        videos: productVideos,
+        promotion_image: promoImage,
         status: isAvailable ? 'active' : 'inactive',
         weight_value: packageWeight ? parseFloat(packageWeight) : undefined,
         weight_unit: packageWeightUnit,
@@ -234,10 +234,15 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
         warranty_period: warrantyPeriod || undefined,
         warranty_policy: warrantyPolicy.trim() || undefined,
         attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
-      });
+      };
       
-      onClose();
-    } catch (error) {
+      console.log('Saving product data:', productData);
+      
+      try {
+        await onSave(productData);
+        
+        onClose();
+      } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to update product');
     } finally {
       setLoading(false);
@@ -267,17 +272,17 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
       const formData = new FormData();
       formData.append('image', file);
-      formData.append('email', userEmail || '');
 
       try {
-        const response = await fetch('/api/upload-image', {
+        const response = await fetch(`/api/upload-image?email=${encodeURIComponent(userEmail || '')}`, {
           method: 'POST',
           body: formData,
         });
 
         if (response.ok) {
           const data = await response.json();
-          newImages.push(data.imageUrl);
+          console.log('Image upload successful:', data);
+          newImages.push(data.url);
         } else {
           const errorData = await response.json();
           setErrorWithTimeout('upload', errorData.error || 'Failed to upload image');
@@ -297,6 +302,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
         return newErrors;
       });
     }
+    
+    // Reset the file input
+    e.target.value = '';
   };
 
   const handleRemoveProductImage = (index: number) => {
@@ -350,17 +358,17 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
       // Upload video
       const formData = new FormData();
       formData.append('video', file);
-      formData.append('email', userEmail || '');
 
       try {
-        const response = await fetch('/api/upload-video', {
+        const response = await fetch(`/api/upload-video?email=${encodeURIComponent(userEmail || '')}`, {
           method: 'POST',
           body: formData,
         });
 
         if (response.ok) {
           const data = await response.json();
-          setProductVideos([data.videoUrl]);
+          console.log('Video upload successful:', data);
+          setProductVideos([data.url]);
           setVideoFileName(file.name);
         } else {
           const errorData = await response.json();
@@ -369,6 +377,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
       } catch {
         setErrorWithTimeout('videoUpload', 'Failed to upload video');
       }
+      
+      // Reset the file input
+      e.target.value = '';
     };
 
     video.src = URL.createObjectURL(file);
@@ -395,17 +406,17 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
     const formData = new FormData();
     formData.append('image', file);
-    formData.append('email', userEmail || '');
 
     try {
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch(`/api/upload-image?email=${encodeURIComponent(userEmail || '')}`, {
         method: 'POST',
         body: formData,
       });
 
       if (response.ok) {
         const data = await response.json();
-        setPromoImage(data.imageUrl);
+        console.log('Promo image upload successful:', data);
+        setPromoImage(data.url);
       } else {
         const errorData = await response.json();
         setErrorWithTimeout('promoUpload', errorData.error || 'Failed to upload image');
@@ -413,6 +424,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
     } catch {
       setErrorWithTimeout('promoUpload', 'Failed to upload image');
     }
+    
+    // Reset the file input
+    e.target.value = '';
   };
 
   const handleRemovePromoImage = () => {
@@ -785,23 +799,27 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                       </div>
                     )}
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {productImages.map((image, index) => (
-                      <div key={index} className="relative">
+                      <div key={index} className="relative group">
                         <Image
                           src={image}
                           alt={`Product ${index + 1}`}
                           width={100}
                           height={100}
-                          className="h-20 w-20 rounded-lg object-cover"
+                          className="h-20 w-20 rounded-lg object-cover border-2 border-blue-300"
                         />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveProductImage(index)}
-                          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white hover:bg-red-600"
-                        >
-                          ×
-                        </button>
+                        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProductImage(index)}
+                            className="text-white hover:text-red-300 transition-colors"
+                          >
+                            <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {productImages.length < 8 && (
@@ -843,24 +861,28 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                     )}
                   </label>
                   {promoImage ? (
-                    <div className="flex items-center space-x-2">
+                    <div className="relative group inline-block">
                       <Image
                         src={promoImage}
                         alt="Promotion"
                         width={100}
                         height={100}
-                        className="h-20 w-20 rounded-lg object-cover"
+                        className="h-20 w-20 rounded-lg object-cover border-2 border-blue-300"
                       />
-                      <button
-                        type="button"
-                        onClick={handleRemovePromoImage}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={handleRemovePromoImage}
+                          className="text-white hover:text-red-300 transition-colors"
+                        >
+                          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-4 hover:border-gray-400">
+                    <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
                       <input
                         type="file"
                         accept="image/*"
@@ -895,18 +917,26 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                     )}
                   </label>
                   {productVideos.length > 0 ? (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{videoFileName}</span>
-                      <button
-                        type="button"
-                        onClick={handleRemoveVideo}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
+                    <div className="relative group inline-block">
+                      <div className="h-20 w-20 rounded-lg border-2 border-blue-300 bg-gray-100 flex items-center justify-center">
+                        <svg className="h-8 w-8 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                        </svg>
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={handleRemoveVideo}
+                          className="text-white hover:text-red-300 transition-colors"
+                        >
+                          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-4 hover:border-gray-400">
+                    <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400">
                       <input
                         type="file"
                         accept="video/mp4"

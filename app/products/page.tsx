@@ -771,6 +771,7 @@ export default function ProductsPage() {
           product={editingProduct}
           onClose={() => setEditingProduct(null)}
           onSave={handleUpdateProduct}
+          userEmail={user?.email}
         />
       )}
 
