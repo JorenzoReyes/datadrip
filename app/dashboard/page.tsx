@@ -15,6 +15,25 @@ export default function DashboardPage() {
   const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[]>([]);
   const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string; platform?: string; platforms?: string }[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<string>('30');
+  const [showDateFilter, setShowDateFilter] = useState(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showDateFilter) {
+        setShowDateFilter(false);
+      }
+    };
+
+    if (showDateFilter) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDateFilter]);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -40,7 +59,7 @@ export default function DashboardPage() {
 
         // Fetch top selling products
         const platformParam = selectedPlatform === 'all' ? '' : `&platform=${selectedPlatform}`;
-        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30${platformParam}`, { cache: 'no-store' });
+        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=${dateRange}${platformParam}`, { cache: 'no-store' });
         const topProductsJson = await topProductsRes.json();
         setTopProducts(topProductsJson.topProducts || []);
 
@@ -90,7 +109,7 @@ export default function DashboardPage() {
       }
     }
     if (!isLoading && user) load();
-  }, [isLoading, user, selectedPlatform]);
+  }, [isLoading, user, selectedPlatform, dateRange]);
 
   if (isLoading) {
     return (
@@ -155,18 +174,65 @@ export default function DashboardPage() {
             <p className="text-gray-600">This is what has been happening to your shops.</p>
           </div>
           <div className="text-right">
-            <p className="text-gray-600 mb-2">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            <button className="bg-header text-white px-3 py-2 rounded-lg flex items-center space-x-2 hover:bg-gray-700 transition text-sm">
-              <span>This Month</span>
+            {/* Day of the week */}
+            <h3 className="text-2xl font-bold text-green-800 mb-1">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+            </h3>
+            {/* Full date */}
+            <p className="text-green-800 mb-3">
+              {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+        </div>
+
+        {/* Sales Report Title with Filter */}
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold font-title text-header">Shop Metrics</h3>
+          <div className="relative">
+            {/* Date range filter button */}
+            <button 
+              onClick={() => setShowDateFilter(!showDateFilter)}
+              className="bg-green-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-900 transition text-sm font-medium"
+            >
+              <span>Past {dateRange} days</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
+            
+            {/* Dropdown filter */}
+            {showDateFilter && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="py-2">
+                  <button
+                    onClick={() => { setDateRange('7'); setShowDateFilter(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '7' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
+                  >
+                    Past 7 days
+                  </button>
+                  <button
+                    onClick={() => { setDateRange('30'); setShowDateFilter(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '30' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
+                  >
+                    Past 30 days
+                  </button>
+                  <button
+                    onClick={() => { setDateRange('90'); setShowDateFilter(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '90' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
+                  >
+                    Past 90 days
+                  </button>
+                  <button
+                    onClick={() => { setDateRange('365'); setShowDateFilter(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '365' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
+                  >
+                    Past year
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Sales Report Title */}
-        <h3 className="text-xl font-bold font-title text-header mb-6">Shop Metrics</h3>
 
         {/* Sales Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
