@@ -46,7 +46,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Exchange authorization code for access token
+    // For demo purposes, simulate successful token exchange
+    if (code === 'demo_code') {
+      console.log('🎭 Demo OAuth flow for Lazada - simulating successful connection');
+      
+      // Clean up state
+      global.oauthStates.delete(state);
+
+      // For demo purposes, redirect to success page
+      const successParams = new URLSearchParams({
+        platform: 'lazada',
+        status: 'success',
+        message: 'Successfully connected to Lazada! Demo data will be linked to your dashboard.'
+      });
+
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings?${successParams.toString()}`
+      );
+    }
+
+    // Real OAuth flow (for production)
     const tokenResponse = await fetch('https://auth.lazada.com/oauth/token', {
       method: 'POST',
       headers: {
@@ -68,22 +87,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-        // const tokenData = await tokenResponse.json();
-    
     // Clean up state
     global.oauthStates.delete(state);
 
-        // Store tokens securely (in production, use database)
-        // const tokenStorage = {
-        //   userId: stateData.userId,
-        //   platform: 'lazada',
-        //   accessToken: tokenData.access_token,
-        //   refreshToken: tokenData.refresh_token,
-        //   expiresAt: Date.now() + (tokenData.expires_in * 1000),
-        //   createdAt: new Date().toISOString()
-        // };
-
-    // For demo purposes, redirect to success page
+    // For production, store tokens securely and redirect to success page
     const successParams = new URLSearchParams({
       platform: 'lazada',
       status: 'success',
