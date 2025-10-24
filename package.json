@@ -31,11 +31,13 @@
     "@types/pg": "^8.10.9",
     "bcryptjs": "^2.4.3",
     "next": "15.5.0",
+    "pdfkit": "^0.17.2",
     "pg": "^8.11.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
