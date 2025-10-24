@@ -4,36 +4,77 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, PieChart, Pie } from 'recharts';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  type ShopRow = { platform: string; followers_count: number | null };
-  type Totals = { all: number; tiktok: number; lazada: number; shopee: number };
-  const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; total_sales: number; platform_breakdown?: { tiktok?: number; shopee?: number; lazada?: number } }[]; totals?: Totals } | null>(null);
   const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[]>([]);
   const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string; platform?: string; platforms?: string }[]>([]);
+  const [topWeeklyProducts, setTopWeeklyProducts] = useState<{
+    platform: string;
+    platformDisplay: string;
+    product1: number;
+    product2: number;
+    product3: number;
+    product1Name: string;
+    product2Name: string;
+    product3Name: string;
+  }[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<string>('30');
-  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [weeklyTotals, setWeeklyTotals] = useState<{ all: number; tiktok: number; lazada: number; shopee: number }>({ all: 0, tiktok: 0, lazada: 0, shopee: 0 });
+  const [revenueByCategory, setRevenueByCategory] = useState<{ category: string; revenue: number; percentage: number }[]>([]);
+  const [aovTrend, setAovTrend] = useState<{ date: string; tiktok?: number; shopee?: number; lazada?: number }[]>([]);
+  
+  // Week selection state
+  type WeekOption = { label: string; startDate: Date; endDate: Date };
+  const [availableWeeks, setAvailableWeeks] = useState<WeekOption[]>([]);
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
 
-  // Close dropdown when clicking outside
+  // Generate available weeks on mount
   useEffect(() => {
-    const handleClickOutside = () => {
-      if (showDateFilter) {
-        setShowDateFilter(false);
-      }
-    };
-
-    if (showDateFilter) {
-      document.addEventListener('mousedown', handleClickOutside);
+    const weeks: WeekOption[] = [];
+    const startMonth = new Date('2025-10-01');
+    const endMonth = new Date('2025-11-30');
+    
+    // Find the first Sunday on or before October 1, 2025
+    const firstSunday = new Date(startMonth);
+    firstSunday.setDate(firstSunday.getDate() - firstSunday.getDay());
+    
+    let currentWeekStart = new Date(firstSunday);
+    let weekNumber = 1;
+    
+    // Generate weeks until we cover the entire date range
+    while (currentWeekStart <= endMonth) {
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(currentWeekStart.getDate() + 6);
+      
+      const startStr = currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
+      const endStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
+      const year = currentWeekStart.getFullYear();
+      
+      weeks.push({
+        label: `Week ${weekNumber}: ${startStr} - ${endStr}, ${year}`,
+        startDate: new Date(currentWeekStart),
+        endDate: new Date(weekEnd)
+      });
+      
+      currentWeekStart = new Date(currentWeekStart);
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      weekNumber++;
     }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showDateFilter]);
+    
+    setAvailableWeeks(weeks);
+    
+    // Find and select the current week by default
+    const now = new Date();
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const currentWeekIdx = weeks.findIndex(week => 
+      phTime >= week.startDate && phTime <= week.endDate
+    );
+    
+    setSelectedWeekIndex(currentWeekIdx >= 0 ? currentWeekIdx : weeks.length - 1);
+  }, []);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -53,63 +94,113 @@ export default function DashboardPage() {
     async function load() {
       try {
         const email = encodeURIComponent(user?.email || '');
-        const res = await fetch(`/api/shops/metrics?email=${email}`, { cache: 'no-store' });
+        const selectedWeekForMetrics = availableWeeks[selectedWeekIndex];
+        const startDateStrForMetrics = selectedWeekForMetrics.startDate.toISOString().split('T')[0];
+        const endDateStrForMetrics = selectedWeekForMetrics.endDate.toISOString().split('T')[0];
+        const res = await fetch(`/api/shops/metrics?email=${email}&startDate=${startDateStrForMetrics}&endDate=${endDateStrForMetrics}`, { cache: 'no-store' });
         const json = await res.json();
-        setData(json);
 
         // Fetch top selling products
         const platformParam = selectedPlatform === 'all' ? '' : `&platform=${selectedPlatform}`;
-        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=${dateRange}${platformParam}`, { cache: 'no-store' });
+        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30${platformParam}`, { cache: 'no-store' });
         const topProductsJson = await topProductsRes.json();
         setTopProducts(topProductsJson.topProducts || []);
 
-        // Process daily sales data for the line chart from daily_sales_aggregated
+        // Fetch top 3 weekly products with platform breakdown for the selected week
+        const selectedWeekForProducts = availableWeeks[selectedWeekIndex];
+        const startDateStrForProducts = selectedWeekForProducts.startDate.toISOString().split('T')[0];
+        const endDateStrForProducts = selectedWeekForProducts.endDate.toISOString().split('T')[0];
+        const weeklyProductsRes = await fetch(`/api/products/top-weekly?email=${email}&startDate=${startDateStrForProducts}&endDate=${endDateStrForProducts}`, { cache: 'no-store' });
+        const weeklyProductsJson = await weeklyProductsRes.json();
+        setTopWeeklyProducts(weeklyProductsJson.topProducts || []);
+
+        // Fetch revenue by category data for current week
+        const selectedWeekForCharts = availableWeeks[selectedWeekIndex];
+        const startDateStrForCharts = selectedWeekForCharts.startDate.toISOString().split('T')[0];
+        const endDateStrForCharts = selectedWeekForCharts.endDate.toISOString().split('T')[0];
+        
+        const categoryRes = await fetch(`/api/products/revenue-by-category?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}&platform=${selectedPlatform}`, { cache: 'no-store' });
+        const categoryJson = await categoryRes.json();
+        setRevenueByCategory(categoryJson.revenueByCategory || []);
+
+        // Fetch AOV trend data for current week
+        const aovRes = await fetch(`/api/products/aov-trend?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}&platform=${selectedPlatform}`, { cache: 'no-store' });
+        const aovJson = await aovRes.json();
+        setAovTrend(aovJson.aovTrend || []);
+
+        // Process daily sales data for the line chart from product_sales
+        // Note: We calculate our own weekly totals from the daily sales data
         if (json.dailySales && json.dailySales.length > 0) {
           // Aggregate platform data by date (multiple accounts may have same date)
-          const aggregatedByDate: { [date: string]: { totalSales: number; tiktok: number; shopee: number; lazada: number } } = {};
+          const aggregatedByDate: { [date: string]: { tiktok: number; shopee: number; lazada: number } } = {};
           
           json.dailySales.forEach((sale: { sale_date: string; total_sales: number; platform_breakdown?: { tiktok?: number; shopee?: number; lazada?: number } }) => {
             const dateStr = sale.sale_date.split('T')[0]; // Convert to YYYY-MM-DD format
             
             if (!aggregatedByDate[dateStr]) {
-              aggregatedByDate[dateStr] = { totalSales: 0, tiktok: 0, shopee: 0, lazada: 0 };
+              aggregatedByDate[dateStr] = { tiktok: 0, shopee: 0, lazada: 0 };
             }
             
-            aggregatedByDate[dateStr].totalSales += parseFloat(sale.total_sales.toString());
+            // Only use platform breakdown, not total_sales (which is already the sum)
             aggregatedByDate[dateStr].tiktok += sale.platform_breakdown?.tiktok || 0;
             aggregatedByDate[dateStr].shopee += sale.platform_breakdown?.shopee || 0;
             aggregatedByDate[dateStr].lazada += sale.platform_breakdown?.lazada || 0;
           });
           
-          // Convert to array format
-          const processedData: { date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[] = Object.entries(aggregatedByDate).map(([dateStr, values]) => {
-            const date = new Date(dateStr);
-            return {
-              date: dateStr,
-              totalSales: values.totalSales,
-              tiktok: values.tiktok,
-              shopee: values.shopee,
-              lazada: values.lazada,
-              dayOfWeek: date.getUTCDay(), // 0 for Sunday, 1 for Monday, etc.
-            };
-          });
+          // Get the selected week's date range (Sunday to Saturday)
+          // Use the selected week from the dropdown, or default to current week if not set
+          if (availableWeeks.length === 0) return; // Wait for weeks to be initialized
           
-          // Sort by date to ensure chronological order (oldest to newest)
-          const sortedData = processedData.sort((a, b) => {
-            return new Date(a.date).getTime() - new Date(b.date).getTime();
-          });
+          const selectedWeek = availableWeeks[selectedWeekIndex];
+          const startOfWeek = new Date(selectedWeek.startDate);
+          startOfWeek.setHours(0, 0, 0, 0);
           
-          console.log('Daily sales with platform breakdown:', sortedData.map(d => ({ date: d.date, tiktok: d.tiktok, shopee: d.shopee, lazada: d.lazada })));
-          setProcessedDailySales(sortedData);
+          // Generate all 7 days from Sunday to Saturday for the selected week
+          const weekData: { date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[] = [];
+          
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(startOfWeek);
+            d.setDate(startOfWeek.getDate() + i);
+            // Format as YYYY-MM-DD in Philippine time
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+            
+            const salesData = aggregatedByDate[dateString] || { tiktok: 0, shopee: 0, lazada: 0 };
+            const totalSales = salesData.tiktok + salesData.shopee + salesData.lazada;
+            
+            weekData.push({
+              date: dateString,
+              totalSales: totalSales,
+              tiktok: salesData.tiktok,
+              shopee: salesData.shopee,
+              lazada: salesData.lazada,
+              dayOfWeek: d.getDay() // 0 = Sunday, 1 = Monday, etc.
+            });
+          }
+          
+          setProcessedDailySales(weekData);
+          
+          // Calculate weekly totals from the current week's data
+          const totals = weekData.reduce((acc, day) => ({
+            all: acc.all + day.totalSales,
+            tiktok: acc.tiktok + day.tiktok,
+            lazada: acc.lazada + day.lazada,
+            shopee: acc.shopee + day.shopee
+          }), { all: 0, tiktok: 0, lazada: 0, shopee: 0 });
+          
+          setWeeklyTotals(totals);
         } else {
           setProcessedDailySales([]);
+          setWeeklyTotals({ all: 0, tiktok: 0, lazada: 0, shopee: 0 });
         }
       } catch (e) {
         console.error(e);
       }
     }
-    if (!isLoading && user) load();
-  }, [isLoading, user, selectedPlatform, dateRange]);
+    if (!isLoading && user && availableWeeks.length > 0) load();
+  }, [isLoading, user, selectedPlatform, selectedWeekIndex, availableWeeks]);
 
   if (isLoading) {
     return (
@@ -132,9 +223,11 @@ export default function DashboardPage() {
   };
 
   // Custom XAxis Tick component
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomXAxisTick = (props: any) => {
+  const CustomXAxisTick = (props: { x?: number; y?: number; payload?: { value: string } }) => {
     const { x, y, payload } = props;
+    
+    if (!payload?.value) return null;
+    
     const dateString = payload.value;
     const dayOfWeek = processedDailySales.find(d => d.date === dateString)?.dayOfWeek;
 
@@ -174,127 +267,130 @@ export default function DashboardPage() {
             <p className="text-gray-600">This is what has been happening to your shops.</p>
           </div>
           <div className="text-right">
-            {/* Day of the week */}
-            <h3 className="text-2xl font-bold text-green-800 mb-1">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
-            </h3>
-            {/* Full date */}
-            <p className="text-green-800 mb-3">
-              {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-        </div>
-
-        {/* Sales Report Title with Filter */}
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold font-title text-header">Shop Metrics</h3>
-          <div className="relative">
-            {/* Date range filter button */}
-            <button 
-              onClick={() => setShowDateFilter(!showDateFilter)}
-              className="bg-green-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-900 transition text-sm font-medium"
-            >
-              <span>Past {dateRange} days</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            <p className="text-gray-600 mb-2">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' })}</p>
             
-            {/* Dropdown filter */}
-            {showDateFilter && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                <div className="py-2">
-                  <button
-                    onClick={() => { setDateRange('7'); setShowDateFilter(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '7' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                  >
-                    Past 7 days
-                  </button>
-                  <button
-                    onClick={() => { setDateRange('30'); setShowDateFilter(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '30' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                  >
-                    Past 30 days
-                  </button>
-                  <button
-                    onClick={() => { setDateRange('90'); setShowDateFilter(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '90' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                  >
-                    Past 90 days
-                  </button>
-                  <button
-                    onClick={() => { setDateRange('365'); setShowDateFilter(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '365' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                  >
-                    Past year
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Week Filter Dropdown */}
+            <div className="flex items-center gap-2 justify-end">
+              <label htmlFor="week-filter" className="text-xs text-gray-500 font-medium">View Week:</label>
+              <select
+                id="week-filter"
+                value={selectedWeekIndex}
+                onChange={(e) => setSelectedWeekIndex(Number(e.target.value))}
+                className="text-xs px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+              >
+                {availableWeeks.map((week, index) => (
+                  <option key={index} value={index}>
+                    {week.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Sales Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">Total Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {(data?.totals?.all || 0).toLocaleString()}</p>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Total Sales (Current Week)</h4>
+            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.all).toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">TikTok Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {(data?.totals?.tiktok || 0).toLocaleString()}</p>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">TikTok Sales (Current Week)</h4>
+            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.tiktok).toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">Lazada Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {(data?.totals?.lazada || 0).toLocaleString()}</p>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Lazada Sales (Current Week)</h4>
+            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.lazada).toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">Shopee Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {(data?.totals?.shopee || 0).toLocaleString()}</p>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Shopee Sales (Current Week)</h4>
+            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.shopee).toLocaleString()}</p>
           </div>
         </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-base font-semibold font-title text-header mb-4">Followers by Platform</h4>
+            <h4 className="text-base font-semibold font-title text-header mb-4">Top 3 Products by Platform (Current Week)</h4>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={(data?.shops || []).reduce<{ platform: string; followers: number }[]>((acc, s) => {
-                  const found = acc.find(a => a.platform === s.platform);
-                  if (found) {
-                    found.followers += s.followers_count || 0;
-                  } else {
-                    acc.push({ platform: s.platform, followers: s.followers_count || 0 });
-                  }
-                  return acc;
-                }, [])}>
-                  <XAxis dataKey="platform" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="followers">
-                    {(data?.shops || []).reduce<{ platform: string; followers: number }[]>((acc, s) => {
-                      const found = acc.find(a => a.platform === s.platform);
-                      if (found) {
-                        found.followers += s.followers_count || 0;
-                      } else {
-                        acc.push({ platform: s.platform, followers: s.followers_count || 0 });
-                      }
-                      return acc;
-                    }, []).map((entry, index) => {
-                      const color = entry.platform === 'shopee' ? '#EE4D2D' :
-                        entry.platform === 'lazada' ? '#000083' :
-                          entry.platform === 'tiktok' ? 'black' : '#8884d8';
-                      return <Cell key={`cell-${index}`} fill={color} />;
-                    })}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {topWeeklyProducts.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topWeeklyProducts}>
+                    <XAxis 
+                      dataKey="platformDisplay" 
+                      tick={{ fontSize: 12 }}
+                      interval={0}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                      formatter={(value: number, name: string, props: { payload: Record<string, unknown> }) => {
+                        if (value === 0) return null;
+                        const productNameKey = `${name}Name`;
+                        const productName = props.payload[productNameKey] || 'Product';
+                        return [`₱${Math.round(value).toLocaleString()}`, productName];
+                      }}
+                      contentStyle={{ 
+                        fontSize: '12px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      labelStyle={{ 
+                        fontWeight: 'bold',
+                        color: '#1f2937',
+                        fontSize: '13px'
+                      }}
+                      itemStyle={{ 
+                        color: '#059669',
+                        fontWeight: '600'
+                      }}
+                    />
+                    {/* Product 1 - Base color (darkest/most saturated) */}
+                    <Bar dataKey="product1" stackId="stack">
+                      {topWeeklyProducts.map((entry, index) => {
+                        const colors: { [key: string]: string } = {
+                          'tiktok': '#000000',
+                          'shopee': '#EE4D2D',
+                          'lazada': '#0F146D'
+                        };
+                        return <Cell key={`cell-${index}`} fill={colors[entry.platform]} />;
+                      })}
+                    </Bar>
+                    {/* Product 2 - Medium shade */}
+                    <Bar dataKey="product2" stackId="stack">
+                      {topWeeklyProducts.map((entry, index) => {
+                        const colors: { [key: string]: string } = {
+                          'tiktok': '#4A4A4A',
+                          'shopee': '#F37258',
+                          'lazada': '#3B4BA0'
+                        };
+                        return <Cell key={`cell-${index}`} fill={colors[entry.platform]} />;
+                      })}
+                    </Bar>
+                    {/* Product 3 - Lightest shade */}
+                    <Bar dataKey="product3" stackId="stack">
+                      {topWeeklyProducts.map((entry, index) => {
+                        const colors: { [key: string]: string } = {
+                          'tiktok': '#8B8B8B',
+                          'shopee': '#F89D87',
+                          'lazada': '#6D7BC7'
+                        };
+                        return <Cell key={`cell-${index}`} fill={colors[entry.platform]} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No product data available for this week
+                </div>
+              )}
             </div>
           </div>
 
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-base font-semibold font-title text-header mb-4">Sales Trend by Platform (Past 7 Days)</h4>
+            <h4 className="text-base font-semibold font-title text-header mb-4">Sales Trend by Platform (Current Week)</h4>
             <div className="h-64">
               {processedDailySales.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -342,6 +438,140 @@ export default function DashboardPage() {
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   No sales data available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+          {/* Revenue by Product Category - Donut Chart */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-base font-semibold font-title text-header mb-4">Revenue by Product Category (Current Week)</h4>
+            <div className="h-64">
+              {revenueByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={revenueByCategory}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="revenue"
+                      nameKey="category"
+                    >
+                      {revenueByCategory.map((entry, index) => {
+                        const colors = [
+                          '#EE4D2D', '#0F146D', '#000000', '#059669', '#DC2626', 
+                          '#7C3AED', '#EA580C', '#0891B2', '#BE185D', '#65A30D'
+                        ];
+                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                      })}
+                    </Pie>
+                    <Tooltip 
+                      content={({ active, payload }: { active?: boolean; payload?: { payload: { category: string; revenue: number; percentage: number } }[] }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div style={{
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              padding: '12px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              fontSize: '12px'
+                            }}>
+                              <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{data.category}</p>
+                              <p style={{ margin: '0 0 2px 0' }}>₱{Math.round(data.revenue).toLocaleString()}</p>
+                              <p style={{ margin: '0' }}>{data.percentage.toFixed(1)}%</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No category data available
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Average Order Value Trend - Line Chart */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <h4 className="text-base font-semibold font-title text-header mb-4">Average Order Value Trend (Current Week)</h4>
+            <div className="h-64">
+              {aovTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={aovTrend}>
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value: string) => {
+                        const date = new Date(value);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                      }}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value: number) => `₱${value.toFixed(0)}`}
+                    />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [`₱${value.toFixed(2)}`, name]}
+                      labelFormatter={(label: string) => {
+                        const date = new Date(label);
+                        return `Date: ${date.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          timeZone: 'Asia/Manila'
+                        })}`;
+                      }}
+                      contentStyle={{ 
+                        fontSize: '12px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="tiktok" 
+                      name="TikTok" 
+                      stroke="#000000" 
+                      strokeWidth={2}
+                      dot={{ fill: '#000000', r: 4 }}
+                      activeDot={{ r: 6, stroke: '#000000', strokeWidth: 2 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="shopee" 
+                      name="Shopee" 
+                      stroke="#EE4D2D" 
+                      strokeWidth={2}
+                      dot={{ fill: '#EE4D2D', r: 4 }}
+                      activeDot={{ r: 6, stroke: '#EE4D2D', strokeWidth: 2 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="lazada" 
+                      name="Lazada" 
+                      stroke="#0F146D" 
+                      strokeWidth={2}
+                      dot={{ fill: '#0F146D', r: 4 }}
+                      activeDot={{ r: 6, stroke: '#0F146D', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No AOV data available
                 </div>
               )}
             </div>

@@ -18,11 +18,27 @@ export async function POST(req: Request) {
     // Fetch user's business data using service layer
     let userBusinessData = {};
     let sanitizedData = {};
+    let platformData = {};
     if (userId) {
       try {
         // Auto-sync sales data to ensure accuracy
         await BusinessDataService.syncProductSalesData(userId);
         userBusinessData = await BusinessDataService.getUserBusinessData(userId);
+        
+        // Get platform-specific data
+        const salesByPlatform = await BusinessDataService.getSalesByPlatform(userId, 30);
+        const shopeeTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'shopee', 5);
+        const lazadaTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'lazada', 5);
+        const tiktokTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'tiktok', 5);
+        
+        platformData = {
+          salesByPlatform,
+          topProductsByPlatform: {
+            shopee: shopeeTop5,
+            lazada: lazadaTop5,
+            tiktok: tiktokTop5
+          }
+        };
         
         // Sanitize data before sending to AI (enhanced version maintains accuracy)
         sanitizedData = EnhancedDataSanitizationService.sanitizeForAI(userBusinessData);
@@ -47,22 +63,40 @@ export async function POST(req: Request) {
       }
     });
 
-    // Handle custom questions vs predefined topics
-    let systemPreamble: string;
-    let guidanceText: string;
-    let taskDescription: string;
-
     // Create sanitized business data context for AI
     const businessDataText = Object.keys(sanitizedData).length > 0 
       ? `\n\nBUSINESS INSIGHTS DATA (sanitized for analysis):
 ${JSON.stringify(sanitizedData, null, 2)}
 
-Use this data to provide specific, data-driven insights. Reference the summary metrics, top products, and trends. Data has been sanitized for privacy while maintaining accuracy. All monetary values are in Philippine Peso (PHP) - use ₱ symbol when mentioning prices or revenue.`
+PLATFORM-SPECIFIC DATA:
+${JSON.stringify(platformData, null, 2)}
+
+IMPORTANT CAPABILITIES:
+- You can answer platform-specific questions (Shopee, Lazada, TikTok)
+- Examples: "show me top 5 sales in Shopee", "what are my best sellers on Lazada", "compare TikTok vs Shopee performance"
+- Platform data includes: salesByPlatform (revenue breakdown), topProductsByPlatform (top products per platform)
+- When asked about a specific platform, use the corresponding data from topProductsByPlatform
+
+CRITICAL CURRENCY FORMAT:
+- ALL monetary values are in Philippine Peso (PHP)
+- ALWAYS use ₱ symbol (NOT $ dollar sign)
+- ALWAYS use comma thousand separators: ₱45,678 | ₱1,234.50 | ₱6,772,393.71
+- Format large numbers properly: ₱6,772,393.71 (NOT ₱6772393.71)
+- This applies to revenue, prices, sales, costs - ALL money amounts
+
+Use this data to provide specific, data-driven insights. Reference actual sales numbers, product names, and platform-specific metrics.`
       : '\n\nNote: No business data available. Provide general business advice based on best practices.';
 
+    // Handle custom questions vs predefined topics
+    const systemPreamble = `You are DataDrip's AI business analyst with access to the user's real business database. You have access to their actual sales data, products, shops, and performance metrics across multiple platforms (Shopee, Lazada, TikTok). Be concise, actionable, and data-driven. Respond in markdown. Use real numbers and specific insights from their actual business data.
+
+CRITICAL CURRENCY RULE: ALL monetary values MUST use Philippine Peso symbol ₱ with comma thousand separators (NOT $ dollar sign). Examples: ₱45,678 | ₱1,234.50 | ₱6,772,393.71 (NOT ₱6772393.71). This is MANDATORY for ALL money amounts including revenue, sales, prices, costs, profits, etc.`;
+    
+    let guidanceText: string;
+    let taskDescription: string;
+
     if (topic === 'custom' && customQuestion) {
-      systemPreamble = `You are DataDrip's AI business analyst with access to the user's real business database. You have access to their actual sales data, products, shops, and performance metrics. Be concise, actionable, and data-driven. Respond in markdown. Use real numbers and specific insights from their actual business data. IMPORTANT: All monetary values are in Philippine Peso (PHP) - always use PHP currency symbol (₱) when mentioning prices or revenue.`;
-      guidanceText = `Answer the user's specific question using their real business data. Reference actual sales numbers, product performance, inventory levels, and shop metrics. Provide specific, actionable recommendations based on their actual business performance.`;
+      guidanceText = `Answer the user's specific question using their real business data. You can filter by platform if asked (e.g., "Shopee", "Lazada", "TikTok"). Reference actual sales numbers, product performance, inventory levels, and platform-specific metrics. Provide specific, actionable recommendations based on their actual business performance.`;
       taskDescription = `Custom Question: ${customQuestion}`;
     } else {
       const topicLabelMap: Record<string, string> = {
@@ -75,13 +109,12 @@ Use this data to provide specific, data-driven insights. Reference the summary m
       const topicLabel = topicLabelMap[topic] || 'Business Insights';
 
       const guidance = {
-        'customer-segment': `Analyze the user's actual customer data, shop performance, and sales patterns. Identify customer segments, behaviors, and opportunities based on real data.`,
-        'sale-trends': `Analyze the user's actual sales trends, revenue patterns, and performance metrics. Identify peaks, valleys, and growth opportunities.`,
-        'inventory-forecasting': `Analyze the user's actual inventory levels, stock movements, and product performance. Identify restock needs and overstock risks.`,
-        'product-performance': `Analyze the user's actual product sales, revenue, and performance metrics. Identify top performers and underperformers.`
+        'customer-segment': `Analyze the user's actual customer data, shop performance, and sales patterns across platforms. Identify customer segments, behaviors, and opportunities based on real data.`,
+        'sale-trends': `Analyze the user's actual sales trends, revenue patterns, and performance metrics across platforms (Shopee, Lazada, TikTok). Identify peaks, valleys, and growth opportunities per platform.`,
+        'inventory-forecasting': `Analyze the user's actual inventory levels, stock movements, and product performance. Identify restock needs and overstock risks. Consider platform-specific demand.`,
+        'product-performance': `Analyze the user's actual product sales, revenue, and performance metrics across platforms. Identify top performers and underperformers per platform.`
       } as Record<string, string>;
 
-      systemPreamble = `You are DataDrip's AI business analyst with access to the user's real business database. You have access to their actual sales data, products, shops, and performance metrics. Be concise, actionable, and data-driven. Respond in markdown. Use real numbers and specific insights from their actual business data. IMPORTANT: All monetary values are in Philippine Peso (PHP) - always use PHP currency symbol (₱) when mentioning prices or revenue.`;
       guidanceText = guidance[topic] || 'Provide high-signal business insights based on real data.';
       taskDescription = `Task: ${topicLabel}`;
     }
@@ -108,18 +141,65 @@ ${businessContextText}
 Recent Chat (most recent last):
 ${historyText}
 
-Constraints:
-- Use markdown.
-- Keep it to 150-250 words unless asked for more.
-- Include 2-4 concise action items.
-- Reference specific numbers and data from the user's actual business.
-- If data is missing, state assumptions briefly.
-- For custom questions, be specific and actionable based on real data.
-- ALWAYS use PHP currency symbol (₱) for all monetary values - never use USD or $.
+CRITICAL CURRENCY REQUIREMENT:
+- ALL monetary values MUST use Philippine Peso symbol: ₱
+- NEVER use $ (dollar sign)
+- ALWAYS use comma thousand separators for readability
+- Examples: ₱45,678 NOT $45,678 or ₱45678 | ₱6,772,393.71 NOT ₱6772393.71
+- Format: ₱1,234 | ₱45,678 | ₱1,234.50 | ₱6,772,393.71
+- This is MANDATORY for all numbers representing money
+
+CRITICAL RESPONSE LENGTH (MUST COMPLETE):
+- MAXIMUM 250 words - PLAN your response to finish within this limit
+- Structure: Brief intro (2 sentences) → 3-4 bullet insights → 2-3 action items
+- Each bullet point: 1-2 sentences max
+- Prioritize quality over quantity
+- ALWAYS end with complete sentences and proper punctuation
+- If approaching limit, wrap up gracefully with final action item
+
+Formatting Requirements:
+- Use markdown for readability
+- Bullet points for efficiency (• or numbered lists)
+- Reference specific data: product names, numbers, percentages
+- ALWAYS use ₱ (Philippine Peso) with comma separators: ₱1,234 | ₱45,678 | ₱6,772,393.71
+- NEVER use $ (USD)
+
+TOKEN BUDGET: ${model === 'gemini-2.5-pro' ? '~3500 tokens' : '~1800 tokens'} - allocate wisely to ensure completion
 `;
 
     const result = await genAIModel.generateContent(prompt);
-    const text = result.response.text();
+    let text = result.response.text();
+    
+    // Check if response appears incomplete (ends mid-sentence or with incomplete markdown)
+    const trimmedText = text.trim();
+    const isIncomplete = trimmedText.endsWith('**') || 
+                        trimmedText.endsWith('*') || 
+                        (!trimmedText.endsWith('.') && 
+                         !trimmedText.endsWith('!') && 
+                         !trimmedText.endsWith('?') &&
+                         !trimmedText.endsWith(':'));
+    
+    // If incomplete, make a second request to complete the thought
+    if (isIncomplete) {
+      try {
+        const completionPrompt = `You previously responded with: "${text.slice(-200)}"
+
+This response was cut off. Please provide ONLY a brief 1-2 sentence conclusion to complete the thought. Be concise and end with proper punctuation.`;
+
+        const completionResult = await genAIModel.generateContent(completionPrompt);
+        const completion = completionResult.response.text().trim();
+        
+        // Remove any incomplete markdown at the end of original text
+        const cleanedText = text.replace(/\*{1,2}$/, '').trimEnd();
+        text = cleanedText + ' ' + completion;
+        
+        console.log('✅ Auto-completed truncated response');
+      } catch (completionError) {
+        console.error('Failed to auto-complete response:', completionError);
+        // Fall back to adding truncation notice
+        text = text + '\n\n*[Response truncated. Try asking a more specific question.]*';
+      }
+    }
 
     return NextResponse.json({ content: text });
   } catch (err: unknown) {

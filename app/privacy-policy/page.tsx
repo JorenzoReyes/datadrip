@@ -110,14 +110,6 @@ export default function PrivacyPolicyPage() {
             </section>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-purple-500/30">
-            <Link
-              href="/register"
-              className="inline-flex items-center px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
-            >
-              ← Back to Registration
-            </Link>
-          </div>
         </div>
       </main>
     </div>

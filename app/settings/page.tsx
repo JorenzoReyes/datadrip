@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
 import { useIntegrationManagement } from '../contexts/integrations';
-import ConnectIntegrationModal from '../components/ConnectIntegrationModal';
+import RedirectToShopModal from '../components/RedirectToShopModal';
 import Image from 'next/image';
 
 interface UserSettings {
@@ -221,8 +221,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveSection('account')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
                   activeSection === 'account'
-                    ? 'bg-green-500 text-white'
-                    : 'text-gray-700 hover:bg-green-50'
+                    ? 'bg-green-700 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,8 +235,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveSection('platforms')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
                   activeSection === 'platforms'
-                    ? 'bg-green-500 text-white'
-                    : 'text-gray-700 hover:bg-green-50'
+                    ? 'bg-green-700 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,9 +247,9 @@ export default function SettingsPage() {
             </nav>
 
             {/* Help Section */}
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+            <div className="bg-green-100 rounded-lg p-4 border border-green-300">
               <h4 className="text-sm font-semibold text-green-900 mb-2">Need Help?</h4>
-              <p className="text-xs text-green-700">
+              <p className="text-xs text-green-800">
                 Contact support if you need assistance with your account settings.
               </p>
             </div>
@@ -290,7 +290,7 @@ export default function SettingsPage() {
                   ) : (
                     <button
                       onClick={() => setEditingUserDetails(true)}
-                      className="flex items-center gap-2 px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -310,7 +310,7 @@ export default function SettingsPage() {
                           name="firstName"
                           value={formData.firstName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-green-700"
                           required
                         />
                       </div>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
                           name="lastName"
                           value={formData.lastName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-green-700"
                           required
                         />
                       </div>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        className="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 transition-colors"
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -424,7 +424,7 @@ export default function SettingsPage() {
                   ) : (
                     <button
                       onClick={() => setEditingSecurity(true)}
-                      className="flex items-center gap-2 px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -480,7 +480,7 @@ export default function SettingsPage() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        className="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 transition-colors"
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -548,7 +548,8 @@ interface PlatformsSectionProps {
 
 function PlatformsSection({ user }: PlatformsSectionProps) {
   const { integrations, platformTemplates, deleteIntegrationByUser, testConnection } = useIntegrationManagement();
-  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('');
   const [testingIntegration, setTestingIntegration] = useState<string | null>(null);
   const [disconnectingPlatform, setDisconnectingPlatform] = useState<string | null>(null);
 
@@ -700,13 +701,16 @@ function PlatformsSection({ user }: PlatformsSectionProps) {
                     <p className="text-sm text-gray-600 mb-4">
                       Connect your {platform} shop to start syncing data
                     </p>
-                    <button
-                      onClick={() => setShowConnectModal(true)}
-                      className="w-full px-4 py-2 rounded-lg hover:opacity-90 transition-colors font-medium text-sm text-white"
-                      style={{ backgroundColor: getPlatformColor(platform) }}
-                    >
-                      Connect {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                    </button>
+                     <button
+                       onClick={() => {
+                         setSelectedPlatform(platform);
+                         setShowRedirectModal(true);
+                       }}
+                       className="w-full px-4 py-2 rounded-lg hover:opacity-90 transition-colors font-medium text-sm text-white"
+                       style={{ backgroundColor: getPlatformColor(platform) }}
+                     >
+                       Connect {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                     </button>
                   </>
                 )}
               </div>
@@ -772,35 +776,36 @@ function PlatformsSection({ user }: PlatformsSectionProps) {
       )}
 
       {/* Help Section */}
-      <div className="bg-green-50 rounded-xl border border-green-200 p-6 mt-6">
-        <div className="flex gap-4">
-          <div className="flex-shrink-0">
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-green-900 mb-2">How to Connect Your Shops</h4>
-            <ul className="text-sm text-green-800 space-y-1">
-              <li>• Click &quot;Connect&quot; on the platform you want to integrate</li>
-              <li>• Enter your API credentials from your shop&apos;s settings</li>
-              <li>• Test the connection to ensure it&apos;s working properly</li>
-              <li>• Your sales data will automatically sync based on your chosen frequency</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+       <div className="bg-green-100 rounded-xl border border-green-300 p-6 mt-6">
+         <div className="flex gap-4">
+           <div className="flex-shrink-0">
+             <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+             </svg>
+           </div>
+           <div>
+             <h4 className="text-sm font-semibold text-green-900 mb-2">How to Connect Your Shops</h4>
+             <ul className="text-sm text-green-800 space-y-1">
+               <li>• Click &quot;Connect&quot; on the platform you want to integrate</li>
+               <li>• You&apos;ll be redirected to the shop&apos;s website to log in</li>
+               <li>• Authorize the connection on the shop&apos;s platform</li>
+               <li>• Your sales data will automatically sync based on your chosen frequency</li>
+             </ul>
+           </div>
+         </div>
+       </div>
 
-      {/* Connect Integration Modal */}
-      {showConnectModal && (
-        <ConnectIntegrationModal
-          onClose={() => setShowConnectModal(false)}
-          onSuccess={() => {
-            setShowConnectModal(false);
-            alert('Shop connected successfully!');
-          }}
-        />
-      )}
+       {/* Redirect to Shop Modal */}
+       {showRedirectModal && (
+         <RedirectToShopModal
+           onClose={() => setShowRedirectModal(false)}
+           onConfirm={() => {
+             setShowRedirectModal(false);
+             alert('Redirecting to shop login...');
+           }}
+           platform={selectedPlatform}
+         />
+       )}
     </>
   );
 }
