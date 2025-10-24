@@ -1287,7 +1287,12 @@ function seedDocker() {
     const products = productsResult.trim().split('\n').slice(2, -2).map(line => {
       const [product_id, account_id, price, shop_id] = line.split('|').map(x => x.trim());
       return { product_id: parseInt(product_id), account_id: parseInt(account_id), price: parseFloat(price), shop_id: parseInt(shop_id) };
-    });
+    }).filter(product => product.product_id && product.account_id && product.price && product.shop_id);
+
+    if (products.length === 0) {
+      console.log('⚠️ No products found, skipping sales data generation');
+      return true;
+    }
 
     const platforms = ['tiktok', 'shopee', 'lazada'];
     const startDate = new Date('2025-10-01');
@@ -1301,13 +1306,24 @@ function seedDocker() {
       
       for (let i = 0; i < numSales; i++) {
         const randomProduct = products[Math.floor(Math.random() * products.length)];
+        
+        // Safety check to ensure we have a valid product
+        if (!randomProduct || !randomProduct.price || !randomProduct.account_id || !randomProduct.product_id || !randomProduct.shop_id) {
+          console.log(`⚠️ Skipping invalid product at index ${i}`);
+          continue;
+        }
+        
         const platform = platforms[Math.floor(Math.random() * platforms.length)];
         const quantity = Math.floor(Math.random() * 3) + 1;
         const unitPrice = randomProduct.price * (0.8 + Math.random() * 0.4); // 80-120% of base price
         const totalSales = unitPrice * quantity;
         const orderId = `ORD-${saleDate.replace(/-/g, '')}-${String(i + 1).padStart(3, '0')}`;
 
-        execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_sales (account_id, product_id, shop_id, platform, sale_date, quantity_sold, unit_price, total_sales, order_id) VALUES (${randomProduct.account_id}, ${randomProduct.product_id}, ${randomProduct.shop_id}, '${platform}', '${saleDate}', ${quantity}, ${unitPrice.toFixed(2)}, ${totalSales.toFixed(2)}, '${orderId}');"`, { stdio: 'inherit' });
+        try {
+          execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_sales (account_id, product_id, shop_id, platform, sale_date, quantity_sold, unit_price, total_sales, order_id) VALUES (${randomProduct.account_id}, ${randomProduct.product_id}, ${randomProduct.shop_id}, '${platform}', '${saleDate}', ${quantity}, ${unitPrice.toFixed(2)}, ${totalSales.toFixed(2)}, '${orderId}');"`, { stdio: 'inherit' });
+        } catch (error) {
+          console.log(`⚠️ Failed to insert sale for product ${randomProduct.product_id}: ${error.message}`);
+        }
       }
     }
 
