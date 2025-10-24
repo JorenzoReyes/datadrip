@@ -37,7 +37,9 @@ export type Product = {
   warranty_policy: string | null;
   status: string;
   images: string[] | null;
+  videos: string[] | null;
   promotion_image: string | null;
+  attributes: {[key: string]: unknown} | null;
   created_at: string;
   updated_at: string;
 };
@@ -222,6 +224,7 @@ export default function ProductsPage() {
 		warranty_type?: string;
 		warranty_period?: string;
 		warranty_policy?: string;
+		attributes?: {[key: string]: unknown};
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');
