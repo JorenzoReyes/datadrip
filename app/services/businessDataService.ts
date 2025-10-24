@@ -240,6 +240,70 @@ export class BusinessDataService {
   }
 
   /**
+   * Get top selling products by platform
+   */
+  static async getTopProductsByPlatform(userId: number, platform?: string, limit: number = 10) {
+    try {
+      const platformFilter = platform ? 'AND ps.platform = $2' : '';
+      const queryParams = platform ? [userId, platform] : [userId];
+      const limitIndex = platform ? '$3' : '$2';
+      
+      const topProducts = await query(
+        `SELECT 
+          p.name,
+          p.stock,
+          p.price,
+          p.category,
+          ps.platform,
+          COALESCE(SUM(ps.quantity_sold), 0) as actual_sales_count,
+          COALESCE(SUM(ps.total_sales), 0) as actual_sales_revenue,
+          COALESCE(COUNT(ps.sale_id), 0) as total_transactions
+         FROM products p
+         LEFT JOIN product_sales ps ON p.product_id = ps.product_id
+         WHERE p.owner_user_id = $1
+         ${platformFilter}
+         GROUP BY p.product_id, p.name, p.stock, p.price, p.category, ps.platform
+         ORDER BY actual_sales_revenue DESC
+         LIMIT ${limitIndex}`,
+        [...queryParams, limit]
+      );
+
+      return topProducts;
+    } catch (error) {
+      console.error('Error fetching top products by platform:', error);
+      throw new Error('Failed to fetch platform-specific products');
+    }
+  }
+
+  /**
+   * Get sales breakdown by platform
+   */
+  static async getSalesByPlatform(userId: number, days: number = 30) {
+    try {
+      const platformSales = await query(
+        `SELECT 
+          ps.platform,
+          SUM(ps.total_sales) as total_revenue,
+          SUM(ps.quantity_sold) as total_quantity,
+          COUNT(DISTINCT ps.order_id) as total_orders,
+          COUNT(DISTINCT ps.product_id) as unique_products
+         FROM product_sales ps
+         JOIN products p ON ps.product_id = p.product_id
+         WHERE p.owner_user_id = $1 
+         AND ps.sale_date >= CURRENT_DATE - INTERVAL '${days} days'
+         GROUP BY ps.platform
+         ORDER BY total_revenue DESC`,
+        [userId]
+      );
+
+      return platformSales;
+    } catch (error) {
+      console.error('Error fetching sales by platform:', error);
+      throw new Error('Failed to fetch platform sales');
+    }
+  }
+
+  /**
    * Sync products table with real sales data
    * This updates the sales_count and sales_revenue columns in products table
    */
