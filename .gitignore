@@ -284,3 +284,12 @@ jmeter.log
 *.crt
 *.p12
 *.pfx
+
+# User uploaded files (exclude from git)
+public/uploads/
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp

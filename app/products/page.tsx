@@ -12,18 +12,34 @@ export type Product = {
   sku: string | null;
   name: string;
   description: string | null;
+  highlights: string | null;
+  in_box: string | null;
   brand: string | null;
   category: string | null;
   subcategory: string | null;
+  product_type: string | null;
   price: number;
+  special_price: number | null;
   cost: number | null;
   currency: string;
   stock: number;
   reorder_level: number | null;
   sales_count: number;
   sales_revenue: number;
+  weight_value: number | null;
+  weight_unit: string | null;
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
+  has_dangerous: boolean;
+  warranty_type: string | null;
+  warranty_period: string | null;
+  warranty_policy: string | null;
   status: string;
-  is_archived: boolean;
+  images: string[] | null;
+  videos: string[] | null;
+  promotion_image: string | null;
+  attributes: {[key: string]: unknown} | null;
   created_at: string;
   updated_at: string;
 };
@@ -222,11 +238,28 @@ export default function ProductsPage() {
     name: string;
     sku?: string;
     description?: string;
+    highlights?: string;
+    in_box?: string;
     brand?: string;
     category?: string;
     subcategory?: string;
+    product_type?: string;
     price: number;
+    special_price?: number;
     stock: number;
+    images?: string[];
+    promotion_image?: string;
+    status?: string;
+    weight_value?: number;
+    weight_unit?: string;
+    length_cm?: number;
+    width_cm?: number;
+		height_cm?: number;
+		has_dangerous?: boolean;
+		warranty_type?: string;
+		warranty_period?: string;
+		warranty_policy?: string;
+		attributes?: {[key: string]: unknown};
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');
@@ -281,26 +314,26 @@ export default function ProductsPage() {
   };
 
   // Handle archiving product
-  const handleArchiveProduct = async (productId: number) => {
-    if (!confirm('Are you sure you want to archive this product?')) return;
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
 
     try {
       const email = encodeURIComponent(user?.email || '');
-      const res = await fetch(`/api/products/${productId}/archive?email=${email}`, {
-        method: 'PATCH',
+      const res = await fetch(`/api/products/${productId}?email=${email}`, {
+        method: 'DELETE',
       });
 
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.error || 'Failed to archive product');
+        throw new Error(json.error || 'Failed to delete product');
       }
 
       // Remove the product from the local products list
       setProducts(products.filter(p => p.product_id !== productId));
     } catch (error) {
-      console.error('Error archiving product:', error);
-      alert(error instanceof Error ? error.message : 'Failed to archive product');
+      console.error('Error deleting product:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete product');
     }
   };
 
@@ -533,6 +566,12 @@ export default function ProductsPage() {
                   Price
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
+                  Category
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
+                  Product Type
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
                   Stock
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
@@ -576,6 +615,15 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
                     <td className="px-4 py-3 text-sm text-header">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{p.category || 'Uncategorized'}</span>
+                        {p.subcategory && <span className="text-xs text-gray-500">{p.subcategory}</span>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      {p.product_type || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">
                       <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
                         {p.stock}
                       </span>
@@ -602,9 +650,9 @@ export default function ProductsPage() {
                           </svg>
                         </button>
                         <button 
-                          onClick={() => handleArchiveProduct(p.product_id)}
+                          onClick={() => handleDeleteProduct(p.product_id)}
                           className="text-red-600 hover:text-red-700" 
-                          title="Archive"
+                          title="Delete"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="3 6 5 6 21 6" />
@@ -688,6 +736,7 @@ export default function ProductsPage() {
         <AddProductModal 
           onClose={() => setShowAddModal(false)}
           onSave={handleAddProduct}
+          userEmail={user?.email}
         />
       )}
       {editingProduct && (

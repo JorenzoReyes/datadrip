@@ -13,6 +13,7 @@
     "db:list": "node scripts/migrate-db.js list-tables",
     "db:add-table": "node scripts/migrate-db.js add-table",
     "db:reset-tables": "node scripts/migrate-db.js reset-db",
+    "db:update-categories": "node scripts/update-product-categories.js",
     "docker:dev": "docker-compose -f docker-compose.dev.yml up --build",
     "docker:dev:down": "docker-compose -f docker-compose.dev.yml down",
     "docker:prod": "docker-compose up --build",

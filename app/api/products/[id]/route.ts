@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query, queryOne } from '../../../utils/database';
 
-export async function PATCH(
+export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -27,8 +27,8 @@ export async function PATCH(
     }
 
     // Verify the product belongs to this user
-    const product = await queryOne<{ product_id: number; owner_user_id: number }>(
-      'SELECT product_id, owner_user_id FROM products WHERE product_id = $1',
+    const product = await queryOne<{ product_id: number; owner_user_id: number; name: string }>(
+      'SELECT product_id, owner_user_id, name FROM products WHERE product_id = $1',
       [productId]
     );
 
@@ -37,89 +37,23 @@ export async function PATCH(
     }
 
     if (product.owner_user_id !== owner.user_id) {
-      return NextResponse.json({ error: 'Unauthorized to edit this product' }, { status: 403 });
+      return NextResponse.json({ error: 'Unauthorized to delete this product' }, { status: 403 });
     }
 
-    // Parse the request body
-    const body = await req.json();
-    const { name, brand, category, price, stock } = body;
+    console.log('Deleting product:', productId, product.name);
 
-    console.log('Updating product:', productId, 'with data:', body);
-
-    // Build dynamic UPDATE query
-    const updates: string[] = [];
-    const values: unknown[] = [];
-    let paramCount = 1;
-
-    if (name !== undefined) {
-      updates.push(`name = $${paramCount++}`);
-      values.push(name);
-    }
-    if (brand !== undefined) {
-      updates.push(`brand = $${paramCount++}`);
-      values.push(brand);
-    }
-    if (category !== undefined) {
-      updates.push(`category = $${paramCount++}`);
-      values.push(category);
-    }
-    if (price !== undefined) {
-      updates.push(`price = $${paramCount++}`);
-      values.push(price);
-    }
-    if (stock !== undefined) {
-      updates.push(`stock = $${paramCount++}`);
-      values.push(stock);
-    }
-
-    // Always update the updated_at timestamp
-    updates.push(`updated_at = CURRENT_TIMESTAMP`);
-
-    if (updates.length === 1) {
-      // Only updated_at was added, no actual changes
-      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
-    }
-
-    // Add product_id as the last parameter
-    values.push(productId);
-
-    const updateQuery = `UPDATE products SET ${updates.join(', ')} WHERE product_id = $${paramCount}`;
-    console.log('Executing UPDATE query:', updateQuery);
-    console.log('With values:', values);
-
-    // Execute the update
-    const result = await query(
-      updateQuery,
-      values
-    );
-
-    console.log('UPDATE result:', result);
-
-    // Fetch and return the updated product
-    const updatedProduct = await queryOne<{
-      product_id: number;
-      name: string;
-      brand: string | null;
-      category: string | null;
-      price: number;
-      stock: number;
-      updated_at: string;
-    }>(
-      `SELECT product_id, name, brand, category, price, stock, updated_at 
-       FROM products 
-       WHERE product_id = $1`,
+    // Delete the product
+    await query(
+      'DELETE FROM products WHERE product_id = $1',
       [productId]
     );
 
-    return NextResponse.json({ 
-      success: true, 
-      product: updatedProduct 
-    });
+    console.log('Product deleted successfully:', productId);
 
+    return NextResponse.json({ success: true, message: 'Product deleted successfully' });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Failed to update product';
-    console.error('Error updating product:', message);
+    console.error('API Error:', e);
+    const message = e instanceof Error ? e.message : 'Failed to delete product';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
