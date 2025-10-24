@@ -6,9 +6,66 @@ import Header from '../components/Header';
 import dynamic from 'next/dynamic';
 import { useAuth } from '../contexts/auth';
 
+// --- Product type definition ---
+export type Product = {
+  product_id: number;
+  sku: string | null;
+  name: string;
+  description: string | null;
+  highlights: string | null;
+  in_box: string | null;
+  brand: string | null;
+  category: string | null;
+  subcategory: string | null;
+  product_type: string | null;
+  price: number;
+  special_price: number | null;
+  cost: number | null;
+  currency: string;
+  stock: number;
+  reorder_level: number | null;
+  sales_count: number;
+  sales_revenue: number;
+  weight_value: number | null;
+  weight_unit: string | null;
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
+  has_dangerous: boolean;
+  warranty_type: string | null;
+  warranty_period: string | null;
+  warranty_policy: string | null;
+  status: string;
+  images: string[] | null;
+  videos: string[] | null;
+  promotion_image: string | null;
+  attributes: {[key: string]: unknown} | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export default function ProductsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+
+  // State declarations
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('All Categories');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Date filter states
+  const [dateRange, setDateRange] = useState<string>('30');
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState<{start: string, end: string}>({
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0]
+  });
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -17,51 +74,268 @@ export default function ProductsPage() {
     }
   }, [user, isLoading, router]);
 
+  // Fetch products from the database
+  useEffect(() => {
+    async function loadProducts() {
+      if (!user?.email) return;
+      
+      try {
+        setLoadingProducts(true);
+        const email = encodeURIComponent(user.email);
+        
+        // Build date range parameters
+        let dateParams = '';
+        if (dateRange === 'custom') {
+          dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
+        } else {
+          dateParams = `&days=${dateRange}`;
+        }
+        
+        const res = await fetch(`/api/products?email=${email}${dateParams}`, { cache: 'no-store' });
+        const json = await res.json();
+        
+        if (json.error) {
+          console.error('Error loading products:', json.error);
+          setProducts([]);
+        } else {
+          setProducts(json.products || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch products:', e);
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    
+    if (user) {
+      loadProducts();
+    }
+  }, [user, dateRange, customDateRange]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showDateFilter) {
+        setShowDateFilter(false);
+      }
+    };
+
+    if (showDateFilter) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDateFilter]);
   
+  // Pagination and sorting state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price' | 'created_at'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const itemsPerPage = 10;
 
-  // --- Local UI state & demo data (must be declared before any early returns) ---
-  type Product = {
-    id: string;
-    name: string;
-    price: number;
-    stock: number;
-    status: 'Available' | 'Draft' | 'Archived';
-    category: string;
-  };
-
-  const demoProducts: Product[] = useMemo(
-    () =>
-      Array.from({ length: 8 }).map((_, i) => ({
-        id: `p-${i + 1}`,
-        name: 'Lorem Ipsum',
-        price: 250,
-        stock: 3024,
-        status: 'Available',
-        category: ['All', 'Beverages', 'Snacks', 'Household'][(i % 3) + 1] || 'Beverages',
-      })),
-    []
-  );
-
-  const categories = ['All Categories', 'Beverages', 'Snacks', 'Household'];
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState(categories[0]);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-
-  // Lazy load modal to keep initial bundle small
+  // Lazy load modals to keep initial bundle small
   const AddProductModal = useMemo(
     () => dynamic(() => import('../components/AddProductModal'), { ssr: false }),
     []
   );
+  const EditProductModal = useMemo(
+    () => dynamic(() => import('../components/EditProductModal'), { ssr: false }),
+    []
+  );
 
-  const filtered = useMemo(() => {
-    return demoProducts.filter((p) => {
-      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase());
+  // Extract unique categories from products
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    products.forEach(p => {
+      if (p.category) uniqueCategories.add(p.category);
+    });
+    return ['All Categories', ...Array.from(uniqueCategories).sort()];
+  }, [products]);
+
+  // Filter, sort, and paginate products
+  const { paginated, totalPages, totalItems } = useMemo(() => {
+    // First filter products
+    const filteredProducts = products.filter((p) => {
+      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
+                         p.brand?.toLowerCase().includes(query.toLowerCase()) ||
+                         p.sku?.toLowerCase().includes(query.toLowerCase());
       const matchCategory = category === 'All Categories' ? true : p.category === category;
       return matchQuery && matchCategory;
     });
-  }, [demoProducts, query, category]);
+
+    // Then sort products
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'stock':
+          aValue = a.stock;
+          bValue = b.stock;
+          break;
+        case 'price':
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Calculate pagination
+    const totalItems = sortedProducts.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
+
+    return {
+      paginated: paginatedProducts,
+      totalPages,
+      totalItems
+    };
+  }, [products, query, category, sortBy, sortOrder, currentPage, itemsPerPage]);
+
+  // Handle sorting
+  const handleSort = (newSortBy: 'name' | 'stock' | 'price' | 'created_at') => {
+    if (sortBy === newSortBy) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, category, sortBy, sortOrder]);
+
+  // Handle adding new product
+  const handleAddProduct = async (productData: {
+    name: string;
+    sku?: string;
+    description?: string;
+    highlights?: string;
+    in_box?: string;
+    brand?: string;
+    category?: string;
+    subcategory?: string;
+    product_type?: string;
+    price: number;
+    special_price?: number;
+    stock: number;
+    images?: string[];
+    promotion_image?: string;
+    status?: string;
+    weight_value?: number;
+    weight_unit?: string;
+    length_cm?: number;
+    width_cm?: number;
+		height_cm?: number;
+		has_dangerous?: boolean;
+		warranty_type?: string;
+		warranty_period?: string;
+		warranty_policy?: string;
+		attributes?: {[key: string]: unknown};
+  }) => {
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products?email=${email}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to add product');
+      }
+
+      // Add the new product to the local products list
+      setProducts([json.product, ...products]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      throw error;
+    }
+  };
+
+  // Handle updating product
+  const handleUpdateProduct = async (updatedData: Partial<Product>) => {
+    if (!editingProduct) return;
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${editingProduct.product_id}?email=${email}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to update product');
+      }
+
+      // Update the product in the local products list
+      setProducts(products.map(p => 
+        p.product_id === editingProduct.product_id ? { ...p, ...json.product } : p
+      ));
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  };
+
+  // Handle archiving product
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
+
+    try {
+      const email = encodeURIComponent(user?.email || '');
+      const res = await fetch(`/api/products/${productId}?email=${email}`, {
+        method: 'DELETE',
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to delete product');
+      }
+
+      // Remove the product from the local products list
+      setProducts(products.filter(p => p.product_id !== productId));
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete product');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -91,7 +365,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-green-50/30">
       <Header active="products" />
 
       {/* Main Content */}
@@ -181,14 +455,39 @@ export default function ProductsPage() {
                 </svg>
               </button>
               {filterOpen && (
-                <div className="absolute right-0 z-10 mt-2 w-48 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
-                  <button className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50">
-                    Status: Available
-                    <span className="text-xs text-gray-500">(demo)</span>
+                <div className="absolute right-0 z-10 mt-2 w-56 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
+                  <div className="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider">Sort by</div>
+                  <button 
+                    onClick={() => handleSort('name')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'name' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
-                  <button className="flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50">
-                    Price: Low → High
-                    <span className="text-xs text-gray-500">(demo)</span>
+                  <button 
+                    onClick={() => handleSort('stock')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'stock' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Stock {sortBy === 'stock' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button 
+                    onClick={() => handleSort('price')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'price' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button 
+                    onClick={() => handleSort('created_at')}
+                    className={`flex w-full items-center justify-between rounded px-2 py-2 hover:bg-gray-50 ${
+                      sortBy === 'created_at' ? 'bg-gray-100 font-medium' : ''
+                    }`}
+                  >
+                    Date Added {sortBy === 'created_at' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
                 </div>
               )}
@@ -201,14 +500,17 @@ export default function ProductsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-100">
               <tr>
-                <th className="w-10 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label="Select all" />
-                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
                   Products
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
                   Price
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
+                  Category
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
+                  Product Type
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
                   Stock
@@ -222,53 +524,227 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-gray-50">
-              {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-100/70">
-                  <td className="px-4 py-3">
-                    <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label={`Select ${p.name}`} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-md bg-gray-300" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-header">{p.name}</span>
-                        <span className="text-xs text-subheader">{p.category}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-header">₱{p.price.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-sm text-header">{p.stock}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-4">
-                      <button className="text-gray-700 hover:text-gray-900" title="Edit">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
-                        </svg>
-                      </button>
-                      <button className="text-red-600 hover:text-red-700" title="Delete">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                        </svg>
-                      </button>
-                    </div>
+              {loadingProducts ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">
+                    Loading products...
                   </td>
                 </tr>
-              ))}
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">
+                    {products.length === 0 ? 'No products found. Click "Add Products" to get started.' : 'No products match your search criteria.'}
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((p) => (
+                  <tr key={p.product_id} className="hover:bg-gray-100/70">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-md bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                          <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-header">{p.name}</span>
+                          <span className="text-xs text-subheader">
+                            {p.brand ? `${p.brand} • ` : ''}{p.category || 'Uncategorized'}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{p.category || 'Uncategorized'}</span>
+                        {p.subcategory && <span className="text-xs text-gray-500">{p.subcategory}</span>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      {p.product_type || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
+                        {p.stock}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+                        p.status === 'active' 
+                          ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+                          : 'bg-gray-50 text-gray-700 ring-gray-600/20'
+                      }`}>
+                        {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-4">
+                        <button 
+                          onClick={() => setEditingProduct(p)}
+                          className="text-gray-700 hover:text-gray-900" 
+                          title="Edit"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
+                          </svg>
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProduct(p.product_id)}
+                          className="text-red-600 hover:text-red-700" 
+                          title="Delete"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} products
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              {/* Page numbers */}
+              <div className="flex space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current page
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          page === currentPage
+                            ? 'bg-emerald-700 text-white'
+                            : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return (
+                      <span key={page} className="px-2 py-2 text-sm text-gray-500">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </main>
       {showAddModal && (
-        <AddProductModal onClose={() => setShowAddModal(false)} />
+        <AddProductModal 
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddProduct}
+          userEmail={user?.email}
+        />
+      )}
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSave={handleUpdateProduct}
+        />
+      )}
+
+      {/* Custom Date Range Modal */}
+      {showCustomDateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Custom Date Range</h2>
+              <button
+                onClick={() => setShowCustomDateModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <input
+                  type="date"
+                  value={customDateRange.start}
+                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <input
+                  type="date"
+                  value={customDateRange.end}
+                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowCustomDateModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setDateRange('custom');
+                  setShowCustomDateModal(false);
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                Apply Filter
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
