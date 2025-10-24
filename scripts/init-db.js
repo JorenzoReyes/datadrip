@@ -307,19 +307,6 @@ async function createTables(pool) {
   await pool.query(createUsersTable);
   await pool.query(createAccountsTable);
   
-  // Create daily_sales_aggregated table for efficient sales tracking
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS daily_sales_aggregated (
-      account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
-      sale_date DATE NOT NULL,
-      total_sales DECIMAL(12,2) DEFAULT 0,
-      total_orders INTEGER DEFAULT 0,
-      platform_breakdown JSONB DEFAULT '{}',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (account_id, sale_date)
-    );
-  `);
 
   await pool.query(createShopsTable);
   await pool.query(createProductsTable);
@@ -381,8 +368,6 @@ async function createTables(pool) {
     'CREATE INDEX IF NOT EXISTS idx_product_listings_platform_pid ON product_listings(platform_product_id);',
     // product_sales
     'CREATE INDEX IF NOT EXISTS idx_product_sales_date_product ON product_sales(sale_date, product_id, account_id);',
-    // daily_sales_aggregated
-    'CREATE INDEX IF NOT EXISTS idx_daily_sales_agg_date ON daily_sales_aggregated(sale_date, account_id);',
     // roles/permissions lookup
     'CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);',
     'CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name);',
@@ -428,6 +413,19 @@ async function updateTables(pool) {
       UPDATE users 
       SET last_login_at = CURRENT_TIMESTAMP 
       WHERE last_login_at IS NULL OR last_login_at = created_at;
+    `);
+
+    // Ensure product_sales.total_sales exists (defensive for older local setups)
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='product_sales' AND column_name='total_sales'
+        ) THEN
+          ALTER TABLE product_sales ADD COLUMN total_sales DECIMAL(12,2) NOT NULL DEFAULT 0;
+        END IF;
+      END $$;
     `);
 
     console.log('✅ Table updates completed successfully');
@@ -564,6 +562,26 @@ async function initializeDatabaseWithDocker() {
       );
     `;
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createProductsTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+
+    // Create product_sales table
+    const createProductSalesTable = `
+      CREATE TABLE IF NOT EXISTS product_sales (
+        sale_id SERIAL PRIMARY KEY,
+        account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+        product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+        shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE,
+        platform VARCHAR(30) NOT NULL,
+        sale_date DATE NOT NULL,
+        quantity_sold INTEGER NOT NULL DEFAULT 1,
+        unit_price DECIMAL(12,2) NOT NULL,
+        total_sales DECIMAL(12,2) NOT NULL,
+        order_id VARCHAR(100),
+        customer_info JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createProductSalesTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
 
     // Create product_listings table
     const createProductListingsTable = `

@@ -393,65 +393,6 @@ export default function ProductsPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Date Range Filter */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowDateFilter(!showDateFilter)}
-                className="bg-green-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-900 transition text-sm font-medium"
-              >
-                <span>
-                  {dateRange === 'custom' 
-                    ? `${customDateRange.start} to ${customDateRange.end}`
-                    : `Past ${dateRange} days`
-                  }
-                </span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {/* Dropdown filter */}
-              {showDateFilter && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                  <div className="py-2">
-                    <button
-                      onClick={() => { setDateRange('7'); setShowDateFilter(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '7' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                    >
-                      Past 7 days
-                    </button>
-                    <button
-                      onClick={() => { setDateRange('30'); setShowDateFilter(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '30' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                    >
-                      Past 30 days
-                    </button>
-                    <button
-                      onClick={() => { setDateRange('90'); setShowDateFilter(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '90' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                    >
-                      Past 90 days
-                    </button>
-                    <button
-                      onClick={() => { setDateRange('365'); setShowDateFilter(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${dateRange === '365' ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-700'}`}
-                    >
-                      Past year
-                    </button>
-                    <div className="border-t border-gray-200 my-1"></div>
-                    <button
-                      onClick={() => { setShowCustomDateModal(true); setShowDateFilter(false); }}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-gray-700 flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      Custom Date Range
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
             {/* Categories dropdown */}
             <div className="relative">
               <button
