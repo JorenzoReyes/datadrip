@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import AutocompleteSelect from './AutocompleteSelect';
 
 interface EditProductModalProps {
   product: {
@@ -81,6 +82,51 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
   const [price, setPrice] = useState(product.price.toString());
   const [stock, setStock] = useState(product.stock.toString());
   const [sellerSKU, setSellerSKU] = useState(product.sku || '');
+
+  // Category options
+  const categoryOptions = [
+    'Electronics',
+    'Fashion & Clothing',
+    'Beauty & Cosmetics',
+    'Home & Garden',
+    'Sports & Outdoors',
+    'Health & Wellness',
+    'Toys & Games',
+    'Books & Media',
+    'Automotive',
+    'Food & Beverages',
+    'Baby & Kids',
+    'Pet Supplies',
+    'Office Supplies',
+    'Jewelry & Accessories',
+    'Art & Crafts',
+    'Travel & Luggage',
+    'Industrial & Scientific'
+  ];
+
+  // Subcategory options based on selected category
+  const getSubcategoryOptions = () => {
+    const subcategoryMap: { [key: string]: string[] } = {
+      'Electronics': ['TV & Video', 'Audio', 'Mobile', 'Computers', 'Tablets', 'Cameras', 'Wearables', 'Accessories', 'Monitors', 'Networking'],
+      'Fashion & Clothing': ['Men\'s Clothing', 'Women\'s Clothing', 'Kids\' Clothing', 'Shoes', 'Accessories', 'Underwear', 'Swimwear', 'Activewear'],
+      'Beauty & Cosmetics': ['Skincare', 'Makeup', 'Hair Care', 'Fragrance', 'Personal Care', 'Tools & Brushes'],
+      'Home & Garden': ['Furniture', 'Decor', 'Kitchen & Dining', 'Bedding', 'Bath', 'Garden Tools', 'Plants & Seeds', 'Lighting'],
+      'Sports & Outdoors': ['Fitness Equipment', 'Outdoor Gear', 'Team Sports', 'Water Sports', 'Winter Sports', 'Cycling', 'Running', 'Yoga & Pilates'],
+      'Health & Wellness': ['Supplements', 'Medical Supplies', 'Fitness Equipment', 'Personal Care', 'Therapy & Recovery', 'Monitoring Devices'],
+      'Toys & Games': ['Action Figures', 'Board Games', 'Puzzles', 'Educational Toys', 'Outdoor Toys', 'Electronic Toys', 'Arts & Crafts'],
+      'Books & Media': ['Books', 'Magazines', 'Digital Media', 'Music', 'Movies & TV', 'Video Games'],
+      'Automotive': ['Car Parts', 'Accessories', 'Tools', 'Maintenance', 'Interior', 'Exterior'],
+      'Food & Beverages': ['Beverages', 'Snacks', 'Breakfast', 'Supplements', 'Confectionery', 'Sweeteners', 'Seasonings'],
+      'Baby & Kids': ['Baby Care', 'Feeding', 'Nursery', 'Safety', 'Toys', 'Clothing'],
+      'Pet Supplies': ['Dog Supplies', 'Cat Supplies', 'Fish Supplies', 'Bird Supplies', 'Small Pet Supplies', 'Pet Food'],
+      'Office Supplies': ['Stationery', 'Furniture', 'Technology', 'Storage', 'Presentation', 'Organization'],
+      'Jewelry & Accessories': ['Necklaces', 'Rings', 'Earrings', 'Bracelets', 'Watches', 'Bags', 'Belts'],
+      'Art & Crafts': ['Drawing Supplies', 'Painting', 'Sculpting', 'Crafting', 'Paper Crafts', 'Fabric Crafts'],
+      'Travel & Luggage': ['Luggage', 'Travel Accessories', 'Backpacks', 'Travel Bags', 'Travel Organizers'],
+      'Industrial & Scientific': ['Tools', 'Equipment', 'Safety', 'Lab Supplies', 'Measurement', 'Testing']
+    };
+    return subcategoryMap[category] || [];
+  };
   const [isAvailable, setIsAvailable] = useState(product.status === 'active');
   const errorTimeouts = useRef<{ [key: string]: number }>({});
   
@@ -512,100 +558,41 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
             </div>
 
                 {/* Category */}
-            <div>
-                  <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-                    <span className="text-red-500">*</span> Category
-              </label>
-                  <div className="relative">
-                    <select
-                      value={category}
-                      onChange={(e) => {
-                        setCategory(e.target.value);
-                        setSubcategory(''); // Reset subcategory when category changes
-                        setProduct_type(''); // Reset product type when category changes
-                        setAttributes({}); // Reset attributes when category changes
-                        if (validationErrors.category) {
-                          setValidationErrors(prev => ({ ...prev, category: '' }));
-                        }
-                      }}
-                      className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer ${
-                        validationErrors.category ? 'border-red-500' : 'border-gray-300'
-                      } bg-white`}
-                    >
-                      <option value="">Select option</option>
-                      <option value="Electronics">Electronics</option>
-                      <option value="Cosmetics">Cosmetics</option>
-                      <option value="Food">Food</option>
-                    </select>
-                    <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
-                    </svg>
-                  </div>
-                  {validationErrors.category && (
-                    <p className="text-xs text-red-500 mt-1">{validationErrors.category}</p>
-                  )}
-                </div>
+                <AutocompleteSelect
+                  options={categoryOptions}
+                  value={category}
+                  onChange={(value) => {
+                    setCategory(value);
+                    setSubcategory(''); // Reset subcategory when category changes
+                    setProduct_type(''); // Reset product type when category changes
+                    setAttributes({}); // Reset attributes when category changes
+                    if (validationErrors.category) {
+                      setValidationErrors(prev => ({ ...prev, category: '' }));
+                    }
+                  }}
+                  placeholder="Select category"
+                  label="Category"
+                  required={true}
+                  error={validationErrors.category}
+                />
 
                 {/* Subcategory */}
-                <div>
-                  <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-                    <span className="text-red-500">*</span> Subcategory
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={subcategory}
-                      onChange={(e) => {
-                        setSubcategory(e.target.value);
-                        setProduct_type(''); // Reset product type when subcategory changes
-                        if (validationErrors.subcategory) {
-                          setValidationErrors(prev => ({ ...prev, subcategory: '' }));
-                        }
-                      }}
-                      disabled={!category}
-                      className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer ${
-                        validationErrors.subcategory ? 'border-red-500' : 'border-gray-300'
-                      } bg-white`}
-                    >
-                      <option value="">Select option</option>
-                      {category === 'Electronics' && (
-                        <>
-                          <option value="TV & Video">TV & Video</option>
-                          <option value="Audio">Audio</option>
-                          <option value="Mobile">Mobile</option>
-                          <option value="Computers">Computers</option>
-                          <option value="Tablets">Tablets</option>
-                          <option value="Cameras">Cameras</option>
-                          <option value="Wearables">Wearables</option>
-                          <option value="Accessories">Accessories</option>
-                          <option value="Monitors">Monitors</option>
-                          <option value="Networking">Networking</option>
-                        </>
-                      )}
-                      {category === 'Cosmetics' && (
-                        <>
-                          <option value="Makeup">Makeup</option>
-                          <option value="Skincare">Skincare</option>
-                          <option value="Fragrance">Fragrance</option>
-                          <option value="Tools">Tools</option>
-                        </>
-                      )}
-                      {category === 'Food' && (
-                        <>
-                          <option value="Fresh">Fresh</option>
-                          <option value="Packaged">Packaged</option>
-                          <option value="Beverages">Beverages</option>
-                          <option value="Snacks">Snacks</option>
-                        </>
-                      )}
-                    </select>
-                    <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
-                    </svg>
-                  </div>
-                  {validationErrors.subcategory && (
-                    <p className="text-xs text-red-500 mt-1">{validationErrors.subcategory}</p>
-                  )}
-                </div>
+                <AutocompleteSelect
+                  options={getSubcategoryOptions()}
+                  value={subcategory}
+                  onChange={(value) => {
+                    setSubcategory(value);
+                    setProduct_type(''); // Reset product type when subcategory changes
+                    if (validationErrors.subcategory) {
+                      setValidationErrors(prev => ({ ...prev, subcategory: '' }));
+                    }
+                  }}
+                  placeholder="Select subcategory"
+                  label="Subcategory"
+                  required={true}
+                  disabled={!category}
+                  error={validationErrors.subcategory}
+                />
 
                 {/* Product Type */}
                 <div>
@@ -627,100 +614,261 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                       } bg-white`}
                     >
                       <option value="">Select option</option>
+                      {/* Electronics Product Types */}
                       {subcategory === 'TV & Video' && (
                         <>
-                          <option value="Smart TVs">Smart TVs</option>
-                          <option value="Projectors">Projectors</option>
-                          <option value="Streaming Devices">Streaming Devices</option>
-                          <option value="Cables">Cables</option>
+                          <option value="Smart TV">Smart TV</option>
+                          <option value="LED TV">LED TV</option>
+                          <option value="OLED TV">OLED TV</option>
+                          <option value="Projector">Projector</option>
                         </>
                       )}
                       {subcategory === 'Audio' && (
                         <>
                           <option value="Headphones">Headphones</option>
                           <option value="Speakers">Speakers</option>
-                          <option value="Microphones">Microphones</option>
-                          <option value="Amplifiers">Amplifiers</option>
+                          <option value="Earbuds">Earbuds</option>
+                          <option value="Soundbar">Soundbar</option>
+                          <option value="Microphone">Microphone</option>
                         </>
                       )}
                       {subcategory === 'Mobile' && (
                         <>
-                          <option value="Smartphones">Smartphones</option>
-                          <option value="Cases">Cases</option>
-                          <option value="Chargers">Chargers</option>
-                          <option value="Accessories">Accessories</option>
+                          <option value="Smartphone">Smartphone</option>
+                          <option value="Phone Case">Phone Case</option>
+                          <option value="Screen Protector">Screen Protector</option>
+                          <option value="Charger">Charger</option>
                         </>
                       )}
                       {subcategory === 'Computers' && (
                         <>
-                          <option value="Laptops">Laptops</option>
-                          <option value="Desktops">Desktops</option>
-                          <option value="Components">Components</option>
-                          <option value="Peripherals">Peripherals</option>
+                          <option value="Laptop">Laptop</option>
+                          <option value="Desktop">Desktop</option>
+                          <option value="Keyboard">Keyboard</option>
+                          <option value="Mouse">Mouse</option>
+                          <option value="Webcam">Webcam</option>
                         </>
                       )}
                       {subcategory === 'Tablets' && (
                         <>
-                          <option value="iPads">iPads</option>
-                          <option value="Android Tablets">Android Tablets</option>
-                          <option value="Windows Tablets">Windows Tablets</option>
-                          <option value="Accessories">Accessories</option>
+                          <option value="Tablet">Tablet</option>
+                          <option value="Tablet Case">Tablet Case</option>
+                          <option value="Stylus">Stylus</option>
                         </>
                       )}
                       {subcategory === 'Cameras' && (
                         <>
+                          <option value="Action Camera">Action Camera</option>
                           <option value="DSLR">DSLR</option>
                           <option value="Mirrorless">Mirrorless</option>
-                          <option value="Point & Shoot">Point & Shoot</option>
-                          <option value="Action Cameras">Action Cameras</option>
+                          <option value="Security Camera">Security Camera</option>
                         </>
                       )}
                       {subcategory === 'Wearables' && (
                         <>
-                          <option value="Smartwatches">Smartwatches</option>
-                          <option value="Fitness Trackers">Fitness Trackers</option>
-                          <option value="Smart Bands">Smart Bands</option>
-                          <option value="Accessories">Accessories</option>
+                          <option value="Smart Watch">Smart Watch</option>
+                          <option value="Fitness Tracker">Fitness Tracker</option>
+                          <option value="Smart Ring">Smart Ring</option>
                         </>
                       )}
                       {subcategory === 'Accessories' && (
                         <>
-                          <option value="Cases">Cases</option>
-                          <option value="Chargers">Chargers</option>
-                          <option value="Cables">Cables</option>
-                          <option value="Stands">Stands</option>
+                          <option value="Charger">Charger</option>
+                          <option value="Cable">Cable</option>
+                          <option value="Adapter">Adapter</option>
+                          <option value="Stand">Stand</option>
                         </>
                       )}
                       {subcategory === 'Monitors' && (
                         <>
-                          <option value="Gaming">Gaming</option>
-                          <option value="Professional">Professional</option>
-                          <option value="Ultrawide">Ultrawide</option>
-                          <option value="4K">4K</option>
+                          <option value="Gaming Monitor">Gaming Monitor</option>
+                          <option value="4K Monitor">4K Monitor</option>
+                          <option value="Ultrawide Monitor">Ultrawide Monitor</option>
                         </>
                       )}
                       {subcategory === 'Networking' && (
                         <>
-                          <option value="Routers">Routers</option>
-                          <option value="Modems">Modems</option>
-                          <option value="Switches">Switches</option>
-                          <option value="Access Points">Access Points</option>
+                          <option value="Router">Router</option>
+                          <option value="Modem">Modem</option>
+                          <option value="Switch">Switch</option>
+                          <option value="Access Point">Access Point</option>
+                        </>
+                      )}
+                      
+                      {/* Cosmetics Product Types */}
+                      {subcategory === 'Skincare' && (
+                        <>
+                          <option value="Serum">Serum</option>
+                          <option value="Cleanser">Cleanser</option>
+                          <option value="Moisturizer">Moisturizer</option>
+                          <option value="Sunscreen">Sunscreen</option>
+                          <option value="Toner">Toner</option>
+                          <option value="Face Mask">Face Mask</option>
+                          <option value="Exfoliator">Exfoliator</option>
+                          <option value="Eye Cream">Eye Cream</option>
                         </>
                       )}
                       {subcategory === 'Makeup' && (
                         <>
-                          <option value="Foundation">Foundation</option>
                           <option value="Lipstick">Lipstick</option>
-                          <option value="Eyeshadow">Eyeshadow</option>
+                          <option value="Foundation">Foundation</option>
                           <option value="Mascara">Mascara</option>
+                          <option value="Eyeshadow">Eyeshadow</option>
+                          <option value="Blush">Blush</option>
+                          <option value="Concealer">Concealer</option>
+                          <option value="Eyeliner">Eyeliner</option>
+                          <option value="Highlighter">Highlighter</option>
                         </>
                       )}
-                      {subcategory === 'Skincare' && (
+                      
+                      {/* Food Product Types */}
+                      {subcategory === 'Beverages' && (
                         <>
-                          <option value="Cleansers">Cleansers</option>
-                          <option value="Moisturizers">Moisturizers</option>
-                          <option value="Serums">Serums</option>
-                          <option value="Masks">Masks</option>
+                          <option value="Coffee">Coffee</option>
+                          <option value="Tea">Tea</option>
+                          <option value="Juice">Juice</option>
+                          <option value="Energy Drink">Energy Drink</option>
+                          <option value="Soda">Soda</option>
+                          <option value="Water">Water</option>
+                        </>
+                      )}
+                      {subcategory === 'Snacks' && (
+                        <>
+                          <option value="Protein Bar">Protein Bar</option>
+                          <option value="Nuts">Nuts</option>
+                          <option value="Crackers">Crackers</option>
+                          <option value="Dried Fruit">Dried Fruit</option>
+                          <option value="Chips">Chips</option>
+                          <option value="Trail Mix">Trail Mix</option>
+                        </>
+                      )}
+                      {subcategory === 'Breakfast' && (
+                        <>
+                          <option value="Granola">Granola</option>
+                          <option value="Cereal">Cereal</option>
+                          <option value="Oatmeal">Oatmeal</option>
+                          <option value="Pancake Mix">Pancake Mix</option>
+                        </>
+                      )}
+                      {subcategory === 'Supplements' && (
+                        <>
+                          <option value="Protein Powder">Protein Powder</option>
+                          <option value="Vitamins">Vitamins</option>
+                          <option value="Superfood Powder">Superfood Powder</option>
+                        </>
+                      )}
+                      {subcategory === 'Confectionery' && (
+                        <>
+                          <option value="Chocolate">Chocolate</option>
+                          <option value="Candy">Candy</option>
+                          <option value="Gummies">Gummies</option>
+                          <option value="Cookies">Cookies</option>
+                        </>
+                      )}
+                      {subcategory === 'Sweeteners' && (
+                        <>
+                          <option value="Honey">Honey</option>
+                          <option value="Sugar">Sugar</option>
+                          <option value="Stevia">Stevia</option>
+                          <option value="Maple Syrup">Maple Syrup</option>
+                        </>
+                      )}
+                      {subcategory === 'Seasonings' && (
+                        <>
+                          <option value="Spice Mix">Spice Mix</option>
+                          <option value="Salt">Salt</option>
+                          <option value="Pepper">Pepper</option>
+                          <option value="Herbs">Herbs</option>
+                        </>
+                      )}
+                      
+                      {/* Fashion & Clothing Product Types */}
+                      {subcategory === 'Men&apos;s Clothing' && (
+                        <>
+                          <option value="T-Shirt">T-Shirt</option>
+                          <option value="Shirt">Shirt</option>
+                          <option value="Pants">Pants</option>
+                          <option value="Jeans">Jeans</option>
+                          <option value="Shorts">Shorts</option>
+                          <option value="Jacket">Jacket</option>
+                          <option value="Sweater">Sweater</option>
+                          <option value="Hoodie">Hoodie</option>
+                        </>
+                      )}
+                      {subcategory === 'Women&apos;s Clothing' && (
+                        <>
+                          <option value="Dress">Dress</option>
+                          <option value="Blouse">Blouse</option>
+                          <option value="Skirt">Skirt</option>
+                          <option value="Pants">Pants</option>
+                          <option value="Jeans">Jeans</option>
+                          <option value="Top">Top</option>
+                          <option value="Jacket">Jacket</option>
+                          <option value="Sweater">Sweater</option>
+                        </>
+                      )}
+                      {subcategory === 'Kids&apos; Clothing' && (
+                        <>
+                          <option value="T-Shirt">T-Shirt</option>
+                          <option value="Dress">Dress</option>
+                          <option value="Pants">Pants</option>
+                          <option value="Shorts">Shorts</option>
+                          <option value="Jacket">Jacket</option>
+                          <option value="Pajamas">Pajamas</option>
+                        </>
+                      )}
+                      {subcategory === 'Shoes' && (
+                        <>
+                          <option value="Sneakers">Sneakers</option>
+                          <option value="Boots">Boots</option>
+                          <option value="Sandals">Sandals</option>
+                          <option value="Heels">Heels</option>
+                          <option value="Flats">Flats</option>
+                          <option value="Dress Shoes">Dress Shoes</option>
+                        </>
+                      )}
+                      {subcategory === 'Accessories' && (
+                        <>
+                          <option value="Hat">Hat</option>
+                          <option value="Scarf">Scarf</option>
+                          <option value="Belt">Belt</option>
+                          <option value="Gloves">Gloves</option>
+                          <option value="Sunglasses">Sunglasses</option>
+                        </>
+                      )}
+                      {subcategory === 'Underwear' && (
+                        <>
+                          <option value="Underwear">Underwear</option>
+                          <option value="Bras">Bras</option>
+                          <option value="Socks">Socks</option>
+                          <option value="Undershirts">Undershirts</option>
+                        </>
+                      )}
+                      {subcategory === 'Swimwear' && (
+                        <>
+                          <option value="Swimsuit">Swimsuit</option>
+                          <option value="Bikini">Bikini</option>
+                          <option value="Swim Trunks">Swim Trunks</option>
+                          <option value="Cover-up">Cover-up</option>
+                        </>
+                      )}
+                      {subcategory === 'Activewear' && (
+                        <>
+                          <option value="Leggings">Leggings</option>
+                          <option value="Sports Bra">Sports Bra</option>
+                          <option value="Athletic Shorts">Athletic Shorts</option>
+                          <option value="Tank Top">Tank Top</option>
+                        </>
+                      )}
+                      
+                      {/* Beauty & Cosmetics Product Types */}
+                      {subcategory === 'Hair Care' && (
+                        <>
+                          <option value="Shampoo">Shampoo</option>
+                          <option value="Conditioner">Conditioner</option>
+                          <option value="Hair Mask">Hair Mask</option>
+                          <option value="Hair Oil">Hair Oil</option>
+                          <option value="Hair Serum">Hair Serum</option>
                         </>
                       )}
                       {subcategory === 'Fragrance' && (
@@ -728,47 +876,708 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                           <option value="Perfume">Perfume</option>
                           <option value="Cologne">Cologne</option>
                           <option value="Body Spray">Body Spray</option>
-                          <option value="Essential Oils">Essential Oils</option>
+                          <option value="Essential Oil">Essential Oil</option>
+                        </>
+                      )}
+                      {subcategory === 'Personal Care' && (
+                        <>
+                          <option value="Body Wash">Body Wash</option>
+                          <option value="Lotion">Lotion</option>
+                          <option value="Deodorant">Deodorant</option>
+                          <option value="Soap">Soap</option>
+                        </>
+                      )}
+                      {subcategory === 'Tools & Brushes' && (
+                        <>
+                          <option value="Makeup Brush">Makeup Brush</option>
+                          <option value="Sponge">Sponge</option>
+                          <option value="Mirror">Mirror</option>
+                          <option value="Tweezers">Tweezers</option>
+                        </>
+                      )}
+                      
+                      {/* Home & Garden Product Types */}
+                      {subcategory === 'Furniture' && (
+                        <>
+                          <option value="Chair">Chair</option>
+                          <option value="Table">Table</option>
+                          <option value="Sofa">Sofa</option>
+                          <option value="Bed">Bed</option>
+                          <option value="Desk">Desk</option>
+                          <option value="Cabinet">Cabinet</option>
+                        </>
+                      )}
+                      {subcategory === 'Decor' && (
+                        <>
+                          <option value="Wall Art">Wall Art</option>
+                          <option value="Vase">Vase</option>
+                          <option value="Candle">Candle</option>
+                          <option value="Picture Frame">Picture Frame</option>
+                          <option value="Rug">Rug</option>
+                        </>
+                      )}
+                      {subcategory === 'Kitchen & Dining' && (
+                        <>
+                          <option value="Cookware">Cookware</option>
+                          <option value="Dinnerware">Dinnerware</option>
+                          <option value="Utensils">Utensils</option>
+                          <option value="Appliances">Appliances</option>
+                        </>
+                      )}
+                      {subcategory === 'Bedding' && (
+                        <>
+                          <option value="Bed Sheets">Bed Sheets</option>
+                          <option value="Pillow">Pillow</option>
+                          <option value="Comforter">Comforter</option>
+                          <option value="Blanket">Blanket</option>
+                        </>
+                      )}
+                      {subcategory === 'Bath' && (
+                        <>
+                          <option value="Towel">Towel</option>
+                          <option value="Bath Mat">Bath Mat</option>
+                          <option value="Shower Curtain">Shower Curtain</option>
+                          <option value="Bath Accessories">Bath Accessories</option>
+                        </>
+                      )}
+                      {subcategory === 'Garden Tools' && (
+                        <>
+                          <option value="Shovel">Shovel</option>
+                          <option value="Rake">Rake</option>
+                          <option value="Pruners">Pruners</option>
+                          <option value="Hoe">Hoe</option>
+                        </>
+                      )}
+                      {subcategory === 'Plants & Seeds' && (
+                        <>
+                          <option value="Flower Seeds">Flower Seeds</option>
+                          <option value="Vegetable Seeds">Vegetable Seeds</option>
+                          <option value="Plant">Plant</option>
+                          <option value="Bulbs">Bulbs</option>
+                        </>
+                      )}
+                      {subcategory === 'Lighting' && (
+                        <>
+                          <option value="Lamp">Lamp</option>
+                          <option value="Light Bulb">Light Bulb</option>
+                          <option value="Chandelier">Chandelier</option>
+                          <option value="String Lights">String Lights</option>
+                        </>
+                      )}
+                      
+                      {/* Sports & Outdoors Product Types */}
+                      {subcategory === 'Fitness Equipment' && (
+                        <>
+                          <option value="Dumbbells">Dumbbells</option>
+                          <option value="Resistance Bands">Resistance Bands</option>
+                          <option value="Yoga Mat">Yoga Mat</option>
+                          <option value="Exercise Ball">Exercise Ball</option>
+                        </>
+                      )}
+                      {subcategory === 'Outdoor Gear' && (
+                        <>
+                          <option value="Tent">Tent</option>
+                          <option value="Sleeping Bag">Sleeping Bag</option>
+                          <option value="Backpack">Backpack</option>
+                          <option value="Hiking Boots">Hiking Boots</option>
+                        </>
+                      )}
+                      {subcategory === 'Team Sports' && (
+                        <>
+                          <option value="Basketball">Basketball</option>
+                          <option value="Soccer Ball">Soccer Ball</option>
+                          <option value="Tennis Racket">Tennis Racket</option>
+                          <option value="Baseball Glove">Baseball Glove</option>
+                        </>
+                      )}
+                      {subcategory === 'Water Sports' && (
+                        <>
+                          <option value="Swimming Goggles">Swimming Goggles</option>
+                          <option value="Snorkel">Snorkel</option>
+                          <option value="Life Jacket">Life Jacket</option>
+                          <option value="Water Shoes">Water Shoes</option>
+                        </>
+                      )}
+                      {subcategory === 'Winter Sports' && (
+                        <>
+                          <option value="Ski Goggles">Ski Goggles</option>
+                          <option value="Ski Gloves">Ski Gloves</option>
+                          <option value="Snowboard">Snowboard</option>
+                          <option value="Ice Skates">Ice Skates</option>
+                        </>
+                      )}
+                      {subcategory === 'Cycling' && (
+                        <>
+                          <option value="Bicycle">Bicycle</option>
+                          <option value="Helmet">Helmet</option>
+                          <option value="Bike Lock">Bike Lock</option>
+                          <option value="Water Bottle">Water Bottle</option>
+                        </>
+                      )}
+                      {subcategory === 'Running' && (
+                        <>
+                          <option value="Running Shoes">Running Shoes</option>
+                          <option value="Running Shorts">Running Shorts</option>
+                          <option value="Sports Watch">Sports Watch</option>
+                          <option value="Hydration Pack">Hydration Pack</option>
+                        </>
+                      )}
+                      {subcategory === 'Yoga & Pilates' && (
+                        <>
+                          <option value="Yoga Mat">Yoga Mat</option>
+                          <option value="Yoga Block">Yoga Block</option>
+                          <option value="Yoga Strap">Yoga Strap</option>
+                          <option value="Pilates Ring">Pilates Ring</option>
+                        </>
+                      )}
+                      
+                      {/* Health & Wellness Product Types */}
+                      {subcategory === 'Supplements' && (
+                        <>
+                          <option value="Multivitamin">Multivitamin</option>
+                          <option value="Protein Powder">Protein Powder</option>
+                          <option value="Omega-3">Omega-3</option>
+                          <option value="Probiotics">Probiotics</option>
+                        </>
+                      )}
+                      {subcategory === 'Medical Supplies' && (
+                        <>
+                          <option value="Bandages">Bandages</option>
+                          <option value="Thermometer">Thermometer</option>
+                          <option value="Blood Pressure Monitor">Blood Pressure Monitor</option>
+                          <option value="First Aid Kit">First Aid Kit</option>
+                        </>
+                      )}
+                      {subcategory === 'Personal Care' && (
+                        <>
+                          <option value="Toothbrush">Toothbrush</option>
+                          <option value="Toothpaste">Toothpaste</option>
+                          <option value="Mouthwash">Mouthwash</option>
+                          <option value="Dental Floss">Dental Floss</option>
+                        </>
+                      )}
+                      {subcategory === 'Therapy & Recovery' && (
+                        <>
+                          <option value="Massage Ball">Massage Ball</option>
+                          <option value="Foam Roller">Foam Roller</option>
+                          <option value="Compression Sleeves">Compression Sleeves</option>
+                          <option value="Ice Pack">Ice Pack</option>
+                        </>
+                      )}
+                      {subcategory === 'Monitoring Devices' && (
+                        <>
+                          <option value="Fitness Tracker">Fitness Tracker</option>
+                          <option value="Smart Scale">Smart Scale</option>
+                          <option value="Heart Rate Monitor">Heart Rate Monitor</option>
+                          <option value="Sleep Tracker">Sleep Tracker</option>
+                        </>
+                      )}
+                      
+                      {/* Toys & Games Product Types */}
+                      {subcategory === 'Action Figures' && (
+                        <>
+                          <option value="Superhero Figure">Superhero Figure</option>
+                          <option value="Dinosaur Figure">Dinosaur Figure</option>
+                          <option value="Robot Figure">Robot Figure</option>
+                          <option value="Collectible Figure">Collectible Figure</option>
+                        </>
+                      )}
+                      {subcategory === 'Board Games' && (
+                        <>
+                          <option value="Strategy Game">Strategy Game</option>
+                          <option value="Card Game">Card Game</option>
+                          <option value="Puzzle Game">Puzzle Game</option>
+                          <option value="Family Game">Family Game</option>
+                        </>
+                      )}
+                      {subcategory === 'Puzzles' && (
+                        <>
+                          <option value="Jigsaw Puzzle">Jigsaw Puzzle</option>
+                          <option value="3D Puzzle">3D Puzzle</option>
+                          <option value="Word Puzzle">Word Puzzle</option>
+                          <option value="Logic Puzzle">Logic Puzzle</option>
+                        </>
+                      )}
+                      {subcategory === 'Educational Toys' && (
+                        <>
+                          <option value="Building Blocks">Building Blocks</option>
+                          <option value="Science Kit">Science Kit</option>
+                          <option value="Art Supplies">Art Supplies</option>
+                          <option value="Musical Toy">Musical Toy</option>
+                        </>
+                      )}
+                      {subcategory === 'Outdoor Toys' && (
+                        <>
+                          <option value="Bicycle">Bicycle</option>
+                          <option value="Scooter">Scooter</option>
+                          <option value="Trampoline">Trampoline</option>
+                          <option value="Playground Set">Playground Set</option>
+                        </>
+                      )}
+                      {subcategory === 'Electronic Toys' && (
+                        <>
+                          <option value="Remote Control Car">Remote Control Car</option>
+                          <option value="Robot Toy">Robot Toy</option>
+                          <option value="Electronic Game">Electronic Game</option>
+                          <option value="Interactive Toy">Interactive Toy</option>
+                        </>
+                      )}
+                      {subcategory === 'Arts & Crafts' && (
+                        <>
+                          <option value="Craft Kit">Craft Kit</option>
+                          <option value="Coloring Book">Coloring Book</option>
+                          <option value="Art Set">Art Set</option>
+                          <option value="DIY Kit">DIY Kit</option>
+                        </>
+                      )}
+                      
+                      {/* Books & Media Product Types */}
+                      {subcategory === 'Books' && (
+                        <>
+                          <option value="Fiction">Fiction</option>
+                          <option value="Non-Fiction">Non-Fiction</option>
+                          <option value="Textbook">Textbook</option>
+                          <option value="Children&apos;s Book">Children&apos;s Book</option>
+                        </>
+                      )}
+                      {subcategory === 'Magazines' && (
+                        <>
+                          <option value="News Magazine">News Magazine</option>
+                          <option value="Fashion Magazine">Fashion Magazine</option>
+                          <option value="Sports Magazine">Sports Magazine</option>
+                          <option value="Tech Magazine">Tech Magazine</option>
+                        </>
+                      )}
+                      {subcategory === 'Digital Media' && (
+                        <>
+                          <option value="E-Book">E-Book</option>
+                          <option value="Audiobook">Audiobook</option>
+                          <option value="Digital Magazine">Digital Magazine</option>
+                          <option value="Online Course">Online Course</option>
+                        </>
+                      )}
+                      {subcategory === 'Music' && (
+                        <>
+                          <option value="CD">CD</option>
+                          <option value="Vinyl Record">Vinyl Record</option>
+                          <option value="Digital Music">Digital Music</option>
+                          <option value="Music Accessories">Music Accessories</option>
+                        </>
+                      )}
+                      {subcategory === 'Movies & TV' && (
+                        <>
+                          <option value="DVD">DVD</option>
+                          <option value="Blu-ray">Blu-ray</option>
+                          <option value="Streaming Device">Streaming Device</option>
+                          <option value="Movie Accessories">Movie Accessories</option>
+                        </>
+                      )}
+                      {subcategory === 'Video Games' && (
+                        <>
+                          <option value="Console Game">Console Game</option>
+                          <option value="PC Game">PC Game</option>
+                          <option value="Mobile Game">Mobile Game</option>
+                          <option value="Gaming Accessories">Gaming Accessories</option>
+                        </>
+                      )}
+                      
+                      {/* Automotive Product Types */}
+                      {subcategory === 'Car Parts' && (
+                        <>
+                          <option value="Engine Parts">Engine Parts</option>
+                          <option value="Brake Parts">Brake Parts</option>
+                          <option value="Suspension Parts">Suspension Parts</option>
+                          <option value="Electrical Parts">Electrical Parts</option>
+                        </>
+                      )}
+                      {subcategory === 'Accessories' && (
+                        <>
+                          <option value="Car Cover">Car Cover</option>
+                          <option value="Floor Mats">Floor Mats</option>
+                          <option value="Seat Covers">Seat Covers</option>
+                          <option value="Phone Mount">Phone Mount</option>
                         </>
                       )}
                       {subcategory === 'Tools' && (
                         <>
-                          <option value="Brushes">Brushes</option>
-                          <option value="Sponges">Sponges</option>
-                          <option value="Mirrors">Mirrors</option>
-                          <option value="Kits">Kits</option>
+                          <option value="Wrench Set">Wrench Set</option>
+                          <option value="Socket Set">Socket Set</option>
+                          <option value="Screwdriver Set">Screwdriver Set</option>
+                          <option value="Pliers">Pliers</option>
                         </>
                       )}
-                      {subcategory === 'Fresh' && (
+                      {subcategory === 'Maintenance' && (
                         <>
-                          <option value="Vegetables">Vegetables</option>
-                          <option value="Fruits">Fruits</option>
-                          <option value="Meat">Meat</option>
-                          <option value="Seafood">Seafood</option>
+                          <option value="Oil Filter">Oil Filter</option>
+                          <option value="Air Filter">Air Filter</option>
+                          <option value="Spark Plugs">Spark Plugs</option>
+                          <option value="Brake Fluid">Brake Fluid</option>
                         </>
                       )}
-                      {subcategory === 'Packaged' && (
+                      {subcategory === 'Interior' && (
                         <>
-                          <option value="Canned">Canned</option>
-                          <option value="Frozen">Frozen</option>
-                          <option value="Dried">Dried</option>
-                          <option value="Ready-to-Eat">Ready-to-Eat</option>
+                          <option value="Dashboard Cover">Dashboard Cover</option>
+                          <option value="Steering Wheel Cover">Steering Wheel Cover</option>
+                          <option value="Cup Holders">Cup Holders</option>
+                          <option value="Storage Organizer">Storage Organizer</option>
                         </>
                       )}
-                      {subcategory === 'Beverages' && (
+                      {subcategory === 'Exterior' && (
                         <>
-                          <option value="Soft Drinks">Soft Drinks</option>
-                          <option value="Juices">Juices</option>
-                          <option value="Water">Water</option>
-                          <option value="Energy Drinks">Energy Drinks</option>
+                          <option value="Car Wax">Car Wax</option>
+                          <option value="Tire Shine">Tire Shine</option>
+                          <option value="Car Wash Kit">Car Wash Kit</option>
+                          <option value="Paint Protection">Paint Protection</option>
                         </>
                       )}
-                      {subcategory === 'Snacks' && (
+                      
+                      {/* Baby & Kids Product Types */}
+                      {subcategory === 'Baby Care' && (
                         <>
-                          <option value="Chips">Chips</option>
-                          <option value="Candy">Candy</option>
-                          <option value="Nuts">Nuts</option>
-                          <option value="Dried Fruits">Dried Fruits</option>
+                          <option value="Diapers">Diapers</option>
+                          <option value="Baby Wipes">Baby Wipes</option>
+                          <option value="Baby Shampoo">Baby Shampoo</option>
+                          <option value="Baby Lotion">Baby Lotion</option>
+                        </>
+                      )}
+                      {subcategory === 'Feeding' && (
+                        <>
+                          <option value="Baby Bottle">Baby Bottle</option>
+                          <option value="Sippy Cup">Sippy Cup</option>
+                          <option value="Baby Food">Baby Food</option>
+                          <option value="High Chair">High Chair</option>
+                        </>
+                      )}
+                      {subcategory === 'Nursery' && (
+                        <>
+                          <option value="Crib">Crib</option>
+                          <option value="Changing Table">Changing Table</option>
+                          <option value="Rocking Chair">Rocking Chair</option>
+                          <option value="Nursery Decor">Nursery Decor</option>
+                        </>
+                      )}
+                      {subcategory === 'Safety' && (
+                        <>
+                          <option value="Baby Gate">Baby Gate</option>
+                          <option value="Outlet Covers">Outlet Covers</option>
+                          <option value="Cabinet Locks">Cabinet Locks</option>
+                          <option value="Safety Monitor">Safety Monitor</option>
+                        </>
+                      )}
+                      {subcategory === 'Toys' && (
+                        <>
+                          <option value="Rattle">Rattle</option>
+                          <option value="Teething Toy">Teething Toy</option>
+                          <option value="Soft Toy">Soft Toy</option>
+                          <option value="Musical Toy">Musical Toy</option>
+                        </>
+                      )}
+                      {subcategory === 'Clothing' && (
+                        <>
+                          <option value="Onesie">Onesie</option>
+                          <option value="Sleep Sack">Sleep Sack</option>
+                          <option value="Baby Hat">Baby Hat</option>
+                          <option value="Baby Socks">Baby Socks</option>
+                        </>
+                      )}
+                      
+                      {/* Pet Supplies Product Types */}
+                      {subcategory === 'Dog Supplies' && (
+                        <>
+                          <option value="Dog Food">Dog Food</option>
+                          <option value="Dog Toys">Dog Toys</option>
+                          <option value="Dog Collar">Dog Collar</option>
+                          <option value="Dog Leash">Dog Leash</option>
+                        </>
+                      )}
+                      {subcategory === 'Cat Supplies' && (
+                        <>
+                          <option value="Cat Food">Cat Food</option>
+                          <option value="Cat Toys">Cat Toys</option>
+                          <option value="Cat Litter">Cat Litter</option>
+                          <option value="Cat Scratching Post">Cat Scratching Post</option>
+                        </>
+                      )}
+                      {subcategory === 'Fish Supplies' && (
+                        <>
+                          <option value="Fish Food">Fish Food</option>
+                          <option value="Aquarium Filter">Aquarium Filter</option>
+                          <option value="Fish Tank">Fish Tank</option>
+                          <option value="Aquarium Decorations">Aquarium Decorations</option>
+                        </>
+                      )}
+                      {subcategory === 'Bird Supplies' && (
+                        <>
+                          <option value="Bird Food">Bird Food</option>
+                          <option value="Bird Cage">Bird Cage</option>
+                          <option value="Bird Toys">Bird Toys</option>
+                          <option value="Bird Perch">Bird Perch</option>
+                        </>
+                      )}
+                      {subcategory === 'Small Pet Supplies' && (
+                        <>
+                          <option value="Hamster Food">Hamster Food</option>
+                          <option value="Rabbit Food">Rabbit Food</option>
+                          <option value="Small Pet Cage">Small Pet Cage</option>
+                          <option value="Small Pet Toys">Small Pet Toys</option>
+                        </>
+                      )}
+                      {subcategory === 'Pet Food' && (
+                        <>
+                          <option value="Dry Food">Dry Food</option>
+                          <option value="Wet Food">Wet Food</option>
+                          <option value="Treats">Treats</option>
+                          <option value="Supplements">Supplements</option>
+                        </>
+                      )}
+                      
+                      {/* Office Supplies Product Types */}
+                      {subcategory === 'Stationery' && (
+                        <>
+                          <option value="Pen">Pen</option>
+                          <option value="Pencil">Pencil</option>
+                          <option value="Notebook">Notebook</option>
+                          <option value="Paper">Paper</option>
+                        </>
+                      )}
+                      {subcategory === 'Furniture' && (
+                        <>
+                          <option value="Office Chair">Office Chair</option>
+                          <option value="Desk">Desk</option>
+                          <option value="Filing Cabinet">Filing Cabinet</option>
+                          <option value="Bookshelf">Bookshelf</option>
+                        </>
+                      )}
+                      {subcategory === 'Technology' && (
+                        <>
+                          <option value="Computer">Computer</option>
+                          <option value="Printer">Printer</option>
+                          <option value="Scanner">Scanner</option>
+                          <option value="Projector">Projector</option>
+                        </>
+                      )}
+                      {subcategory === 'Storage' && (
+                        <>
+                          <option value="File Folder">File Folder</option>
+                          <option value="Storage Box">Storage Box</option>
+                          <option value="Binder">Binder</option>
+                          <option value="Archive Box">Archive Box</option>
+                        </>
+                      )}
+                      {subcategory === 'Presentation' && (
+                        <>
+                          <option value="Whiteboard">Whiteboard</option>
+                          <option value="Flip Chart">Flip Chart</option>
+                          <option value="Presentation Board">Presentation Board</option>
+                          <option value="Pointer">Pointer</option>
+                        </>
+                      )}
+                      {subcategory === 'Organization' && (
+                        <>
+                          <option value="Desk Organizer">Desk Organizer</option>
+                          <option value="Label Maker">Label Maker</option>
+                          <option value="Calendar">Calendar</option>
+                          <option value="Planner">Planner</option>
+                        </>
+                      )}
+                      
+                      {/* Jewelry & Accessories Product Types */}
+                      {subcategory === 'Necklaces' && (
+                        <>
+                          <option value="Chain Necklace">Chain Necklace</option>
+                          <option value="Pendant Necklace">Pendant Necklace</option>
+                          <option value="Pearl Necklace">Pearl Necklace</option>
+                          <option value="Choker">Choker</option>
+                        </>
+                      )}
+                      {subcategory === 'Rings' && (
+                        <>
+                          <option value="Engagement Ring">Engagement Ring</option>
+                          <option value="Wedding Ring">Wedding Ring</option>
+                          <option value="Fashion Ring">Fashion Ring</option>
+                          <option value="Cocktail Ring">Cocktail Ring</option>
+                        </>
+                      )}
+                      {subcategory === 'Earrings' && (
+                        <>
+                          <option value="Stud Earrings">Stud Earrings</option>
+                          <option value="Hoop Earrings">Hoop Earrings</option>
+                          <option value="Drop Earrings">Drop Earrings</option>
+                          <option value="Chandelier Earrings">Chandelier Earrings</option>
+                        </>
+                      )}
+                      {subcategory === 'Bracelets' && (
+                        <>
+                          <option value="Chain Bracelet">Chain Bracelet</option>
+                          <option value="Bangle">Bangle</option>
+                          <option value="Cuff Bracelet">Cuff Bracelet</option>
+                          <option value="Charm Bracelet">Charm Bracelet</option>
+                        </>
+                      )}
+                      {subcategory === 'Watches' && (
+                        <>
+                          <option value="Smart Watch">Smart Watch</option>
+                          <option value="Analog Watch">Analog Watch</option>
+                          <option value="Digital Watch">Digital Watch</option>
+                          <option value="Sports Watch">Sports Watch</option>
+                        </>
+                      )}
+                      {subcategory === 'Bags' && (
+                        <>
+                          <option value="Handbag">Handbag</option>
+                          <option value="Clutch">Clutch</option>
+                          <option value="Tote Bag">Tote Bag</option>
+                          <option value="Crossbody Bag">Crossbody Bag</option>
+                        </>
+                      )}
+                      {subcategory === 'Belts' && (
+                        <>
+                          <option value="Leather Belt">Leather Belt</option>
+                          <option value="Chain Belt">Chain Belt</option>
+                          <option value="Fabric Belt">Fabric Belt</option>
+                          <option value="Studded Belt">Studded Belt</option>
+                        </>
+                      )}
+                      
+                      {/* Art & Crafts Product Types */}
+                      {subcategory === 'Drawing Supplies' && (
+                        <>
+                          <option value="Pencils">Pencils</option>
+                          <option value="Markers">Markers</option>
+                          <option value="Charcoal">Charcoal</option>
+                          <option value="Pastels">Pastels</option>
+                        </>
+                      )}
+                      {subcategory === 'Painting' && (
+                        <>
+                          <option value="Acrylic Paint">Acrylic Paint</option>
+                          <option value="Oil Paint">Oil Paint</option>
+                          <option value="Watercolor">Watercolor</option>
+                          <option value="Paint Brushes">Paint Brushes</option>
+                        </>
+                      )}
+                      {subcategory === 'Sculpting' && (
+                        <>
+                          <option value="Clay">Clay</option>
+                          <option value="Sculpting Tools">Sculpting Tools</option>
+                          <option value="Modeling Clay">Modeling Clay</option>
+                          <option value="Sculpting Wire">Sculpting Wire</option>
+                        </>
+                      )}
+                      {subcategory === 'Crafting' && (
+                        <>
+                          <option value="Scissors">Scissors</option>
+                          <option value="Glue">Glue</option>
+                          <option value="Craft Paper">Craft Paper</option>
+                          <option value="Ribbon">Ribbon</option>
+                        </>
+                      )}
+                      {subcategory === 'Paper Crafts' && (
+                        <>
+                          <option value="Origami Paper">Origami Paper</option>
+                          <option value="Cardstock">Cardstock</option>
+                          <option value="Tissue Paper">Tissue Paper</option>
+                          <option value="Construction Paper">Construction Paper</option>
+                        </>
+                      )}
+                      {subcategory === 'Fabric Crafts' && (
+                        <>
+                          <option value="Fabric">Fabric</option>
+                          <option value="Thread">Thread</option>
+                          <option value="Needles">Needles</option>
+                          <option value="Sewing Machine">Sewing Machine</option>
+                        </>
+                      )}
+                      
+                      {/* Travel & Luggage Product Types */}
+                      {subcategory === 'Luggage' && (
+                        <>
+                          <option value="Suitcase">Suitcase</option>
+                          <option value="Carry-on">Carry-on</option>
+                          <option value="Duffel Bag">Duffel Bag</option>
+                          <option value="Travel Bag">Travel Bag</option>
+                        </>
+                      )}
+                      {subcategory === 'Travel Accessories' && (
+                        <>
+                          <option value="Travel Pillow">Travel Pillow</option>
+                          <option value="Eye Mask">Eye Mask</option>
+                          <option value="Ear Plugs">Ear Plugs</option>
+                          <option value="Travel Adapter">Travel Adapter</option>
+                        </>
+                      )}
+                      {subcategory === 'Backpacks' && (
+                        <>
+                          <option value="Hiking Backpack">Hiking Backpack</option>
+                          <option value="School Backpack">School Backpack</option>
+                          <option value="Travel Backpack">Travel Backpack</option>
+                          <option value="Laptop Backpack">Laptop Backpack</option>
+                        </>
+                      )}
+                      {subcategory === 'Travel Bags' && (
+                        <>
+                          <option value="Toiletry Bag">Toiletry Bag</option>
+                          <option value="Laundry Bag">Laundry Bag</option>
+                          <option value="Shoe Bag">Shoe Bag</option>
+                          <option value="Electronics Bag">Electronics Bag</option>
+                        </>
+                      )}
+                      {subcategory === 'Travel Organizers' && (
+                        <>
+                          <option value="Packing Cubes">Packing Cubes</option>
+                          <option value="Travel Wallet">Travel Wallet</option>
+                          <option value="Passport Holder">Passport Holder</option>
+                          <option value="Travel Document Organizer">Travel Document Organizer</option>
+                        </>
+                      )}
+                      
+                      {/* Industrial & Scientific Product Types */}
+                      {subcategory === 'Tools' && (
+                        <>
+                          <option value="Power Drill">Power Drill</option>
+                          <option value="Saw">Saw</option>
+                          <option value="Hammer">Hammer</option>
+                          <option value="Screwdriver">Screwdriver</option>
+                        </>
+                      )}
+                      {subcategory === 'Equipment' && (
+                        <>
+                          <option value="Safety Equipment">Safety Equipment</option>
+                          <option value="Measuring Equipment">Measuring Equipment</option>
+                          <option value="Testing Equipment">Testing Equipment</option>
+                          <option value="Industrial Equipment">Industrial Equipment</option>
+                        </>
+                      )}
+                      {subcategory === 'Safety' && (
+                        <>
+                          <option value="Safety Helmet">Safety Helmet</option>
+                          <option value="Safety Glasses">Safety Glasses</option>
+                          <option value="Safety Gloves">Safety Gloves</option>
+                          <option value="Safety Vest">Safety Vest</option>
+                        </>
+                      )}
+                      {subcategory === 'Lab Supplies' && (
+                        <>
+                          <option value="Test Tubes">Test Tubes</option>
+                          <option value="Beakers">Beakers</option>
+                          <option value="Microscopes">Microscopes</option>
+                          <option value="Lab Coats">Lab Coats</option>
+                        </>
+                      )}
+                      {subcategory === 'Measurement' && (
+                        <>
+                          <option value="Ruler">Ruler</option>
+                          <option value="Calipers">Calipers</option>
+                          <option value="Scale">Scale</option>
+                          <option value="Thermometer">Thermometer</option>
+                        </>
+                      )}
+                      {subcategory === 'Testing' && (
+                        <>
+                          <option value="pH Test Kit">pH Test Kit</option>
+                          <option value="Water Test Kit">Water Test Kit</option>
+                          <option value="Soil Test Kit">Soil Test Kit</option>
+                          <option value="Chemical Test Kit">Chemical Test Kit</option>
                         </>
                       )}
                     </select>
@@ -808,6 +1617,10 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                           width={100}
                           height={100}
                           className="h-20 w-20 rounded-lg object-cover border-2 border-blue-300"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/placeholder-image.svg';
+                          }}
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                           <button
@@ -868,6 +1681,10 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                         width={100}
                         height={100}
                         className="h-20 w-20 rounded-lg object-cover border-2 border-blue-300"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-image.svg';
+                        }}
                       />
                       <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                         <button

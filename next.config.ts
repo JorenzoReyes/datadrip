@@ -3,6 +3,35 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: 'standalone',
   serverExternalPackages: ['pg'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'example.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'source.unsplash.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+      },
+    ],
+  },
   // Enable file watching with polling for Docker on Windows
   ...(process.env.NODE_ENV === 'development' && {
     webpack: (config) => {
