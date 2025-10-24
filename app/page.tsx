@@ -17,14 +17,13 @@ export default function LoginPage() {
   const demoPages = useMemo(
     () => [
       [
-        { label: 'User', creds: 'user@example.com or demo_user / password123' },
-        { label: 'Admin', creds: 'admin@example.com or demo_admin / admin123' },
-        { label: 'System Admin', creds: 'system.admin@example.com or demo_system_admin / system123' }
-      ],
-      [
         { label: 'Electronics Owner', creds: 'electronics.owner@example.com or electronics_owner / electra123' },
         { label: 'Cosmetics Owner', creds: 'cosmetics.owner@example.com or cosmetics_owner / cosma123' },
         { label: 'Food & Drinks Owner', creds: 'food.owner@example.com or food_owner / gusto123' }
+      ],
+      [
+        { label: 'Admin', creds: 'admin@example.com or demo_admin / admin123' },
+        { label: 'System Admin', creds: 'system.admin@example.com or demo_system_admin / system123' }
       ]
     ],
     []
