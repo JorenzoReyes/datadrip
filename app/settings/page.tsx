@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '../contexts/auth';
 import { useIntegrationManagement } from '../contexts/integrations';
+import Header from '../components/Header';
 
 // Connect Platforms Component
 function ConnectPlatformsSection() {
@@ -50,28 +50,8 @@ function ConnectPlatformsSection() {
   const [showDisconnectModal, setShowDisconnectModal] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Handle OAuth callback
-  useEffect(() => {
-    const platform = searchParams.get('platform');
-    const status = searchParams.get('status');
-    const oauthError = searchParams.get('oauth_error');
-    const oauthMessage = searchParams.get('message');
-
-    if (platform && status === 'success' && oauthMessage) {
-      // OAuth success - create integration
-      handleOAuthSuccess(platform, oauthMessage);
-    } else if (oauthError) {
-      // OAuth error
-      setMessage({ 
-        type: 'error', 
-        text: `OAuth authentication failed: ${decodeURIComponent(oauthError)}` 
-      });
-      setTimeout(() => setMessage(null), 5000);
-    }
-  }, [searchParams]);
-
   // Handle OAuth success
-  const handleOAuthSuccess = async (platform: string, successMessage: string) => {
+  const handleOAuthSuccess = useCallback(async (platform: string, successMessage: string) => {
     if (!user) return;
 
     try {
@@ -115,7 +95,27 @@ function ConnectPlatformsSection() {
       console.error('OAuth success handling error:', err);
       setMessage({ type: 'error', text: 'Failed to complete OAuth integration. Please try again.' });
     }
-  };
+  }, [user, platformTemplates, createIntegration]);
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const platform = searchParams.get('platform');
+    const status = searchParams.get('status');
+    const oauthError = searchParams.get('oauth_error');
+    const oauthMessage = searchParams.get('message');
+
+    if (platform && status === 'success' && oauthMessage) {
+      // OAuth success - create integration
+      handleOAuthSuccess(platform, oauthMessage);
+    } else if (oauthError) {
+      // OAuth error
+      setMessage({ 
+        type: 'error', 
+        text: `OAuth authentication failed: ${decodeURIComponent(oauthError)}` 
+      });
+      setTimeout(() => setMessage(null), 5000);
+    }
+  }, [searchParams, handleOAuthSuccess]);
 
   // Link OAuth integration to existing demo data
   const linkOAuthToDemoData = async (userEmail: string, platform: string) => {
@@ -218,33 +218,33 @@ function ConnectPlatformsSection() {
         // For API key based platforms, use the existing flow
         // Simulate connection process
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Create integration in admin system
-        const userId = currentUser.email.replace('@', '_').replace('.', '_');
-        const integrationData = {
-          platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
-          name: `${template.name} Integration - ${currentUser.fname || 'User'} ${currentUser.lname || ''}`,
-          apiKey: `user_${userId}_${platformId}_${Date.now()}`, // Simulated API key
-          apiSecret: `secret_${userId}_${platformId}_${Date.now()}`, // Simulated API secret
-          webhookUrl: '',
-          syncFrequency: 'daily' as const,
-          configuration: { ...template.defaultConfiguration }
-        };
 
-        const result = await createIntegration(integrationData, currentUser.email);
+      // Create integration in admin system
+      const userId = currentUser.email.replace('@', '_').replace('.', '_');
+      const integrationData = {
+        platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
+        name: `${template.name} Integration - ${currentUser.fname || 'User'} ${currentUser.lname || ''}`,
+        apiKey: `user_${userId}_${platformId}_${Date.now()}`, // Simulated API key
+        apiSecret: `secret_${userId}_${platformId}_${Date.now()}`, // Simulated API secret
+        webhookUrl: '',
+        syncFrequency: 'daily' as const,
+        configuration: { ...template.defaultConfiguration }
+      };
+
+      const result = await createIntegration(integrationData, currentUser.email);
+      
+      if (result.success) {
+        // Update local platform status
+        setPlatforms(prev => prev.map(p => 
+          p.id === platformId 
+            ? { ...p, status: 'connected', lastSync: new Date().toISOString() }
+            : p
+        ));
         
-        if (result.success) {
-          // Update local platform status
-          setPlatforms(prev => prev.map(p => 
-            p.id === platformId 
-              ? { ...p, status: 'connected', lastSync: new Date().toISOString() }
-              : p
-          ));
-          
-          setMessage({ type: 'success', text: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}! Integration has been added to admin management.` });
-          setTimeout(() => setMessage(null), 5000);
-        } else {
-          throw new Error(result.error || 'Failed to create integration');
+        setMessage({ type: 'success', text: `Successfully connected to ${platforms.find(p => p.id === platformId)?.name}! Integration has been added to admin management.` });
+        setTimeout(() => setMessage(null), 5000);
+      } else {
+        throw new Error(result.error || 'Failed to create integration');
         }
       }
     } catch (err) {
@@ -611,13 +611,13 @@ export default function SettingsPage() {
       // Handle password change logic here
       setMessage({ type: 'success', text: 'Password updated successfully!' });
       setEditingSecurity(false);
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }));
-      setTimeout(() => setMessage(null), 3000);
+        setFormData(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        }));
+        setTimeout(() => setMessage(null), 3000);
     } catch {
       setMessage({ type: 'error', text: 'Failed to update password. Please try again.' });
     } finally {
@@ -657,13 +657,13 @@ export default function SettingsPage() {
       <Header active="settings" />
       
       <div className="flex max-w-7xl mx-auto">
-        {/* Left Sidebar */}
+            {/* Left Sidebar */}
         <aside className="w-80 bg-white rounded-xl border border-gray-200 p-6 mx-6 my-6 shadow-sm">
-          <div className="sticky top-6">
+              <div className="sticky top-6">
             <h3 className="text-2xl font-bold text-gray-900 mb-8">Settings</h3>
-            
+                
             <nav className="space-y-3 mb-8">
-              <button
+                  <button
                 onClick={() => setActiveSection('account')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
                   activeSection === 'account'
@@ -675,41 +675,41 @@ export default function SettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Account Details
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('platforms')}
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveSection('platforms')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
-                  activeSection === 'platforms'
+                      activeSection === 'platforms'
                     ? 'bg-blue-500 text-white'
                     : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
+                    }`}
+                  >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
                 Connect Platforms
-              </button>
-            </nav>
+                  </button>
+                </nav>
 
             {/* Help Section */}
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Need Help?</h4>
               <p className="text-xs text-gray-600">
-                Contact support if you need assistance with your account settings.
-              </p>
-            </div>
-          </div>
-        </aside>
+                    Contact support if you need assistance with your account settings.
+                  </p>
+                </div>
+              </div>
+            </aside>
 
-        {/* Main Content */}
+            {/* Main Content */}
         <main className="flex-1 px-6 py-8">
           {activeSection === 'account' && (
             <>
-              <div className="mb-6">
+          <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Account Settings</h2>
                 <p className="text-gray-600 mt-2">Please review and update your account information below</p>
-              </div>
+          </div>
 
               {/* Message Display */}
               {message && (
@@ -748,31 +748,31 @@ export default function SettingsPage() {
 
                 {editingUserDetails ? (
                   <form onSubmit={handleUserDetailsSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleInputChange}
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                      <div>
+                      required
+                    />
+                  </div>
+                  <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          value={formData.lastName}
-                          onChange={handleInputChange}
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div>
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
                       <input
                         type="text"
@@ -785,15 +785,15 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
+                    required
+                  />
+                </div>
                     <div className="flex justify-end gap-3 pt-4">
                       <button
                         type="button"
@@ -923,15 +923,15 @@ export default function SettingsPage() {
                       >
                         Cancel
                       </button>
-                      <button
-                        type="submit"
-                        disabled={isLoading}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                      >
+                  >
                         {isLoading ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    </div>
-                  </form>
+                  </button>
+                </div>
+              </form>
                 ) : (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3 border-b border-gray-100">
@@ -963,7 +963,7 @@ export default function SettingsPage() {
                       </div>
                       <span className="text-gray-400">Confirm new password</span>
                     </div>
-                  </div>
+            </div>
                 )}
               </div>
             </>
@@ -976,9 +976,9 @@ export default function SettingsPage() {
           {/* Version Indicator */}
           <div className="mt-8 text-right">
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">v0.6.0</span>
-          </div>
+       </div>
         </main>
-      </div>
-    </div>
+     </div>
+  </div>
   );
-}
+ }

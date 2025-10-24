@@ -92,7 +92,7 @@ async function linkOAuthToDemoData(userId: string, platform: string, businessOwn
       rating_value: number | null;
       rating_count: number | null;
       joined_at: string;
-      metadata: any;
+      metadata: Record<string, unknown>;
     }>(`
       SELECT shop_id, name, platform, platform_shop_id, url, status, products_count,
              followers_count, following_count, chat_performance_percent, rating_value,
@@ -137,8 +137,8 @@ async function linkOAuthToDemoData(userId: string, platform: string, businessOwn
       subcategory: string;
       price: number;
       stock: number;
-      attributes: any;
-      images: any;
+      attributes: Record<string, unknown>;
+      images: string[];
       weight_value: number;
       weight_unit: string;
       length_cm: number;

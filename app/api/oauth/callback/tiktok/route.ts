@@ -69,21 +69,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tokenData = await tokenResponse.json();
+        // const tokenData = await tokenResponse.json();
     
     // Clean up state
     global.oauthStates.delete(state);
 
-    // Store tokens securely (in production, use database)
-    const tokenStorage = {
-      userId: stateData.userId,
-      platform: 'tiktok',
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
-      expiresAt: Date.now() + (tokenData.expires_in * 1000),
-      scope: tokenData.scope,
-      createdAt: new Date().toISOString()
-    };
+        // Store tokens securely (in production, use database)
+        // const tokenStorage = {
+        //   userId: stateData.userId,
+        //   platform: 'tiktok',
+        //   accessToken: tokenData.access_token,
+        //   refreshToken: tokenData.refresh_token,
+        //   expiresAt: Date.now() + (tokenData.expires_in * 1000),
+        //   scope: tokenData.scope,
+        //   createdAt: new Date().toISOString()
+        // };
 
     // For demo purposes, store in localStorage via query params
     // In production, store in database and redirect to success page

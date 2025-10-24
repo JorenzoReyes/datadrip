@@ -67,21 +67,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tokenData = await tokenResponse.json();
+        // const tokenData = await tokenResponse.json();
     
     // Clean up state
     global.oauthStates.delete(state);
 
-    // Store tokens securely (in production, use database)
-    const tokenStorage = {
-      userId: stateData.userId,
-      platform: 'shopee',
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
-      expiresAt: Date.now() + (tokenData.expires_in * 1000),
-      shopId: tokenData.shop_id,
-      createdAt: new Date().toISOString()
-    };
+        // Store tokens securely (in production, use database)
+        // const tokenStorage = {
+        //   userId: stateData.userId,
+        //   platform: 'shopee',
+        //   accessToken: tokenData.access_token,
+        //   refreshToken: tokenData.refresh_token,
+        //   expiresAt: Date.now() + (tokenData.expires_in * 1000),
+        //   shopId: tokenData.shop_id,
+        //   createdAt: new Date().toISOString()
+        // };
 
     // For demo purposes, redirect to success page
     const successParams = new URLSearchParams({
