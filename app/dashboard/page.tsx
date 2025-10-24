@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
+import ExportReportsModal from '../components/ExportReportsModal';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, PieChart, Pie } from 'recharts';
 
 export default function DashboardPage() {
@@ -21,6 +22,8 @@ export default function DashboardPage() {
     product2Name: string;
     product3Name: string;
   }[]>([]);
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
+  const [showExportModal, setShowExportModal] = useState(false);
   const [weeklyTotals, setWeeklyTotals] = useState<{ all: number; tiktok: number; lazada: number; shopee: number }>({ all: 0, tiktok: 0, lazada: 0, shopee: 0 });
   const [revenueByCategory, setRevenueByCategory] = useState<{ category: string; revenue: number; percentage: number }[]>([]);
   const [aovTrend, setAovTrend] = useState<{ date: string; tiktok?: number; shopee?: number; lazada?: number }[]>([]);
@@ -37,6 +40,46 @@ export default function DashboardPage() {
   const [availableYears, setAvailableYears] = useState<number[]>([]);
 
 
+
+  // Export function
+  const handleExport = async (options: { reportType: string; format: string; dateRange: string }) => {
+    try {
+      const response = await fetch('/api/export/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.user_id,
+          ...options
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filename = contentDisposition
+        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+        : `export_${options.reportType}_${new Date().toISOString().split('T')[0]}.${options.format}`;
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export report. Please try again.');
+    }
+  };
 
   // Generate available weeks on mount
   useEffect(() => {
@@ -384,7 +427,23 @@ export default function DashboardPage() {
                 <select
                   id="week-filter"
                   value={selectedWeekIndex}
-                  onChange={(e) => setSelectedWeekIndex(Number(e.target.value))}
+                  onChange={(e) => {
+                    const newIndex = Number(e.target.value);
+                    setSelectedWeekIndex(newIndex);
+                    // Store timeline context for insights chat
+                    const selectedWeek = availableWeeks[newIndex];
+                    if (selectedWeek) {
+                      localStorage.setItem('dashboardTimeline', JSON.stringify({
+                        type: 'week',
+                        index: newIndex,
+                        label: selectedWeek.label,
+                        startDate: selectedWeek.startDate.toISOString(),
+                        endDate: selectedWeek.endDate.toISOString(),
+                        month: selectedWeek.month,
+                        year: selectedWeek.year
+                      }));
+                    }
+                  }}
                   className="text-xs px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                 >
                   {monthlyWeeks[currentMonthPage]?.map((week, index) => {
@@ -750,12 +809,25 @@ export default function DashboardPage() {
         </div>
 
         {/* Export Reports Button */}
-        <div className="flex justify-end">
-          <button className="bg-header text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gray-700 transition text-sm">
-            Export Reports
+        <div className="flex justify-end mt-8 pt-6 border-t border-gray-200">
+          <button 
+            onClick={() => setShowExportModal(true)}
+            className="bg-header text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gray-700 transition text-sm flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Export Reports</span>
           </button>
         </div>
       </main>
+
+      {/* Export Reports Modal */}
+      <ExportReportsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={handleExport}
+      />
     </div>
   );
 }

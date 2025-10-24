@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Header from '../components/Header';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/auth';
 import { useIntegrationManagement } from '../contexts/integrations';
+import Header from '../components/Header';
 import RedirectToShopModal from '../components/RedirectToShopModal';
 import Image from 'next/image';
+
 
 interface UserSettings {
   firstName: string;
@@ -165,13 +166,13 @@ export default function SettingsPage() {
       // Handle password change logic here
       setMessage({ type: 'success', text: 'Password updated successfully!' });
       setEditingSecurity(false);
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }));
-      setTimeout(() => setMessage(null), 3000);
+        setFormData(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        }));
+        setTimeout(() => setMessage(null), 3000);
     } catch {
       setMessage({ type: 'error', text: 'Failed to update password. Please try again.' });
     } finally {
@@ -211,13 +212,13 @@ export default function SettingsPage() {
       <Header active="settings" />
       
       <div className="flex max-w-7xl mx-auto">
-        {/* Left Sidebar */}
+            {/* Left Sidebar */}
         <aside className="w-80 bg-white rounded-xl border border-gray-200 p-6 mx-6 my-6 shadow-sm">
-          <div className="sticky top-6">
+              <div className="sticky top-6">
             <h3 className="text-2xl font-bold text-gray-900 mb-8">Settings</h3>
-            
+                
             <nav className="space-y-3 mb-8">
-              <button
+                  <button
                 onClick={() => setActiveSection('account')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
                   activeSection === 'account'
@@ -229,10 +230,10 @@ export default function SettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Account Details
-              </button>
-              
-              <button
-                onClick={() => setActiveSection('platforms')}
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveSection('platforms')}
                 className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 ${
                   activeSection === 'platforms'
                     ? 'bg-green-700 text-white'
@@ -243,8 +244,8 @@ export default function SettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
                 Connect Platforms
-              </button>
-            </nav>
+                  </button>
+                </nav>
 
             {/* Help Section */}
             <div className="bg-green-100 rounded-lg p-4 border border-green-300">
@@ -256,14 +257,14 @@ export default function SettingsPage() {
           </div>
         </aside>
 
-        {/* Main Content */}
+            {/* Main Content */}
         <main className="flex-1 px-6 py-8">
           {activeSection === 'account' && (
             <>
-              <div className="mb-6">
+          <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Account Settings</h2>
                 <p className="text-gray-600 mt-2">Please review and update your account information below</p>
-              </div>
+          </div>
 
               {/* Message Display */}
               {message && (
@@ -302,8 +303,8 @@ export default function SettingsPage() {
 
                 {editingUserDetails ? (
                   <form onSubmit={handleUserDetailsSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                         <input
                           type="text"
@@ -483,9 +484,9 @@ export default function SettingsPage() {
                         className="px-6 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 transition-colors"
                       >
                         {isLoading ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    </div>
-                  </form>
+                  </button>
+                </div>
+              </form>
                 ) : (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3 border-b border-gray-100">
@@ -517,7 +518,7 @@ export default function SettingsPage() {
                       </div>
                       <span className="text-gray-400">Confirm new password</span>
                     </div>
-                  </div>
+            </div>
                 )}
               </div>
             </>
@@ -530,10 +531,10 @@ export default function SettingsPage() {
           {/* Version Indicator */}
           <div className="mt-8 text-right">
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">v0.6.0</span>
-          </div>
+       </div>
         </main>
-      </div>
-    </div>
+     </div>
+  </div>
   );
 }
 
@@ -547,16 +548,156 @@ interface PlatformsSectionProps {
 }
 
 function PlatformsSection({ user }: PlatformsSectionProps) {
-  const { integrations, platformTemplates, deleteIntegrationByUser, testConnection } = useIntegrationManagement();
+  const { integrations, platformTemplates, deleteIntegrationByUser, testConnection, createIntegration } = useIntegrationManagement();
+  const [showConnectModal, setShowConnectModal] = useState(false);
   const [showRedirectModal, setShowRedirectModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('');
   const [testingIntegration, setTestingIntegration] = useState<string | null>(null);
   const [disconnectingPlatform, setDisconnectingPlatform] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const searchParams = useSearchParams();
 
   // Get user's integrations
   const userIntegrations = integrations.filter(integration => 
     integration.createdBy === user.email
   );
+
+  // Handle OAuth success
+  const handleOAuthSuccess = useCallback(async (platform: string, successMessage: string) => {
+    if (!user) return;
+
+    try {
+      // Find the platform template
+      const template = platformTemplates.find(t => t.platform === platform);
+      if (!template) {
+        throw new Error('Platform template not found');
+      }
+
+      // Create integration in admin system
+      const userId = user.email.replace('@', '_').replace('.', '_');
+      const integrationData = {
+        platform: template.platform as 'shopee' | 'lazada' | 'tiktok' | 'custom',
+        name: `${template.name} Integration - ${user.fname || 'User'} ${user.lname || ''}`,
+        accessToken: `oauth_token_${userId}_${platform}_${Date.now()}`,
+        refreshToken: `oauth_refresh_${userId}_${platform}_${Date.now()}`,
+        webhookUrl: '',
+        syncFrequency: 'daily' as const,
+        configuration: { ...template.defaultConfiguration }
+      };
+
+      const result = await createIntegration(integrationData, user.email);
+      
+      if (result.success) {
+        // Link OAuth integration to existing demo data
+        await linkOAuthToDemoData(user.email, platform);
+        
+        setMessage({ type: 'success', text: `${successMessage} Demo data has been linked and will appear in your dashboard.` });
+        setTimeout(() => setMessage(null), 5000);
+      } else {
+        throw new Error(result.error || 'Failed to create integration');
+      }
+    } catch (err) {
+      console.error('OAuth success handling error:', err);
+      setMessage({ type: 'error', text: 'Failed to complete OAuth integration. Please try again.' });
+    }
+  }, [user, platformTemplates, createIntegration]);
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const platform = searchParams.get('platform');
+    const status = searchParams.get('status');
+    const oauthError = searchParams.get('oauth_error');
+    const oauthMessage = searchParams.get('message');
+
+    if (platform && status === 'success' && oauthMessage) {
+      handleOAuthSuccess(platform, oauthMessage);
+    } else if (oauthError) {
+      setMessage({ 
+        type: 'error', 
+        text: `OAuth authentication failed: ${decodeURIComponent(oauthError)}` 
+      });
+      setTimeout(() => setMessage(null), 5000);
+    }
+  }, [searchParams, handleOAuthSuccess]);
+
+  // Link OAuth integration to existing demo data
+  const linkOAuthToDemoData = async (userEmail: string, platform: string) => {
+    try {
+      const demoUserMapping = {
+        'user@example.com': 'electronics.owner@example.com',
+        'admin@example.com': 'cosmetics.owner@example.com',
+        'system.admin@example.com': 'food.owner@example.com'
+      };
+
+      const businessOwnerEmail = demoUserMapping[userEmail as keyof typeof demoUserMapping] || 'electronics.owner@example.com';
+      
+      const syncResponse = await fetch('/api/admin/sync-sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: platform,
+          userId: userEmail,
+          businessOwnerEmail: businessOwnerEmail,
+          forceSync: true
+        })
+      });
+
+      if (syncResponse.ok) {
+        console.log(`✅ Linked OAuth integration to demo data for ${platform}`);
+      } else {
+        console.warn(`⚠️ Could not sync demo data for ${platform}, but OAuth connection succeeded`);
+      }
+    } catch (error) {
+      console.error('Error linking OAuth to demo data:', error);
+    }
+  };
+
+  const handleConnect = async (platformId: string) => {
+    if (!user) return;
+    
+    setIsConnecting(platformId);
+    setMessage(null);
+
+    try {
+      // Find the platform template
+      const template = platformTemplates.find(t => t.platform === platformId);
+      if (!template) {
+        throw new Error('Platform template not found');
+      }
+
+      // Check if platform uses OAuth
+      if (template.authType === 'oauth2') {
+        // Initiate OAuth flow
+        const response = await fetch('/api/oauth/initiate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            platform: platformId,
+            userId: user.email
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success && result.authUrl) {
+          // Redirect to OAuth provider
+          window.location.href = result.authUrl;
+          return; // Don't set isConnecting to null as we're redirecting
+        } else {
+          throw new Error(result.error || 'Failed to initiate OAuth flow');
+        }
+      } else {
+        // For API key based platforms, show the modal
+        setShowConnectModal(true);
+      }
+    } catch (err) {
+      console.error('Connection error:', err);
+      setMessage({ type: 'error', text: 'Connection failed. Please try again.' });
+    } finally {
+      setIsConnecting(null);
+    }
+  };
 
   const handleTestConnection = async (integrationId: string) => {
     setTestingIntegration(integrationId);
@@ -620,6 +761,17 @@ function PlatformsSection({ user }: PlatformsSectionProps) {
         <h2 className="text-2xl font-bold text-gray-900">Connect Your Shops</h2>
         <p className="text-gray-600 mt-2">Connect your e-commerce platforms to sync sales data and manage your business</p>
       </div>
+
+      {/* Message Display */}
+      {message && (
+        <div className={`mb-6 rounded-lg p-4 ${
+          message.type === 'success' 
+            ? 'bg-green-50 border border-green-200 text-green-700'
+            : 'bg-red-50 border border-red-200 text-red-700'
+        }`}>
+          <p className="text-sm">{message.text}</p>
+        </div>
+      )}
 
       {/* Platform Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -701,16 +853,16 @@ function PlatformsSection({ user }: PlatformsSectionProps) {
                     <p className="text-sm text-gray-600 mb-4">
                       Connect your {platform} shop to start syncing data
                     </p>
-                     <button
-                       onClick={() => {
-                         setSelectedPlatform(platform);
-                         setShowRedirectModal(true);
-                       }}
-                       className="w-full px-4 py-2 rounded-lg hover:opacity-90 transition-colors font-medium text-sm text-white"
-                       style={{ backgroundColor: getPlatformColor(platform) }}
-                     >
-                       Connect {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                     </button>
+                    <button
+                      onClick={() => {
+                        setSelectedPlatform(platform);
+                        setShowRedirectModal(true);
+                      }}
+                      className="w-full px-4 py-2 rounded-lg hover:opacity-90 transition-colors font-medium text-sm text-white"
+                      style={{ backgroundColor: getPlatformColor(platform) }}
+                    >
+                      Connect {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                    </button>
                   </>
                 )}
               </div>
