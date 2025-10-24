@@ -23,17 +23,23 @@ export default function DashboardPage() {
     product3Name: string;
   }[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<string>('30');
-  const [showDateFilter, setShowDateFilter] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [weeklyTotals, setWeeklyTotals] = useState<{ all: number; tiktok: number; lazada: number; shopee: number }>({ all: 0, tiktok: 0, lazada: 0, shopee: 0 });
   const [revenueByCategory, setRevenueByCategory] = useState<{ category: string; revenue: number; percentage: number }[]>([]);
   const [aovTrend, setAovTrend] = useState<{ date: string; tiktok?: number; shopee?: number; lazada?: number }[]>([]);
   
   // Week selection state
-  type WeekOption = { label: string; startDate: Date; endDate: Date };
+  type WeekOption = { label: string; startDate: Date; endDate: Date; month: string; year: number };
   const [availableWeeks, setAvailableWeeks] = useState<WeekOption[]>([]);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
+  const [currentMonthPage, setCurrentMonthPage] = useState<number>(0);
+  const [monthlyWeeks, setMonthlyWeeks] = useState<WeekOption[][]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+
+
 
   // Export function
   const handleExport = async (options: { reportType: string; format: string; dateRange: string }) => {
@@ -78,15 +84,14 @@ export default function DashboardPage() {
   // Generate available weeks on mount
   useEffect(() => {
     const weeks: WeekOption[] = [];
-    const startMonth = new Date('2025-10-01');
-    const endMonth = new Date('2025-11-30');
+    const startMonth = new Date('2025-09-01');
+    const endMonth = new Date('2025-12-31');
     
-    // Find the first Sunday on or before October 1, 2025
+    // Find the first Sunday on or before September 1, 2025
     const firstSunday = new Date(startMonth);
     firstSunday.setDate(firstSunday.getDate() - firstSunday.getDay());
     
     let currentWeekStart = new Date(firstSunday);
-    let weekNumber = 1;
     
     // Generate weeks until we cover the entire date range
     while (currentWeekStart <= endMonth) {
@@ -96,19 +101,47 @@ export default function DashboardPage() {
       const startStr = currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
       const endStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
       const year = currentWeekStart.getFullYear();
+      const month = currentWeekStart.toLocaleDateString('en-US', { month: 'long', timeZone: 'Asia/Manila' });
       
       weeks.push({
-        label: `Week ${weekNumber}: ${startStr} - ${endStr}, ${year}`,
+        label: `${startStr} - ${endStr}, ${year}`,
         startDate: new Date(currentWeekStart),
-        endDate: new Date(weekEnd)
+        endDate: new Date(weekEnd),
+        month: month,
+        year: year
       });
       
       currentWeekStart = new Date(currentWeekStart);
       currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-      weekNumber++;
     }
     
     setAvailableWeeks(weeks);
+    
+    // Group weeks by month and limit to 4 weeks per month
+    const monthlyGroups: WeekOption[][] = [];
+    const monthGroups = new Map<string, WeekOption[]>();
+    
+    weeks.forEach(week => {
+      const monthKey = `${week.month} ${week.year}`;
+      if (!monthGroups.has(monthKey)) {
+        monthGroups.set(monthKey, []);
+      }
+      monthGroups.get(monthKey)!.push(week);
+    });
+    
+    // Convert to array and limit each month to 4 weeks
+    monthGroups.forEach(monthWeeks => {
+      const limitedWeeks = monthWeeks.slice(0, 4);
+      monthlyGroups.push(limitedWeeks);
+    });
+    
+    setMonthlyWeeks(monthlyGroups);
+    
+    // Extract unique months and years
+    const uniqueMonths = [...new Set(weeks.map(week => week.month))];
+    const uniqueYears = [...new Set(weeks.map(week => week.year))];
+    setAvailableMonths(uniqueMonths);
+    setAvailableYears(uniqueYears.sort());
     
     // Find and select the current week by default
     const now = new Date();
@@ -118,7 +151,50 @@ export default function DashboardPage() {
     );
     
     setSelectedWeekIndex(currentWeekIdx >= 0 ? currentWeekIdx : weeks.length - 1);
+    
+    // Find which month page contains the current week
+    const currentMonthIdx = monthlyGroups.findIndex(monthWeeks => 
+      monthWeeks.some(week => 
+        phTime >= week.startDate && phTime <= week.endDate
+      )
+    );
+    setCurrentMonthPage(currentMonthIdx >= 0 ? currentMonthIdx : 0);
+    
+    // Set initial month and year
+    if (monthlyGroups[currentMonthIdx] && monthlyGroups[currentMonthIdx].length > 0) {
+      setSelectedMonth(monthlyGroups[currentMonthIdx][0].month);
+      setSelectedYear(monthlyGroups[currentMonthIdx][0].year);
+    }
   }, []);
+
+  // Update selected week when month page changes
+  useEffect(() => {
+    if (monthlyWeeks[currentMonthPage] && monthlyWeeks[currentMonthPage].length > 0) {
+      const firstWeekOfMonth = monthlyWeeks[currentMonthPage][0];
+      const globalIndex = availableWeeks.findIndex(w => 
+        w.startDate.getTime() === firstWeekOfMonth.startDate.getTime()
+      );
+      if (globalIndex >= 0) {
+        setSelectedWeekIndex(globalIndex);
+      }
+    }
+  }, [currentMonthPage, monthlyWeeks, availableWeeks]);
+
+  // Update month page when month or year changes
+  useEffect(() => {
+    if (selectedMonth && selectedYear && monthlyWeeks.length > 0) {
+      const monthIndex = monthlyWeeks.findIndex(monthWeeks => 
+        monthWeeks.length > 0 && 
+        monthWeeks[0].month === selectedMonth && 
+        monthWeeks[0].year === selectedYear
+      );
+      if (monthIndex >= 0) {
+        setCurrentMonthPage(monthIndex);
+      }
+    }
+  }, [selectedMonth, selectedYear, monthlyWeeks]);
+
+  // Close platform dropdown when clicking outside
 
   useEffect(() => {
     // Check if user is authenticated
@@ -144,9 +220,9 @@ export default function DashboardPage() {
         const res = await fetch(`/api/shops/metrics?email=${email}&startDate=${startDateStrForMetrics}&endDate=${endDateStrForMetrics}`, { cache: 'no-store' });
         const json = await res.json();
 
+
         // Fetch top selling products
-        const platformParam = selectedPlatform === 'all' ? '' : `&platform=${selectedPlatform}`;
-        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30${platformParam}`, { cache: 'no-store' });
+        const topProductsRes = await fetch(`/api/products/top-selling?email=${email}&limit=5&days=30`, { cache: 'no-store' });
         const topProductsJson = await topProductsRes.json();
         setTopProducts(topProductsJson.topProducts || []);
 
@@ -163,12 +239,12 @@ export default function DashboardPage() {
         const startDateStrForCharts = selectedWeekForCharts.startDate.toISOString().split('T')[0];
         const endDateStrForCharts = selectedWeekForCharts.endDate.toISOString().split('T')[0];
         
-        const categoryRes = await fetch(`/api/products/revenue-by-category?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}&platform=${selectedPlatform}`, { cache: 'no-store' });
+        const categoryRes = await fetch(`/api/products/revenue-by-category?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}`, { cache: 'no-store' });
         const categoryJson = await categoryRes.json();
         setRevenueByCategory(categoryJson.revenueByCategory || []);
 
         // Fetch AOV trend data for current week
-        const aovRes = await fetch(`/api/products/aov-trend?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}&platform=${selectedPlatform}`, { cache: 'no-store' });
+        const aovRes = await fetch(`/api/products/aov-trend?email=${email}&startDate=${startDateStrForCharts}&endDate=${endDateStrForCharts}`, { cache: 'no-store' });
         const aovJson = await aovRes.json();
         setAovTrend(aovJson.aovTrend || []);
 
@@ -244,7 +320,7 @@ export default function DashboardPage() {
       }
     }
     if (!isLoading && user && availableWeeks.length > 0) load();
-  }, [isLoading, user, selectedPlatform, selectedWeekIndex, availableWeeks]);
+  }, [isLoading, user, selectedWeekIndex, availableWeeks]);
 
   if (isLoading) {
     return (
@@ -313,21 +389,59 @@ export default function DashboardPage() {
           <div className="text-right">
             <p className="text-gray-600 mb-2">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' })}</p>
             
-            {/* Week Filter Dropdown */}
+            {/* Filters */}
             <div className="flex items-center gap-2 justify-end">
-              <label htmlFor="week-filter" className="text-xs text-gray-500 font-medium">View Week:</label>
-              <select
-                id="week-filter"
-                value={selectedWeekIndex}
-                onChange={(e) => setSelectedWeekIndex(Number(e.target.value))}
-                className="text-xs px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
-              >
-                {availableWeeks.map((week, index) => (
-                  <option key={index} value={index}>
-                    {week.label}
-                  </option>
-                ))}
-              </select>
+              {/* Week Filter */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="week-filter" className="text-xs text-gray-500 font-medium">View Week:</label>
+                
+                {/* Month Selection */}
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="text-xs px-2 py-1.5 border border-gray-300 rounded bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                >
+                  <option value="">Month</option>
+                  {availableMonths.map((month, index) => (
+                    <option key={index} value={month}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+                
+                {/* Year Selection */}
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="text-xs px-2 py-1.5 border border-gray-300 rounded bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                >
+                  <option value="">Year</option>
+                  {availableYears.map((year, index) => (
+                    <option key={index} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                
+                {/* Week Selection */}
+                <select
+                  id="week-filter"
+                  value={selectedWeekIndex}
+                  onChange={(e) => setSelectedWeekIndex(Number(e.target.value))}
+                  className="text-xs px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                >
+                  {monthlyWeeks[currentMonthPage]?.map((week, index) => {
+                    const globalIndex = availableWeeks.findIndex(w => 
+                      w.startDate.getTime() === week.startDate.getTime()
+                    );
+                    return (
+                      <option key={index} value={globalIndex}>
+                        {week.label}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -335,19 +449,19 @@ export default function DashboardPage() {
         {/* Sales Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">Total Sales (Current Week)</h4>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Total Sales</h4>
             <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.all).toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">TikTok Sales (Current Week)</h4>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">TikTok Sales</h4>
             <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.tiktok).toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">Lazada Sales (Current Week)</h4>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Lazada Sales</h4>
             <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.lazada).toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-gray-600 text-xs font-medium mb-2">Shopee Sales (Current Week)</h4>
+            <h4 className="text-gray-600 text-xs font-medium mb-2">Shopee Sales</h4>
             <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.shopee).toLocaleString()}</p>
           </div>
         </div>
@@ -355,7 +469,7 @@ export default function DashboardPage() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-base font-semibold font-title text-header mb-4">Top 3 Products by Platform (Current Week)</h4>
+            <h4 className="text-base font-semibold font-title text-header mb-4">Top 3 Products by Platform</h4>
             <div className="h-64">
               {topWeeklyProducts.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -364,8 +478,12 @@ export default function DashboardPage() {
                       dataKey="platformDisplay" 
                       tick={{ fontSize: 12 }}
                       interval={0}
+                      axisLine={false}
                     />
-                    <YAxis tick={{ fontSize: 12 }} />
+                    <YAxis 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value: number) => `₱${value.toFixed(0)}`}
+                    />
                     <Tooltip 
                       formatter={(value: number, name: string, props: { payload: Record<string, unknown> }) => {
                         if (value === 0) return null;
@@ -434,7 +552,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-base font-semibold font-title text-header mb-4">Sales Trend by Platform (Current Week)</h4>
+            <h4 className="text-base font-semibold font-title text-header mb-4">Sales Trend by Platform</h4>
             <div className="h-64">
               {processedDailySales.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -448,10 +566,27 @@ export default function DashboardPage() {
                     height={60}
                     padding={{ left: 20, right: 20 }}
                   />
-                  <YAxis />
+                  <YAxis 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value: number) => `₱${value.toFixed(0)}`}
+                  />
                   <Tooltip 
-                    formatter={(value: number) => [`₱${Math.round(value).toLocaleString()}`]}
-                    labelFormatter={(label: string) => `Date: ${label}`}
+                    formatter={(value: number, name: string) => [`₱${Math.round(value).toLocaleString()}`, name]}
+                    labelFormatter={(label: string) => {
+                      const date = new Date(label);
+                      return `Date: ${date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        timeZone: 'Asia/Manila'
+                      })}`;
+                    }}
+                    contentStyle={{ 
+                      fontSize: '12px',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
                   />
                   <Line 
                     type="monotone" 
@@ -492,7 +627,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           {/* Revenue by Product Category - Donut Chart */}
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-base font-semibold font-title text-header mb-4">Revenue by Product Category (Current Week)</h4>
+            <h4 className="text-base font-semibold font-title text-header mb-4">Top 5 Revenue by Product Category</h4>
             <div className="h-64">
               {revenueByCategory.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -549,7 +684,7 @@ export default function DashboardPage() {
 
           {/* Average Order Value Trend - Line Chart */}
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <h4 className="text-base font-semibold font-title text-header mb-4">Average Order Value Trend (Current Week)</h4>
+            <h4 className="text-base font-semibold font-title text-header mb-4">Average Order Value Trend</h4>
             <div className="h-64">
               {aovTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -561,6 +696,8 @@ export default function DashboardPage() {
                         const date = new Date(value);
                         return `${date.getMonth() + 1}/${date.getDate()}`;
                       }}
+                      axisLine={false}
+                      padding={{ left: 20, right: 20 }}
                     />
                     <YAxis 
                       tick={{ fontSize: 12 }}
@@ -625,21 +762,7 @@ export default function DashboardPage() {
         {/* Top 5 Selling Products */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Top 5 Selling Products (Last 30 Days)</h3>
-            <div className="flex items-center space-x-2">
-              <label htmlFor="platform-filter" className="text-sm font-medium text-gray-700">Platform:</label>
-              <select
-                id="platform-filter"
-                value={selectedPlatform}
-                onChange={(e) => setSelectedPlatform(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              >
-                <option value="all">All Platforms</option>
-                <option value="shopee">Shopee</option>
-                <option value="lazada">Lazada</option>
-                <option value="tiktok">TikTok</option>
-              </select>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Top 5 Selling Products</h3>
           </div>
           {topProducts.length > 0 ? (
             <div className="space-y-3">
@@ -658,7 +781,7 @@ export default function DashboardPage() {
                     <p className="font-semibold text-gray-900">₱{Math.round(product.total_revenue).toLocaleString()}</p>
                     <p className="text-sm text-gray-500">{product.total_quantity_sold} sold</p>
                     <p className="text-xs text-gray-400">
-                      {selectedPlatform === 'all' ? (product.platforms || 'Multiple platforms') : (product.platform || selectedPlatform)}
+                      {product.platforms || 'Multiple platforms'}
                     </p>
                   </div>
                 </div>
