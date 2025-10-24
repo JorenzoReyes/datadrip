@@ -86,26 +86,6 @@ const PLATFORM_TEMPLATES: PlatformTemplate[] = [
       }
     }
   },
-  {
-    platform: 'custom',
-    name: 'Custom API',
-    description: 'Connect to a custom API endpoint',
-    icon: '⚙️',
-    color: '#6b7280',
-    authType: 'api_key',
-    requiredFields: ['apiKey'],
-    optionalFields: ['apiSecret', 'webhookUrl'],
-    defaultConfiguration: {
-      baseUrl: '',
-      version: '1.0',
-      endpoints: {
-        auth: '/auth',
-        products: '/products',
-        orders: '/orders',
-        inventory: '/inventory'
-      }
-    }
-  }
 ];
 
 export function IntegrationManagementProvider({ children }: { children: ReactNode }) {
