@@ -78,21 +78,52 @@ export async function GET(request: NextRequest) {
         .sort((a, b) => b.total_revenue - a.total_revenue)
         .slice(0, 3);
 
-      const result: any = { 
+      const result: { 
+        platform: string; 
+        platformDisplay: string; 
+        product1: number; 
+        product2: number; 
+        product3: number; 
+        product1Name: string; 
+        product2Name: string; 
+        product3Name: string; 
+      } = { 
         platform,
-        platformDisplay: platform.charAt(0).toUpperCase() + platform.slice(1)
+        platformDisplay: platform.charAt(0).toUpperCase() + platform.slice(1),
+        product1: 0,
+        product2: 0,
+        product3: 0,
+        product1Name: '',
+        product2Name: '',
+        product3Name: ''
       };
       
       // Add products for this platform
       platformProducts.forEach((product, index) => {
-        result[`product${index + 1}`] = product.total_revenue;
-        result[`product${index + 1}_name`] = product.product_name;
+        if (index === 0) {
+          result.product1 = product.total_revenue;
+          result.product1Name = product.product_name;
+        } else if (index === 1) {
+          result.product2 = product.total_revenue;
+          result.product2Name = product.product_name;
+        } else if (index === 2) {
+          result.product3 = product.total_revenue;
+          result.product3Name = product.product_name;
+        }
       });
 
       // Fill empty slots with 0
       for (let i = platformProducts.length; i < 3; i++) {
-        result[`product${i + 1}`] = 0;
-        result[`product${i + 1}_name`] = '';
+        if (i === 0) {
+          result.product1 = 0;
+          result.product1Name = '';
+        } else if (i === 1) {
+          result.product2 = 0;
+          result.product2Name = '';
+        } else if (i === 2) {
+          result.product3 = 0;
+          result.product3Name = '';
+        }
       }
 
       return result;

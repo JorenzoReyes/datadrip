@@ -9,12 +9,18 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  type ShopRow = { platform: string; followers_count: number | null };
-  type Totals = { all: number; tiktok: number; lazada: number; shopee: number };
-  const [data, setData] = useState<{ shops: ShopRow[]; dailySales: { sale_date: string; total_sales: number; platform_breakdown?: { tiktok?: number; shopee?: number; lazada?: number } }[] } | null>(null);
   const [processedDailySales, setProcessedDailySales] = useState<{ date: string; totalSales: number; tiktok: number; shopee: number; lazada: number; dayOfWeek: number }[]>([]);
   const [topProducts, setTopProducts] = useState<{ product_name: string; total_revenue: number; total_quantity_sold: number; brand: string; platform?: string; platforms?: string }[]>([]);
-  const [topWeeklyProducts, setTopWeeklyProducts] = useState<any[]>([]);
+  const [topWeeklyProducts, setTopWeeklyProducts] = useState<{
+    platform: string;
+    platformDisplay: string;
+    product1: number;
+    product2: number;
+    product3: number;
+    product1Name: string;
+    product2Name: string;
+    product3Name: string;
+  }[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [weeklyTotals, setWeeklyTotals] = useState<{ all: number; tiktok: number; lazada: number; shopee: number }>({ all: 0, tiktok: 0, lazada: 0, shopee: 0 });
   
@@ -91,7 +97,6 @@ export default function DashboardPage() {
         const endDateStrForMetrics = selectedWeekForMetrics.endDate.toISOString().split('T')[0];
         const res = await fetch(`/api/shops/metrics?email=${email}&startDate=${startDateStrForMetrics}&endDate=${endDateStrForMetrics}`, { cache: 'no-store' });
         const json = await res.json();
-        setData(json);
 
         // Fetch top selling products
         const platformParam = selectedPlatform === 'all' ? '' : `&platform=${selectedPlatform}`;
@@ -202,9 +207,11 @@ export default function DashboardPage() {
   };
 
   // Custom XAxis Tick component
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomXAxisTick = (props: any) => {
+  const CustomXAxisTick = (props: { x?: number; y?: number; payload?: { value: string } }) => {
     const { x, y, payload } = props;
+    
+    if (!payload?.value) return null;
+    
     const dateString = payload.value;
     const dayOfWeek = processedDailySales.find(d => d.date === dateString)?.dayOfWeek;
 
@@ -300,7 +307,7 @@ export default function DashboardPage() {
                     />
                     <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip 
-                      formatter={(value: number, name: string, props: any) => {
+                      formatter={(value: number, name: string, props: { payload: Record<string, unknown> }) => {
                         if (value === 0) return null;
                         const productName = props.payload[`${name}_name`] || 'Product';
                         return [`₱${Math.round(value).toLocaleString()}`, productName];
