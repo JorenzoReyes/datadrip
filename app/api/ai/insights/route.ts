@@ -14,6 +14,9 @@ export async function POST(req: Request) {
     }
 
     const { topic, customQuestion, history, businessContext, userId, model = 'gemini-2.5-flash' } = await req.json();
+    
+    // Extract timeline context from businessContext
+    const timeline = businessContext?.timeline;
 
     // Fetch user's business data using service layer
     let userBusinessData = {};
@@ -23,22 +26,63 @@ export async function POST(req: Request) {
       try {
         // Auto-sync sales data to ensure accuracy
         await BusinessDataService.syncProductSalesData(userId);
-        userBusinessData = await BusinessDataService.getUserBusinessData(userId);
         
-        // Get platform-specific data
-        const salesByPlatform = await BusinessDataService.getSalesByPlatform(userId, 30);
-        const shopeeTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'shopee', 5);
-        const lazadaTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'lazada', 5);
-        const tiktokTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'tiktok', 5);
-        
-        platformData = {
-          salesByPlatform,
-          topProductsByPlatform: {
-            shopee: shopeeTop5,
-            lazada: lazadaTop5,
-            tiktok: tiktokTop5
-          }
-        };
+        // If timeline is provided, fetch timeline-specific data
+        if (timeline && timeline.startDate && timeline.endDate) {
+          console.log('📅 Fetching timeline-specific data for:', timeline.label);
+          console.log('📅 Start date:', timeline.startDate);
+          console.log('📅 End date:', timeline.endDate);
+          
+          // Convert ISO dates to YYYY-MM-DD format for database
+          const startDate = new Date(timeline.startDate).toISOString().split('T')[0];
+          const endDate = new Date(timeline.endDate).toISOString().split('T')[0];
+          console.log('📅 Converted start date:', startDate);
+          console.log('📅 Converted end date:', endDate);
+          
+          userBusinessData = await BusinessDataService.getUserBusinessDataForPeriod(userId, startDate, endDate);
+          
+          // Get timeline-specific platform data
+          const salesByPlatform = await BusinessDataService.getSalesByPlatformForPeriod(userId, startDate, endDate);
+          const shopeeTop5 = await BusinessDataService.getTopProductsByPlatformForPeriod(userId, 'shopee', startDate, endDate, 5);
+          const lazadaTop5 = await BusinessDataService.getTopProductsByPlatformForPeriod(userId, 'lazada', startDate, endDate, 5);
+          const tiktokTop5 = await BusinessDataService.getTopProductsByPlatformForPeriod(userId, 'tiktok', startDate, endDate, 5);
+          
+          platformData = {
+            salesByPlatform,
+            topProductsByPlatform: {
+              shopee: shopeeTop5,
+              lazada: lazadaTop5,
+              tiktok: tiktokTop5
+            }
+          };
+          
+          // Debug: Log the fetched data
+          console.log('📊 Timeline-specific data fetched:');
+          console.log('📊 Sales by platform:', JSON.stringify(salesByPlatform, null, 2));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          console.log('📊 Top products (first 3):', JSON.stringify((userBusinessData as any).topProducts?.slice(0, 3), null, 2));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          console.log('📊 Recent sales (first 3):', JSON.stringify((userBusinessData as any).recentSales?.slice(0, 3), null, 2));
+        } else {
+          // Fallback to default data (last 30 days)
+          console.log('📅 No timeline provided, using default data (last 30 days)');
+          userBusinessData = await BusinessDataService.getUserBusinessData(userId);
+          
+          // Get platform-specific data
+          const salesByPlatform = await BusinessDataService.getSalesByPlatform(userId, 30);
+          const shopeeTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'shopee', 5);
+          const lazadaTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'lazada', 5);
+          const tiktokTop5 = await BusinessDataService.getTopProductsByPlatform(userId, 'tiktok', 5);
+          
+          platformData = {
+            salesByPlatform,
+            topProductsByPlatform: {
+              shopee: shopeeTop5,
+              lazada: lazadaTop5,
+              tiktok: tiktokTop5
+            }
+          };
+        }
         
         // Sanitize data before sending to AI (enhanced version maintains accuracy)
         sanitizedData = EnhancedDataSanitizationService.sanitizeForAI(userBusinessData);
@@ -63,6 +107,22 @@ export async function POST(req: Request) {
       }
     });
 
+    // Create timeline context text
+    const timelineText = timeline ? `
+CURRENT TIMELINE CONTEXT:
+- Selected Period: ${timeline.label}
+- Type: ${timeline.type}
+- Date Range: ${timeline.startDate} to ${timeline.endDate}
+- Month: ${timeline.month} ${timeline.year}
+
+IMPORTANT: When the user asks about "this week", "current week", "selected week", or similar time-based queries, they are referring to the above timeline period. Use this specific date range to filter and analyze their data accordingly.` : '';
+
+    // Debug logging
+    console.log('=== Timeline Context Debug ===');
+    console.log('Timeline received:', JSON.stringify(timeline, null, 2));
+    console.log('Timeline text:', timelineText);
+    console.log('=== End Timeline Debug ===');
+
     // Create sanitized business data context for AI
     const businessDataText = Object.keys(sanitizedData).length > 0 
       ? `\n\nBUSINESS INSIGHTS DATA (sanitized for analysis):
@@ -70,12 +130,14 @@ ${JSON.stringify(sanitizedData, null, 2)}
 
 PLATFORM-SPECIFIC DATA:
 ${JSON.stringify(platformData, null, 2)}
+${timelineText}
 
 IMPORTANT CAPABILITIES:
 - You can answer platform-specific questions (Shopee, Lazada, TikTok)
 - Examples: "show me top 5 sales in Shopee", "what are my best sellers on Lazada", "compare TikTok vs Shopee performance"
 - Platform data includes: salesByPlatform (revenue breakdown), topProductsByPlatform (top products per platform)
 - When asked about a specific platform, use the corresponding data from topProductsByPlatform
+- When asked about time periods (this week, current week, selected week), use the timeline context above
 
 CRITICAL CURRENCY FORMAT:
 - ALL monetary values are in Philippine Peso (PHP)
@@ -90,13 +152,17 @@ Use this data to provide specific, data-driven insights. Reference actual sales 
     // Handle custom questions vs predefined topics
     const systemPreamble = `You are DataDrip's AI business analyst with access to the user's real business database. You have access to their actual sales data, products, shops, and performance metrics across multiple platforms (Shopee, Lazada, TikTok). Be concise, actionable, and data-driven. Respond in markdown. Use real numbers and specific insights from their actual business data.
 
+CRITICAL TIMELINE RULE: You MUST use the timeline context provided below. When the user asks about "this week", "current week", "selected week", or any time-based queries, you MUST refer to the specific timeline period provided in the context. DO NOT use your own date calculations or assumptions about what "this week" means. ALWAYS use the exact timeline period specified in the context.
+
 CRITICAL CURRENCY RULE: ALL monetary values MUST use Philippine Peso symbol ₱ with comma thousand separators (NOT $ dollar sign). Examples: ₱45,678 | ₱1,234.50 | ₱6,772,393.71 (NOT ₱6772393.71). This is MANDATORY for ALL money amounts including revenue, sales, prices, costs, profits, etc.`;
     
     let guidanceText: string;
     let taskDescription: string;
 
     if (topic === 'custom' && customQuestion) {
-      guidanceText = `Answer the user's specific question using their real business data. You can filter by platform if asked (e.g., "Shopee", "Lazada", "TikTok"). Reference actual sales numbers, product performance, inventory levels, and platform-specific metrics. Provide specific, actionable recommendations based on their actual business performance.`;
+      guidanceText = `Answer the user's specific question using their real business data. You can filter by platform if asked (e.g., "Shopee", "Lazada", "TikTok"). Reference actual sales numbers, product performance, inventory levels, and platform-specific metrics. Provide specific, actionable recommendations based on their actual business performance.
+
+CRITICAL: If the user asks about "this week", "current week", or any time-based queries, you MUST use the timeline context provided above. DO NOT make assumptions about dates - use the exact timeline period specified in the context.`;
       taskDescription = `Custom Question: ${customQuestion}`;
     } else {
       const topicLabelMap: Record<string, string> = {
@@ -140,6 +206,12 @@ ${businessContextText}
 
 Recent Chat (most recent last):
 ${historyText}
+
+CRITICAL TIMELINE REQUIREMENT:
+- If the user asks about "this week", "current week", "selected week", or any time-based queries, you MUST use the timeline context provided above
+- DO NOT calculate your own dates or make assumptions about what "this week" means
+- ALWAYS refer to the exact timeline period specified in the context
+- Example: If context shows "Oct 5 - Oct 11, 2025", then "this week" means Oct 5-11, 2025
 
 CRITICAL CURRENCY REQUIREMENT:
 - ALL monetary values MUST use Philippine Peso symbol: ₱

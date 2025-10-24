@@ -384,7 +384,23 @@ export default function DashboardPage() {
                 <select
                   id="week-filter"
                   value={selectedWeekIndex}
-                  onChange={(e) => setSelectedWeekIndex(Number(e.target.value))}
+                  onChange={(e) => {
+                    const newIndex = Number(e.target.value);
+                    setSelectedWeekIndex(newIndex);
+                    // Store timeline context for insights chat
+                    const selectedWeek = availableWeeks[newIndex];
+                    if (selectedWeek) {
+                      localStorage.setItem('dashboardTimeline', JSON.stringify({
+                        type: 'week',
+                        index: newIndex,
+                        label: selectedWeek.label,
+                        startDate: selectedWeek.startDate.toISOString(),
+                        endDate: selectedWeek.endDate.toISOString(),
+                        month: selectedWeek.month,
+                        year: selectedWeek.year
+                      }));
+                    }
+                  }}
                   className="text-xs px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                 >
                   {monthlyWeeks[currentMonthPage]?.map((week, index) => {

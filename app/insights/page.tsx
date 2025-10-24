@@ -55,6 +55,7 @@ export default function InsightsPage() {
 
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [currentTimeline, setCurrentTimeline] = useState<string | null>(null);
 
   // Get user-specific localStorage key
   const getInsightsStorageKey = useCallback(() => {
@@ -82,6 +83,19 @@ export default function InsightsPage() {
     }
   }, [user?.user_id, getInsightsStorageKey]);
 
+  // Load current timeline on mount
+  useEffect(() => {
+    const timelineContext = localStorage.getItem('dashboardTimeline');
+    if (timelineContext) {
+      try {
+        const parsed = JSON.parse(timelineContext);
+        setCurrentTimeline(parsed.label);
+      } catch (e) {
+        console.warn('Failed to parse timeline context:', e);
+      }
+    }
+  }, []);
+
   const insightOptions = [
     { value: 'customer-segment', label: 'Customer Segment', shortLabel: 'Customer Segment' },
     { value: 'sale-trends', label: 'Sale Trends', shortLabel: 'Sale Trends' },
@@ -97,11 +111,24 @@ export default function InsightsPage() {
     setInsightsError(null);
 
     try {
+      // Get current timeline context from dashboard
+      const timelineContext = localStorage.getItem('dashboardTimeline');
+      let parsedTimeline = null;
+      if (timelineContext) {
+        try {
+          parsedTimeline = JSON.parse(timelineContext);
+          setCurrentTimeline(parsedTimeline.label);
+        } catch (e) {
+          console.warn('Failed to parse timeline context:', e);
+        }
+      }
+
       const response = await fetch('/api/ai/business-insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.user_id
+          userId: user.user_id,
+          timeline: parsedTimeline
         })
       });
 
@@ -216,6 +243,17 @@ export default function InsightsPage() {
     setIsTyping(true);
 
     try {
+      // Get current timeline context from dashboard
+      const timelineContext = localStorage.getItem('dashboardTimeline');
+      let parsedTimeline = null;
+      if (timelineContext) {
+        try {
+          parsedTimeline = JSON.parse(timelineContext);
+        } catch (e) {
+          console.warn('Failed to parse timeline context:', e);
+        }
+      }
+
       const response = await fetch('/api/ai/insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -229,6 +267,7 @@ export default function InsightsPage() {
             // Additional context can be added here if needed
             userEmail: user?.email,
             userName: user?.fname + ' ' + user?.lname,
+            timeline: parsedTimeline
           }
         })
       });
@@ -384,12 +423,19 @@ export default function InsightsPage() {
           {/* Insights list */}
           <section className="bg-white rounded-lg p-4 border border-primary-200 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-header font-medium flex items-center">
-                💡 Business Insights
-                <span className="ml-2 text-xs bg-primary-500 text-white px-2 py-1 rounded-full">
-                  {insights.filter(i => !i.dismissed).length}
-                </span>
-              </h3>
+              <div className="flex items-center space-x-3">
+                <h3 className="text-header font-medium flex items-center">
+                  💡 Business Insights
+                  <span className="ml-2 text-xs bg-primary-500 text-white px-2 py-1 rounded-full">
+                    {insights.filter(i => !i.dismissed).length}
+                  </span>
+                </h3>
+                {currentTimeline && (
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full border">
+                    📅 {currentTimeline}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={fetchBusinessInsights}
                 disabled={isLoadingInsights}
