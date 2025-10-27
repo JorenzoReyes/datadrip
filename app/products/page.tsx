@@ -53,8 +53,12 @@ export default function ProductsPage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All Categories');
+  const [subcategory, setSubcategory] = useState('All Subcategories');
+  const [productType, setProductType] = useState('All Product Types');
   const [filterOpen, setFilterOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [subcategoryOpen, setSubcategoryOpen] = useState(false);
+  const [productTypeOpen, setProductTypeOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
@@ -115,20 +119,36 @@ export default function ProductsPage() {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => {
-      if (showDateFilter) {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target) return;
+
+      // Check if the click is outside the dropdown elements
+      if (showDateFilter && !target.closest('[data-date-filter]')) {
         setShowDateFilter(false);
+      }
+      if (categoryOpen && !target.closest('[data-category-dropdown]')) {
+        setCategoryOpen(false);
+      }
+      if (subcategoryOpen && !target.closest('[data-subcategory-dropdown]')) {
+        setSubcategoryOpen(false);
+      }
+      if (productTypeOpen && !target.closest('[data-producttype-dropdown]')) {
+        setProductTypeOpen(false);
+      }
+      if (filterOpen && !target.closest('[data-filter-dropdown]')) {
+        setFilterOpen(false);
       }
     };
 
-    if (showDateFilter) {
+    if (showDateFilter || categoryOpen || subcategoryOpen || productTypeOpen || filterOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showDateFilter]);
+  }, [showDateFilter, categoryOpen, subcategoryOpen, productTypeOpen, filterOpen]);
   
   // Pagination and sorting state
   const [currentPage, setCurrentPage] = useState(1);
@@ -155,6 +175,51 @@ export default function ProductsPage() {
     return ['All Categories', ...Array.from(uniqueCategories).sort()];
   }, [products]);
 
+  // Extract unique subcategories based on selected category
+  const subcategories = useMemo(() => {
+    const uniqueSubcategories = new Set<string>();
+    products.forEach(p => {
+      // If category is selected, only include subcategories from that category
+      if (category !== 'All Categories') {
+        if (p.category === category && p.subcategory) {
+          uniqueSubcategories.add(p.subcategory);
+        }
+      } else {
+        // If all categories, include all subcategories
+        if (p.subcategory) {
+          uniqueSubcategories.add(p.subcategory);
+        }
+      }
+    });
+    return ['All Subcategories', ...Array.from(uniqueSubcategories).sort()];
+  }, [products, category]);
+
+  // Extract unique product types based on selected category and subcategory
+  // Shows all available product types for the current category/subcategory selection
+  const productTypes = useMemo(() => {
+    const uniqueProductTypes = new Set<string>();
+    products.forEach(p => {
+      if (!p.product_type) return;
+      
+      let shouldInclude = true;
+      
+      // Filter by category if specified
+      if (category !== 'All Categories') {
+        shouldInclude = shouldInclude && p.category === category;
+      }
+      
+      // Filter by subcategory if specified
+      if (subcategory !== 'All Subcategories') {
+        shouldInclude = shouldInclude && p.subcategory === subcategory;
+      }
+      
+      if (shouldInclude) {
+        uniqueProductTypes.add(p.product_type);
+      }
+    });
+    return ['All Product Types', ...Array.from(uniqueProductTypes).sort()];
+  }, [products, category, subcategory]);
+
   // Filter, sort, and paginate products
   const { paginated, totalPages, totalItems } = useMemo(() => {
     // First filter products
@@ -162,8 +227,10 @@ export default function ProductsPage() {
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
                          p.brand?.toLowerCase().includes(query.toLowerCase()) ||
                          p.sku?.toLowerCase().includes(query.toLowerCase());
-      const matchCategory = category === 'All Categories' ? true : p.category === category;
-      return matchQuery && matchCategory;
+      const matchCategory = category === 'All Categories' ? true : (p.category === category);
+      const matchSubcategory = subcategory === 'All Subcategories' ? true : (p.subcategory === subcategory);
+      const matchProductType = productType === 'All Product Types' ? true : (p.product_type === productType);
+      return matchQuery && matchCategory && matchSubcategory && matchProductType;
     });
 
     // Then sort products
@@ -210,7 +277,7 @@ export default function ProductsPage() {
       totalPages,
       totalItems
     };
-  }, [products, query, category, sortBy, sortOrder, currentPage, itemsPerPage]);
+  }, [products, query, category, subcategory, productType, sortBy, sortOrder, currentPage, itemsPerPage]);
 
   // Handle sorting
   const handleSort = (newSortBy: 'name' | 'stock' | 'price' | 'created_at') => {
@@ -231,7 +298,18 @@ export default function ProductsPage() {
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [query, category, sortBy, sortOrder]);
+  }, [query, category, subcategory, productType, sortBy, sortOrder]);
+
+  // Reset subcategory and product type filters when category changes
+  useEffect(() => {
+    setSubcategory('All Subcategories');
+    setProductType('All Product Types');
+  }, [category]);
+
+  // Reset product type filter when subcategory changes
+  useEffect(() => {
+    setProductType('All Product Types');
+  }, [subcategory]);
 
   // Handle adding new product
   const handleAddProduct = async (productData: {
@@ -421,11 +499,13 @@ export default function ProductsPage() {
 
           <div className="flex items-center gap-3">
             {/* Categories dropdown */}
-            <div className="relative">
+            <div className="relative" data-category-dropdown>
               <button
                 onClick={() => {
                   setCategoryOpen((o) => !o);
                   setFilterOpen(false);
+                  setSubcategoryOpen(false);
+                  setProductTypeOpen(false);
                 }}
                 className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm text-header hover:bg-gray-200"
                 aria-haspopup="listbox"
@@ -439,7 +519,7 @@ export default function ProductsPage() {
               {categoryOpen && (
                 <ul
                   role="listbox"
-                  className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                  className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto"
                 >
                   {categories.map((c) => (
                     <li
@@ -461,13 +541,103 @@ export default function ProductsPage() {
               )}
             </div>
 
+            {/* Subcategories dropdown */}
+            {subcategories.length > 1 && (
+              <div className="relative" data-subcategory-dropdown>
+                <button
+                  onClick={() => {
+                    setSubcategoryOpen((o) => !o);
+                    setFilterOpen(false);
+                    setCategoryOpen(false);
+                    setProductTypeOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm text-header hover:bg-gray-200"
+                  aria-haspopup="listbox"
+                  aria-expanded={subcategoryOpen}
+                >
+                  {subcategory}
+                  <svg className="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
+                  </svg>
+                </button>
+                {subcategoryOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {subcategories.map((sc) => (
+                      <li
+                        key={sc}
+                        role="option"
+                        aria-selected={sc === subcategory}
+                        onClick={() => {
+                          setSubcategory(sc);
+                          setSubcategoryOpen(false);
+                        }}
+                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-50 ${
+                          sc === subcategory ? 'bg-gray-50 font-medium' : ''
+                        }`}
+                      >
+                        {sc}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Product Types dropdown */}
+            {productTypes.length > 1 && (
+              <div className="relative" data-producttype-dropdown>
+                <button
+                  onClick={() => {
+                    setProductTypeOpen((o) => !o);
+                    setFilterOpen(false);
+                    setCategoryOpen(false);
+                    setSubcategoryOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm text-header hover:bg-gray-200"
+                  aria-haspopup="listbox"
+                  aria-expanded={productTypeOpen}
+                >
+                  {productType}
+                  <svg className="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
+                  </svg>
+                </button>
+                {productTypeOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {productTypes.map((pt) => (
+                      <li
+                        key={pt}
+                        role="option"
+                        aria-selected={pt === productType}
+                        onClick={() => {
+                          setProductType(pt);
+                          setProductTypeOpen(false);
+                        }}
+                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-50 ${
+                          pt === productType ? 'bg-gray-50 font-medium' : ''
+                        }`}
+                      >
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
             {/* Add product button */}
             <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
               Add Products
             </button>
 
             {/* Filters dropdown (icon) */}
-            <div className="relative">
+            <div className="relative" data-filter-dropdown>
               <button
                 onClick={() => {
                   setFilterOpen((o) => !o);
