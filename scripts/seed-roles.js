@@ -300,9 +300,9 @@ async function seedDirect() {
         }
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Electronics', $7, $8, $9, '{"color":"black","warranty":"1 year"}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - High quality ${product.category.toLowerCase()}`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"color":"black","warranty":"1 year"}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - High quality ${product.sub_category.toLowerCase()}`, product.brand, 'Electronics', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -311,7 +311,7 @@ async function seedDirect() {
     // Appliances - 12 products
     const appliancesProducts = [
       { sku: 'APPL-FRIDGE-2D', name: 'Two-Door Refrigerator 14cuft', price: 18999.00, stock: 20, brand: 'CoolMax', sub_category: 'Kitchen', product_type: 'Refrigerator' },
-      { sku: 'APPL-MICROWAVE-30L', name: 'Microwave Oven 30L', price: 5999.00, stock: 40, brand: 'HeatWave', category: 'Kitchen', sub_category: 'Microwave Oven' },
+      { sku: 'APPL-MICROWAVE-30L', name: 'Microwave Oven 30L', price: 5999.00, stock: 40, brand: 'HeatWave', sub_category: 'Kitchen', sub_category: 'Microwave Oven' },
       { sku: 'APPL-WASHER-AUTO', name: 'Automatic Washing Machine 8kg', price: 15999.00, stock: 25, brand: 'CleanCycle', sub_category: 'Laundry', product_type: 'Washing Machine' },
       { sku: 'APPL-AIRCOND-1HP', name: 'Air Conditioner 1HP', price: 22999.00, stock: 30, brand: 'CoolAir', sub_category: 'Climate', product_type: 'Air Conditioner' },
       { sku: 'APPL-RICE-COOKER', name: 'Digital Rice Cooker 1.8L', price: 2999.00, stock: 80, brand: 'RicePro', sub_category: 'Kitchen', product_type: 'Rice Cooker' },
@@ -338,9 +338,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Appliances', $7, $8, $9, '{"energy_rating":"A+","warranty":"2 years"}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Efficient ${product.category.toLowerCase()} appliance`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"energy_rating":"A+","warranty":"2 years"}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Efficient ${product.sub_category.toLowerCase()} appliance`, product.brand, 'Appliances', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -376,9 +376,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Peripherals', $7, $8, $9, '{"plug_and_play":true,"warranty":"1 year"}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.category.toLowerCase()}`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"plug_and_play":true,"warranty":"1 year"}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.sub_category.toLowerCase()}`, product.brand, 'Peripherals', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -414,9 +414,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Computer Components', $7, $8, $9, '{"compatible":"PC","warranty":"3 years"}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - High-performance ${product.category.toLowerCase()}`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"compatible":"PC","warranty":"3 years"}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - High-performance ${product.sub_category.toLowerCase()}`, product.brand, 'Computer Components', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -453,8 +453,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Gaming', $7, $8, $9, '{"gaming_grade":"pro","warranty":"1 year"}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Pro-level ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"gaming_grade":"pro","warranty":"1 year"}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Pro-level ${product.sub_category.toLowerCase()}`, product.brand, 'Gaming', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -503,8 +503,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Cosmetics', $7, $8, $9, '{"skin_type":"all","cruelty_free":true}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"skin_type":"all","cruelty_free":true}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.sub_category.toLowerCase()}`, product.brand, 'Cosmetics', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -541,8 +541,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Skincare', $7, $8, $9, '{"dermatologist_tested":true,"hypoallergenic":true}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Advanced ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"dermatologist_tested":true,"hypoallergenic":true}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Advanced ${product.sub_category.toLowerCase()}`, product.brand, 'Skincare', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -579,8 +579,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Fashion', $7, $8, $9, '{"material":"quality","size_range":"various"}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Trendy ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"material":"quality","size_range":"various"}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Trendy ${product.sub_category.toLowerCase()}`, product.brand, 'Fashion', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -617,8 +617,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Home & Living', $7, $8, $9, '{"eco_friendly":true,"durable":true}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Quality ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"eco_friendly":true,"durable":true}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Quality ${product.sub_category.toLowerCase()}`, product.brand, 'Home & Living', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -655,8 +655,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Hair Care', $7, $8, $9, '{"sulfate_free":true,"paraben_free":true}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"sulfate_free":true,"paraben_free":true}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.sub_category.toLowerCase()}`, product.brand, 'Hair Care', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -693,8 +693,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Fragrances', $7, $8, $9, '{"long_lasting":true,"allergen_free":false}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Luxurious ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"long_lasting":true,"allergen_free":false}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Luxurious ${product.sub_category.toLowerCase()}`, product.brand, 'Fragrances', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -736,8 +736,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Food', $7, $8, $9, '{"organic":true,"gluten_free":false}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"organic":true,"gluten_free":false}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.sub_category.toLowerCase()}`, product.brand, 'Food', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -769,8 +769,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Drinks', $7, $8, $9, '{"sugar_free":false,"natural":true}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Refreshing ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"sugar_free":false,"natural":true}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Refreshing ${product.sub_category.toLowerCase()}`, product.brand, 'Drinks', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -807,8 +807,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Snacks', $7, $8, $9, '{"preservative_free":false,"tasty":true}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Delicious ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"preservative_free":false,"tasty":true}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Delicious ${product.sub_category.toLowerCase()}`, product.brand, 'Snacks', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -845,8 +845,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Condiments & Sauces', $7, $8, $9, '{"preservatives":"minimal","gluten_free":false}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Flavorful ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"preservatives":"minimal","gluten_free":false}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Flavorful ${product.sub_category.toLowerCase()}`, product.brand, 'Condiments & Sauces', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -883,8 +883,8 @@ async function seedDirect() {
 
         await pool.query(`
           INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Baking Supplies', $7, $8, $9, '{"quality":"premium","baker_approved":true}', $10::jsonb, $11)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Essential ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '{"quality":"premium","baker_approved":true}', $11::jsonb, $12)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Essential ${product.sub_category.toLowerCase()}`, product.brand, 'Baking Supplies', product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -1213,326 +1213,326 @@ function seedDocker() {
 
     // Electronics products (15 total)
     const electronicsDockerProducts = [
-      { sku: 'ELEC-TV-55-4K', name: '4K Smart TV 55-inch', price: 25999.00, stock: 25, brand: 'Electra', category: 'TV & Video' },
-      { sku: 'ELEC-HEAD-NC', name: 'Noise-Cancelling Headphones', price: 7999.00, stock: 100, brand: 'SonicX', category: 'Audio' },
-      { sku: 'ELEC-PHONE-128', name: 'Smartphone 128GB', price: 15999.00, stock: 50, brand: 'TechCore', category: 'Mobile' },
-      { sku: 'ELEC-LAPTOP-16', name: 'Gaming Laptop 16GB RAM', price: 45999.00, stock: 15, brand: 'GameMax', category: 'Computers' },
-      { sku: 'ELEC-TABLET-10', name: '10-inch Tablet', price: 12999.00, stock: 75, brand: 'TabPro', category: 'Tablets' },
-      { sku: 'ELEC-SPEAKER-BT', name: 'Bluetooth Speaker', price: 2999.00, stock: 200, brand: 'SoundWave', category: 'Audio' },
-      { sku: 'ELEC-CAMERA-4K', name: '4K Action Camera', price: 8999.00, stock: 60, brand: 'ActionCam', category: 'Cameras' },
-      { sku: 'ELEC-SMARTWATCH', name: 'Smart Watch Pro', price: 5999.00, stock: 120, brand: 'WearTech', category: 'Wearables' },
-      { sku: 'ELEC-CHARGER-WIRELESS', name: 'Wireless Charger', price: 1999.00, stock: 300, brand: 'ChargeMax', category: 'Accessories' },
-      { sku: 'ELEC-KEYBOARD-MECH', name: 'Mechanical Keyboard', price: 3999.00, stock: 80, brand: 'KeyMaster', category: 'Accessories' },
-      { sku: 'ELEC-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2499.00, stock: 150, brand: 'GameGear', category: 'Accessories' },
-      { sku: 'ELEC-MONITOR-27', name: '27-inch Gaming Monitor', price: 18999.00, stock: 30, brand: 'DisplayPro', category: 'Monitors' },
-      { sku: 'ELEC-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 90, brand: 'StreamCam', category: 'Accessories' },
-      { sku: 'ELEC-ROUTER-WIFI6', name: 'WiFi 6 Router', price: 12999.00, stock: 40, brand: 'NetMax', category: 'Networking' },
-      { sku: 'ELEC-POWERBANK-20K', name: '20,000mAh Power Bank', price: 3499.00, stock: 180, brand: 'PowerMax', category: 'Accessories' }
+      { sku: 'ELEC-TV-55-4K', name: '4K Smart TV 55-inch', price: 25999.00, stock: 25, brand: 'Electra', sub_category: 'TV & Video', product_type: 'Smart TV' },
+      { sku: 'ELEC-HEAD-NC', name: 'Noise-Cancelling Headphones', price: 7999.00, stock: 100, brand: 'SonicX', sub_category: 'Audio', product_type: 'Headphones' },
+      { sku: 'ELEC-PHONE-128', name: 'Smartphone 128GB', price: 15999.00, stock: 50, brand: 'TechCore', sub_category: 'Mobile', product_type: 'Smartphone' },
+      { sku: 'ELEC-LAPTOP-16', name: 'Gaming Laptop 16GB RAM', price: 45999.00, stock: 15, brand: 'GameMax', sub_category: 'Computers', product_type: 'Laptop' },
+      { sku: 'ELEC-TABLET-10', name: '10-inch Tablet', price: 12999.00, stock: 75, brand: 'TabPro', sub_category: 'Tablets', product_type: 'Tablet' },
+      { sku: 'ELEC-SPEAKER-BT', name: 'Bluetooth Speaker', price: 2999.00, stock: 200, brand: 'SoundWave', sub_category: 'Audio', product_type: 'Speaker' },
+      { sku: 'ELEC-CAMERA-4K', name: '4K Action Camera', price: 8999.00, stock: 60, brand: 'ActionCam', sub_category: 'Cameras', product_type: 'Action Camera' },
+      { sku: 'ELEC-SMARTWATCH', name: 'Smart Watch Pro', price: 5999.00, stock: 120, brand: 'WearTech', sub_category: 'Wearables', product_type: 'Smart Watch' },
+      { sku: 'ELEC-CHARGER-WIRELESS', name: 'Wireless Charger', price: 1999.00, stock: 300, brand: 'ChargeMax', sub_category: 'Accessories', product_type: 'Wireless Charger' },
+      { sku: 'ELEC-KEYBOARD-MECH', name: 'Mechanical Keyboard', price: 3999.00, stock: 80, brand: 'KeyMaster', sub_category: 'Input Devices', product_type: 'Mechanical Keyboard' },
+      { sku: 'ELEC-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2499.00, stock: 150, brand: 'GameGear', sub_category: 'Input Devices', product_type: 'Gaming Mouse' },
+      { sku: 'ELEC-MONITOR-27', name: '27-inch Gaming Monitor', price: 18999.00, stock: 30, brand: 'DisplayPro', sub_category: 'Display', product_type: 'Gaming Monitor' },
+      { sku: 'ELEC-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 90, brand: 'StreamCam', sub_category: 'Video', product_type: 'Webcam' },
+      { sku: 'ELEC-ROUTER-WIFI6', name: 'WiFi 6 Router', price: 12999.00, stock: 40, brand: 'NetMax', sub_category: 'Networking', product_type: 'Router' },
+      { sku: 'ELEC-POWERBANK-20K', name: '20,000mAh Power Bank', price: 3499.00, stock: 180, brand: 'PowerMax', sub_category: 'Accessories', product_type: 'Power Bank' }
     ];
 
     for (const product of electronicsDockerProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Electronics','${product.category}',${product.price},${product.stock},'{\\\"color\\\":\\\"black\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.sub_category.toLowerCase()}','${product.brand}','Electronics','${product.sub_category}',${product.price},${product.stock},'{\\\"color\\\":\\\"black\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
     // Cosmetics products (15 total)
     const cosmeticsDockerProducts = [
-      { sku: 'COS-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', category: 'Skincare' },
-      { sku: 'COS-LIP-MATTE', name: 'Matte Lipstick', price: 499.00, stock: 300, brand: 'Chroma', category: 'Makeup' },
-      { sku: 'COS-FOUNDATION-30', name: 'Full Coverage Foundation', price: 899.00, stock: 150, brand: 'BeautyBase', category: 'Makeup' },
-      { sku: 'COS-MASCARA-VOL', name: 'Volumizing Mascara', price: 599.00, stock: 250, brand: 'LashPro', category: 'Makeup' },
-      { sku: 'COS-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', category: 'Skincare' },
-      { sku: 'COS-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', category: 'Skincare' },
-      { sku: 'COS-EYESHADOW-PAL', name: 'Eyeshadow Palette', price: 1299.00, stock: 100, brand: 'ColorPop', category: 'Makeup' },
-      { sku: 'COS-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', category: 'Skincare' },
-      { sku: 'COS-CONCEALER-FULL', name: 'Full Coverage Concealer', price: 649.00, stock: 175, brand: 'HideIt', category: 'Makeup' },
-      { sku: 'COS-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', category: 'Skincare' },
-      { sku: 'COS-LIPGLOSS-SHINE', name: 'Shiny Lip Gloss', price: 399.00, stock: 220, brand: 'Glossy', category: 'Makeup' },
-      { sku: 'COS-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', category: 'Skincare' },
-      { sku: 'COS-BLUSH-PINK', name: 'Pink Blush Compact', price: 749.00, stock: 140, brand: 'Cheeky', category: 'Makeup' },
-      { sku: 'COS-EYELINER-WING', name: 'Winged Eyeliner Pen', price: 449.00, stock: 190, brand: 'WingMaster', category: 'Makeup' },
-      { sku: 'COS-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', category: 'Skincare' }
+      { sku: 'COS-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', sub_category: 'Serums', product_type: 'Hydrating Serum' },
+      { sku: 'COS-LIP-MATTE', name: 'Matte Lipstick', price: 499.00, stock: 300, brand: 'Chroma', sub_category: 'Makeup', product_type: 'Lipstick' },
+      { sku: 'COS-FOUNDATION-30', name: 'Full Coverage Foundation', price: 899.00, stock: 150, brand: 'BeautyBase', sub_category: 'Makeup', product_type: 'Foundation' },
+      { sku: 'COS-MASCARA-VOL', name: 'Volumizing Mascara', price: 599.00, stock: 250, brand: 'LashPro', sub_category: 'Makeup', product_type: 'Mascara' },
+      { sku: 'COS-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', sub_category: 'Cleansers', product_type: 'Gel Cleanser' },
+      { sku: 'COS-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', sub_category: 'Moisturizers', product_type: 'Anti-Aging Moisturizer' },
+      { sku: 'COS-EYESHADOW-PAL', name: 'Eyeshadow Palette', price: 1299.00, stock: 100, brand: 'ColorPop', sub_category: 'Makeup', product_type: 'Eyeshadow' },
+      { sku: 'COS-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', sub_category: 'Sun Protection', product_type: 'Sunscreen' },
+      { sku: 'COS-CONCEALER-FULL', name: 'Full Coverage Concealer', price: 649.00, stock: 175, brand: 'HideIt', sub_category: 'Makeup', product_type: 'Concealer' },
+      { sku: 'COS-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', sub_category: 'Toners', product_type: 'Hydrating Toner' },
+      { sku: 'COS-LIPGLOSS-SHINE', name: 'Shiny Lip Gloss', price: 399.00, stock: 220, brand: 'Glossy', sub_category: 'Makeup', product_type: 'Lip Gloss' },
+      { sku: 'COS-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', sub_category: 'Masks', product_type: 'Face Mask' },
+      { sku: 'COS-BLUSH-PINK', name: 'Pink Blush Compact', price: 749.00, stock: 140, brand: 'Cheeky', sub_category: 'Makeup', product_type: 'Blush' },
+      { sku: 'COS-EYELINER-WING', name: 'Winged Eyeliner Pen', price: 449.00, stock: 190, brand: 'WingMaster', sub_category: 'Makeup', product_type: 'Eyeliner' },
+      { sku: 'COS-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', sub_category: 'Exfoliators', product_type: 'Exfoliating Scrub' }
     ];
 
     for (const product of cosmeticsDockerProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Cosmetics','${product.category}',${product.price},${product.stock},'{\\\"skin_type\\\":\\\"all\\\",\\\"cruelty_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Cosmetics','${product.sub_category}',${product.price},${product.stock},'{\\\"skin_type\\\":\\\"all\\\",\\\"cruelty_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Food & Drinks products (15 total)
     const foodDockerProducts = [
-      { sku: 'FOOD-CBREW-1L', name: 'Cold Brew Coffee 1L', price: 299.00, stock: 150, brand: 'BrewLab', category: 'Beverages' },
-      { sku: 'FOOD-PROTBAR-12', name: 'Protein Snack Bars (12-pack)', price: 799.00, stock: 120, brand: 'NutriBite', category: 'Snacks' },
-      { sku: 'FOOD-GRANOLA-500G', name: 'Organic Granola 500g', price: 449.00, stock: 200, brand: 'NatureCrunch', category: 'Breakfast' },
-      { sku: 'FOOD-SMOOTHIE-MIX', name: 'Superfood Smoothie Mix', price: 599.00, stock: 100, brand: 'GreenBoost', category: 'Supplements' },
-      { sku: 'FOOD-CHOCOLATE-DARK', name: 'Dark Chocolate 70%', price: 349.00, stock: 300, brand: 'CocoaPure', category: 'Confectionery' },
-      { sku: 'FOOD-NUTS-MIXED', name: 'Mixed Nuts 250g', price: 399.00, stock: 180, brand: 'NuttyGood', category: 'Snacks' },
-      { sku: 'FOOD-TEA-GREEN', name: 'Green Tea Bags (50-pack)', price: 249.00, stock: 250, brand: 'TeaLeaf', category: 'Beverages' },
-      { sku: 'FOOD-HONEY-RAW', name: 'Raw Honey 500g', price: 699.00, stock: 80, brand: 'BeePure', category: 'Sweeteners' },
-      { sku: 'FOOD-CRACKERS-SEED', name: 'Seed Crackers 200g', price: 299.00, stock: 150, brand: 'CrispySeed', category: 'Snacks' },
-      { sku: 'FOOD-JUICE-ORGANIC', name: 'Organic Apple Juice 1L', price: 199.00, stock: 200, brand: 'FruitFresh', category: 'Beverages' },
-      { sku: 'FOOD-SPICE-MIX', name: 'Gourmet Spice Mix Set', price: 899.00, stock: 60, brand: 'SpiceMaster', category: 'Seasonings' },
-      { sku: 'FOOD-CEREAL-HEALTHY', name: 'Healthy Cereal 500g', price: 549.00, stock: 120, brand: 'GrainGood', category: 'Breakfast' },
-      { sku: 'FOOD-ENERGY-DRINK', name: 'Natural Energy Drink', price: 149.00, stock: 300, brand: 'EnergyBoost', category: 'Beverages' },
-      { sku: 'FOOD-DRIED-FRUIT', name: 'Mixed Dried Fruit 300g', price: 399.00, stock: 160, brand: 'FruitMix', category: 'Snacks' },
-      { sku: 'FOOD-SUPERFOOD-POWDER', name: 'Superfood Powder 200g', price: 1299.00, stock: 70, brand: 'SuperNutrients', category: 'Supplements' }
+      { sku: 'FOOD-CBREW-1L', name: 'Cold Brew Coffee 1L', price: 299.00, stock: 150, brand: 'BrewLab', sub_category: 'Beverages', product_type: 'Coffee' },
+      { sku: 'FOOD-PROTBAR-12', name: 'Protein Snack Bars (12-pack)', price: 799.00, stock: 120, brand: 'NutriBite', sub_category: 'Snacks', product_type: 'Protein Bar' },
+      { sku: 'FOOD-GRANOLA-500G', name: 'Organic Granola 500g', price: 449.00, stock: 200, brand: 'NatureCrunch', sub_category: 'Breakfast', product_type: 'Granola' },
+      { sku: 'FOOD-SMOOTHIE-MIX', name: 'Superfood Smoothie Mix', price: 599.00, stock: 100, brand: 'GreenBoost', sub_category: 'Beverages', product_type: 'Smoothie Mix' },
+      { sku: 'FOOD-CHOCOLATE-DARK', name: 'Dark Chocolate 70%', price: 349.00, stock: 300, brand: 'CocoaPure', sub_category: 'Confectionery', product_type: 'Dark Chocolate' },
+      { sku: 'FOOD-NUTS-MIXED', name: 'Mixed Nuts 250g', price: 399.00, stock: 180, brand: 'NuttyGood', sub_category: 'Snacks', product_type: 'Mixed Nuts' },
+      { sku: 'FOOD-TEA-GREEN', name: 'Green Tea Bags (50-pack)', price: 249.00, stock: 250, brand: 'TeaLeaf', sub_category: 'Beverages', product_type: 'Tea' },
+      { sku: 'FOOD-HONEY-RAW', name: 'Raw Honey 500g', price: 699.00, stock: 80, brand: 'BeePure', sub_category: 'Sweeteners', product_type: 'Raw Honey' },
+      { sku: 'FOOD-CRACKERS-SEED', name: 'Seed Crackers 200g', price: 299.00, stock: 150, brand: 'CrispySeed', sub_category: 'Snacks', product_type: 'Crackers' },
+      { sku: 'FOOD-JUICE-ORGANIC', name: 'Organic Apple Juice 1L', price: 199.00, stock: 200, brand: 'FruitFresh', sub_category: 'Beverages', product_type: 'Juice' },
+      { sku: 'FOOD-SPICE-MIX', name: 'Gourmet Spice Mix Set', price: 899.00, stock: 60, brand: 'SpiceMaster', sub_category: 'Pantry', product_type: 'Spice Mix' },
+      { sku: 'FOOD-CEREAL-HEALTHY', name: 'Healthy Cereal 500g', price: 549.00, stock: 120, brand: 'GrainGood', sub_category: 'Breakfast', product_type: 'Cereal' },
+      { sku: 'FOOD-ENERGY-DRINK', name: 'Natural Energy Drink', price: 149.00, stock: 300, brand: 'EnergyBoost', sub_category: 'Beverages', product_type: 'Energy Drink' },
+      { sku: 'FOOD-DRIED-FRUIT', name: 'Mixed Dried Fruit 300g', price: 399.00, stock: 160, brand: 'FruitMix', sub_category: 'Snacks', product_type: 'Dried Fruit' },
+      { sku: 'FOOD-SUPERFOOD-POWDER', name: 'Superfood Powder 200g', price: 1299.00, stock: 70, brand: 'SuperNutrients', sub_category: 'Supplements', product_type: 'Superfood Powder' }
     ];
 
     for (const product of foodDockerProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Food & Drinks','${product.category}',${product.price},${product.stock},'{\\\"organic\\\":true,\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Food & Drinks','${product.sub_category}',${product.price},${product.stock},'{\\\"organic\\\":true,\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Additional categories for comprehensive seeding
     // Appliances - 12 products
     const appliancesProducts = [
-      { sku: 'APP-WASHER-8KG', name: 'Front Load Washer 8kg', price: 25999.00, stock: 15, brand: 'CleanMax', category: 'Laundry' },
-      { sku: 'APP-DRYER-8KG', name: 'Heat Pump Dryer 8kg', price: 22999.00, stock: 12, brand: 'DryPro', category: 'Laundry' },
-      { sku: 'APP-FRIDGE-500L', name: 'French Door Refrigerator', price: 45999.00, stock: 8, brand: 'CoolMax', category: 'Kitchen' },
-      { sku: 'APP-OVEN-ELECTRIC', name: 'Electric Convection Oven', price: 18999.00, stock: 20, brand: 'BakePro', category: 'Kitchen' },
-      { sku: 'APP-DISHWASHER-12', name: 'Built-in Dishwasher 12-place', price: 19999.00, stock: 18, brand: 'WashMax', category: 'Kitchen' },
-      { sku: 'APP-MICROWAVE-25L', name: '25L Convection Microwave', price: 8999.00, stock: 25, brand: 'MicroPro', category: 'Kitchen' },
-      { sku: 'APP-AIRCOND-1HP', name: '1HP Inverter Air Conditioner', price: 15999.00, stock: 30, brand: 'CoolAir', category: 'Climate' },
-      { sku: 'APP-VACUUM-ROBOT', name: 'Robot Vacuum Cleaner', price: 12999.00, stock: 22, brand: 'CleanBot', category: 'Cleaning' },
-      { sku: 'APP-BLENDER-PRO', name: 'Professional Blender', price: 6999.00, stock: 35, brand: 'BlendMax', category: 'Kitchen' },
-      { sku: 'APP-COFFEE-ESPRESSO', name: 'Espresso Coffee Machine', price: 14999.00, stock: 15, brand: 'BrewPro', category: 'Kitchen' },
-      { sku: 'APP-WATER-HEATER', name: 'Tankless Water Heater', price: 17999.00, stock: 10, brand: 'HeatMax', category: 'Plumbing' },
-      { sku: 'APP-FAN-CEILING', name: 'Smart Ceiling Fan', price: 4999.00, stock: 40, brand: 'AirFlow', category: 'Climate' }
+      { sku: 'APP-WASHER-8KG', name: 'Front Load Washer 8kg', price: 25999.00, stock: 15, brand: 'CleanMax', sub_category: 'Laundry', product_type: 'Washing Machine' },
+      { sku: 'APP-DRYER-8KG', name: 'Heat Pump Dryer 8kg', price: 22999.00, stock: 12, brand: 'DryPro', sub_category: 'Laundry', product_type: 'Dryer' },
+      { sku: 'APP-FRIDGE-500L', name: 'French Door Refrigerator', price: 45999.00, stock: 8, brand: 'CoolMax', sub_category: 'Kitchen', product_type: 'Refrigerator' },
+      { sku: 'APP-OVEN-ELECTRIC', name: 'Electric Convection Oven', price: 18999.00, stock: 20, brand: 'BakePro', sub_category: 'Kitchen', product_type: 'Oven' },
+      { sku: 'APP-DISHWASHER-12', name: 'Built-in Dishwasher 12-place', price: 19999.00, stock: 18, brand: 'WashMax', sub_category: 'Kitchen', product_type: 'Dishwasher' },
+      { sku: 'APP-MICROWAVE-25L', name: '25L Convection Microwave', price: 8999.00, stock: 25, brand: 'MicroPro', sub_category: 'Kitchen', product_type: 'Microwave Oven' },
+      { sku: 'APP-AIRCOND-1HP', name: '1HP Inverter Air Conditioner', price: 15999.00, stock: 30, brand: 'CoolAir', sub_category: 'Climate', product_type: 'Air Conditioner' },
+      { sku: 'APP-VACUUM-ROBOT', name: 'Robot Vacuum Cleaner', price: 12999.00, stock: 22, brand: 'CleanBot', sub_category: 'Cleaning', product_type: 'Robot Vacuum Cleaner' },
+      { sku: 'APP-BLENDER-PRO', name: 'Professional Blender', price: 6999.00, stock: 35, brand: 'BlendMax', sub_category: 'Kitchen', product_type: 'Blender' },
+      { sku: 'APP-COFFEE-ESPRESSO', name: 'Espresso Coffee Machine', price: 14999.00, stock: 15, brand: 'BrewPro', sub_category: 'Kitchen', product_type: 'Coffee Machine' },
+      { sku: 'APP-WATER-HEATER', name: 'Tankless Water Heater', price: 17999.00, stock: 10, brand: 'HeatMax', sub_category: 'Plumbing', product_type: 'Water Heater' },
+      { sku: 'APP-FAN-CEILING', name: 'Smart Ceiling Fan', price: 4999.00, stock: 40, brand: 'AirFlow', sub_category: 'Climate', product_type: 'Ceiling Fan' }
     ];
 
     for (const product of appliancesProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Appliances','${product.category}',${product.price},${product.stock},'{\\\"energy_rating\\\":\\\"A+\\\",\\\"warranty\\\":\\\"2 years\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.sub_category.toLowerCase()}','${product.brand}','Appliances','${product.sub_category}',${product.price},${product.stock},'{\\\"energy_rating\\\":\\\"A+\\\",\\\"warranty\\\":\\\"2 years\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Skincare - 12 products
     const skincareProducts = [
-      { sku: 'SKIN-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', category: 'Cleansers' },
-      { sku: 'SKIN-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', category: 'Moisturizers' },
-      { sku: 'SKIN-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', category: 'Serums' },
-      { sku: 'SKIN-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', category: 'Sunscreen' },
-      { sku: 'SKIN-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', category: 'Toners' },
-      { sku: 'SKIN-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', category: 'Masks' },
-      { sku: 'SKIN-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', category: 'Exfoliators' },
-      { sku: 'SKIN-EYE-CREAM', name: 'Anti-Aging Eye Cream', price: 1199.00, stock: 90, brand: 'EyeCare', category: 'Eye Care' },
-      { sku: 'SKIN-NIGHT-CREAM', name: 'Repair Night Cream', price: 1399.00, stock: 85, brand: 'NightRepair', category: 'Night Care' },
-      { sku: 'SKIN-VITAMIN-C', name: 'Vitamin C Brightening Serum', price: 1099.00, stock: 95, brand: 'BrightSkin', category: 'Serums' },
-      { sku: 'SKIN-RETINOL-CREAM', name: 'Retinol Anti-Aging Cream', price: 1599.00, stock: 70, brand: 'RetinolPro', category: 'Anti-Aging' },
-      { sku: 'SKIN-HYALURONIC-ACID', name: 'Hyaluronic Acid Serum', price: 899.00, stock: 130, brand: 'HydraMax', category: 'Serums' }
+      { sku: 'SKIN-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', sub_category: 'Cleansers', product_type: 'Gel Cleanser' },
+      { sku: 'SKIN-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', sub_category: 'Moisturizers', product_type: 'Anti-Aging Moisturizer' },
+      { sku: 'SKIN-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', sub_category: 'Serums', product_type: 'Hydrating Serum' },
+      { sku: 'SKIN-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', sub_category: 'Sun Protection', product_type: 'Sunscreen' },
+      { sku: 'SKIN-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', sub_category: 'Toners', product_type: 'Hydrating Toner' },
+      { sku: 'SKIN-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', sub_category: 'Masks', product_type: 'Face Mask' },
+      { sku: 'SKIN-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', sub_category: 'Exfoliators', product_type: 'Exfoliating Scrub' },
+      { sku: 'SKIN-EYE-CREAM', name: 'Anti-Aging Eye Cream', price: 1199.00, stock: 90, brand: 'EyeCare', sub_category: 'Eye Care', product_type: 'Eye Cream' },
+      { sku: 'SKIN-NIGHT-CREAM', name: 'Repair Night Cream', price: 1399.00, stock: 85, brand: 'NightRepair', sub_category: 'Night Care', product_type: 'Night Cream' },
+      { sku: 'SKIN-VITAMIN-C', name: 'Vitamin C Brightening Serum', price: 1099.00, stock: 95, brand: 'BrightSkin', sub_category: 'Serums', product_type: 'Vitamin C Serum' },
+      { sku: 'SKIN-RETINOL-CREAM', name: 'Retinol Anti-Aging Cream', price: 1599.00, stock: 70, brand: 'RetinolPro', sub_category: 'Night Care', product_type: 'Retinol Cream' },
+      { sku: 'SKIN-HYALURONIC-ACID', name: 'Hyaluronic Acid Serum', price: 899.00, stock: 130, brand: 'HydraMax', sub_category: 'Serums', product_type: 'Hyaluronic Acid Serum' }
     ];
 
     for (const product of skincareProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Skincare','${product.category}',${product.price},${product.stock},'{\\\"dermatologist_tested\\\":true,\\\"hypoallergenic\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Skincare','${product.sub_category}',${product.price},${product.stock},'{\\\"dermatologist_tested\\\":true,\\\"hypoallergenic\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Fashion - 12 products
     const fashionProducts = [
-      { sku: 'FASH-SHIRT-COTTON', name: 'Cotton Button-Down Shirt', price: 1299.00, stock: 50, brand: 'StyleCo', category: 'Tops' },
-      { sku: 'FASH-JEANS-SLIM', name: 'Slim Fit Jeans', price: 1899.00, stock: 40, brand: 'DenimPro', category: 'Bottoms' },
-      { sku: 'FASH-DRESS-CASUAL', name: 'Casual Summer Dress', price: 1599.00, stock: 35, brand: 'DressUp', category: 'Dresses' },
-      { sku: 'FASH-JACKET-DENIM', name: 'Denim Jacket', price: 2199.00, stock: 25, brand: 'JacketMax', category: 'Outerwear' },
-      { sku: 'FASH-SHOES-SNEAKERS', name: 'Canvas Sneakers', price: 2499.00, stock: 60, brand: 'ShoePro', category: 'Footwear' },
-      { sku: 'FASH-BAG-TOTE', name: 'Canvas Tote Bag', price: 899.00, stock: 45, brand: 'BagMaster', category: 'Accessories' },
-      { sku: 'FASH-SCARF-SILK', name: 'Silk Scarf', price: 699.00, stock: 30, brand: 'SilkStyle', category: 'Accessories' },
-      { sku: 'FASH-BELT-LEATHER', name: 'Genuine Leather Belt', price: 1199.00, stock: 55, brand: 'LeatherPro', category: 'Accessories' },
-      { sku: 'FASH-WATCH-CLASSIC', name: 'Classic Leather Watch', price: 2999.00, stock: 20, brand: 'TimeStyle', category: 'Accessories' },
-      { sku: 'FASH-SUNGLASSES', name: 'UV Protection Sunglasses', price: 1499.00, stock: 40, brand: 'SunStyle', category: 'Accessories' },
-      { sku: 'FASH-HAT-BASEBALL', name: 'Baseball Cap', price: 599.00, stock: 80, brand: 'CapStyle', category: 'Accessories' },
-      { sku: 'FASH-SOCKS-PACK', name: 'Cotton Socks 6-pack', price: 399.00, stock: 100, brand: 'SockPro', category: 'Underwear' }
+      { sku: 'FASH-SHIRT-COTTON', name: 'Cotton Button-Down Shirt', price: 1299.00, stock: 50, brand: 'StyleCo', sub_category: 'Clothing', product_type: 'Shirt' },
+      { sku: 'FASH-JEANS-SLIM', name: 'Slim Fit Jeans', price: 1899.00, stock: 40, brand: 'DenimPro', sub_category: 'Clothing', product_type: 'Jeans' },
+      { sku: 'FASH-DRESS-CASUAL', name: 'Casual Summer Dress', price: 1599.00, stock: 35, brand: 'DressUp', sub_category: 'Clothing', product_type: 'Dress' },
+      { sku: 'FASH-JACKET-DENIM', name: 'Denim Jacket', price: 2199.00, stock: 25, brand: 'JacketMax', sub_category: 'Outerwear', product_type: 'Jacket' },
+      { sku: 'FASH-SHOES-SNEAKERS', name: 'Canvas Sneakers', price: 2499.00, stock: 60, brand: 'ShoePro', sub_category: 'Footwear', product_type: 'Sneakers' },
+      { sku: 'FASH-BAG-TOTE', name: 'Canvas Tote Bag', price: 899.00, stock: 45, brand: 'BagMaster', sub_category: 'Accessories', product_type: 'Handbag' },
+      { sku: 'FASH-SCARF-SILK', name: 'Silk Scarf', price: 699.00, stock: 30, brand: 'SilkStyle', sub_category: 'Accessories', product_type: 'Scarf' },
+      { sku: 'FASH-BELT-LEATHER', name: 'Genuine Leather Belt', price: 1199.00, stock: 55, brand: 'LeatherPro', sub_category: 'Accessories', product_type: 'Belt' },
+      { sku: 'FASH-WATCH-CLASSIC', name: 'Classic Leather Watch', price: 2999.00, stock: 20, brand: 'TimeStyle', sub_category: 'Accessories', product_type: 'Watch' },
+      { sku: 'FASH-SUNGLASSES', name: 'UV Protection Sunglasses', price: 1499.00, stock: 40, brand: 'SunStyle', sub_category: 'Accessories', product_type: 'Sunglasses' },
+      { sku: 'FASH-HAT-BASEBALL', name: 'Baseball Cap', price: 599.00, stock: 80, brand: 'CapStyle', sub_category: 'Accessories', product_type: 'Cap' },
+      { sku: 'FASH-SOCKS-PACK', name: 'Cotton Socks 6-pack', price: 399.00, stock: 100, brand: 'SockPro', sub_category: 'Clothing', product_type: 'Socks' }
     ];
 
     for (const product of fashionProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Fashion','${product.category}',${product.price},${product.stock},'{\\\"material\\\":\\\"quality\\\",\\\"size_range\\\":\\\"various\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Fashion','${product.sub_category}',${product.price},${product.stock},'{\\\"material\\\":\\\"quality\\\",\\\"size_range\\\":\\\"various\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Home & Living - 12 products
     const homeProducts = [
-      { sku: 'HOME-CUSHION-SET', name: 'Decorative Cushion Set', price: 899.00, stock: 60, brand: 'ComfortCo', category: 'Decor' },
-      { sku: 'HOME-LAMP-TABLE', name: 'Modern Table Lamp', price: 1299.00, stock: 40, brand: 'LightStyle', category: 'Lighting' },
-      { sku: 'HOME-RUG-WOOL', name: 'Wool Area Rug', price: 2999.00, stock: 25, brand: 'RugMaster', category: 'Flooring' },
-      { sku: 'HOME-CURTAINS-SET', name: 'Blackout Curtains Set', price: 1899.00, stock: 30, brand: 'WindowStyle', category: 'Window Treatments' },
-      { sku: 'HOME-VASE-CERAMIC', name: 'Ceramic Decorative Vase', price: 699.00, stock: 50, brand: 'PotteryPro', category: 'Decor' },
-      { sku: 'HOME-MIRROR-WALL', name: 'Wall Mirror 60cm', price: 1499.00, stock: 35, brand: 'MirrorMax', category: 'Decor' },
-      { sku: 'HOME-PLANT-POT', name: 'Plant Pot with Saucer', price: 399.00, stock: 80, brand: 'PlantStyle', category: 'Garden' },
-      { sku: 'HOME-CANDLE-SET', name: 'Scented Candle Set', price: 599.00, stock: 45, brand: 'AromaCo', category: 'Fragrance' },
-      { sku: 'HOME-THROW-BLANKET', name: 'Soft Throw Blanket', price: 999.00, stock: 55, brand: 'CozyStyle', category: 'Textiles' },
-      { sku: 'HOME-PHOTO-FRAME', name: 'Photo Frame Set 5pc', price: 499.00, stock: 70, brand: 'FramePro', category: 'Decor' },
-      { sku: 'HOME-COASTER-SET', name: 'Cork Coaster Set', price: 299.00, stock: 90, brand: 'TableStyle', category: 'Tableware' },
-      { sku: 'HOME-BOOKEND-PAIR', name: 'Decorative Bookends', price: 799.00, stock: 40, brand: 'BookStyle', category: 'Decor' }
+      { sku: 'HOME-CUSHION-SET', name: 'Decorative Cushion Set', price: 899.00, stock: 60, brand: 'ComfortCo', sub_category: 'Decor', product_type: 'Cushion' },
+      { sku: 'HOME-LAMP-TABLE', name: 'Modern Table Lamp', price: 1299.00, stock: 40, brand: 'LightStyle', sub_category: 'Lighting', product_type: 'Desk Lamp' },
+      { sku: 'HOME-RUG-WOOL', name: 'Wool Area Rug', price: 2999.00, stock: 25, brand: 'RugMaster', sub_category: 'Flooring', product_type: 'Area Rug' },
+      { sku: 'HOME-CURTAINS-SET', name: 'Blackout Curtains Set', price: 1899.00, stock: 30, brand: 'WindowStyle', sub_category: 'Decor', product_type: 'Curtains' },
+      { sku: 'HOME-VASE-CERAMIC', name: 'Ceramic Decorative Vase', price: 699.00, stock: 50, brand: 'PotteryPro', sub_category: 'Decor', product_type: 'Vase' },
+      { sku: 'HOME-MIRROR-WALL', name: 'Wall Mirror 60cm', price: 1499.00, stock: 35, brand: 'MirrorMax', sub_category: 'Decor', product_type: 'Wall Mirror' },
+      { sku: 'HOME-PLANT-POT', name: 'Plant Pot with Saucer', price: 399.00, stock: 80, brand: 'PlantStyle', sub_category: 'Garden', product_type: 'Plant Pot' },
+      { sku: 'HOME-CANDLE-SET', name: 'Scented Candle Set', price: 599.00, stock: 45, brand: 'AromaCo', sub_category: 'Decor', product_type: 'Candles' },
+      { sku: 'HOME-THROW-BLANKET', name: 'Soft Throw Blanket', price: 999.00, stock: 55, brand: 'CozyStyle', sub_category: 'Bedding', product_type: 'Blanket' },
+      { sku: 'HOME-PHOTO-FRAME', name: 'Photo Frame Set 5pc', price: 499.00, stock: 70, brand: 'FramePro', sub_category: 'Decor', product_type: 'Photo Frame' },
+      { sku: 'HOME-COASTER-SET', name: 'Cork Coaster Set', price: 299.00, stock: 90, brand: 'TableStyle', sub_category: 'Decor', product_type: 'Coaster' },
+      { sku: 'HOME-BOOKEND-PAIR', name: 'Decorative Bookends', price: 799.00, stock: 40, brand: 'BookStyle', sub_category: 'Decor', product_type: 'Bookends' }
     ];
 
     for (const product of homeProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Home & Living','${product.category}',${product.price},${product.stock},'{\\\"eco_friendly\\\":true,\\\"durable\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Home & Living','${product.sub_category}',${product.price},${product.stock},'{\\\"eco_friendly\\\":true,\\\"durable\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Additional categories to match local database
     // Condiments & Sauces - 12 products
     const condimentsProducts = [
-      { sku: 'COND-SOY-SAUCE', name: 'Premium Soy Sauce 500ml', price: 299.00, stock: 100, brand: 'AsianFlavor', category: 'Sauces' },
-      { sku: 'COND-OLIVE-OIL', name: 'Extra Virgin Olive Oil', price: 899.00, stock: 80, brand: 'Mediterranean', category: 'Oils' },
-      { sku: 'COND-BALSAMIC', name: 'Aged Balsamic Vinegar', price: 699.00, stock: 60, brand: 'ItalianStyle', category: 'Vinegars' },
-      { sku: 'COND-MUSTARD-DIJON', name: 'Dijon Mustard', price: 399.00, stock: 120, brand: 'FrenchTaste', category: 'Condiments' },
-      { sku: 'COND-KETCHUP-ORGANIC', name: 'Organic Ketchup', price: 249.00, stock: 150, brand: 'NaturalTaste', category: 'Sauces' },
-      { sku: 'COND-MAYO-AVOCADO', name: 'Avocado Mayo', price: 349.00, stock: 90, brand: 'HealthyChoice', category: 'Condiments' },
-      { sku: 'COND-HOT-SAUCE', name: 'Hot Sauce Variety Pack', price: 599.00, stock: 70, brand: 'SpiceMaster', category: 'Sauces' },
-      { sku: 'COND-WORCESTERSHIRE', name: 'Worcestershire Sauce', price: 199.00, stock: 110, brand: 'ClassicTaste', category: 'Sauces' },
-      { sku: 'COND-TAHINI', name: 'Sesame Tahini Paste', price: 449.00, stock: 85, brand: 'MiddleEastern', category: 'Pastes' },
-      { sku: 'COND-FISH-SAUCE', name: 'Fish Sauce Premium', price: 299.00, stock: 75, brand: 'AsianCuisine', category: 'Sauces' },
-      { sku: 'COND-MISO-PASTE', name: 'White Miso Paste', price: 399.00, stock: 65, brand: 'JapaneseFlavor', category: 'Pastes' },
-      { sku: 'COND-SESAME-OIL', name: 'Toasted Sesame Oil', price: 349.00, stock: 95, brand: 'AsianEssence', category: 'Oils' }
+      { sku: 'COND-SOY-SAUCE', name: 'Premium Soy Sauce 500ml', price: 299.00, stock: 100, brand: 'AsianFlavor', sub_category: 'Sauces', product_type: 'Soy Sauce' },
+      { sku: 'COND-OLIVE-OIL', name: 'Extra Virgin Olive Oil', price: 899.00, stock: 80, brand: 'Mediterranean', sub_category: 'Oils', product_type: 'Olive Oil' },
+      { sku: 'COND-BALSAMIC', name: 'Aged Balsamic Vinegar', price: 699.00, stock: 60, brand: 'ItalianStyle', sub_category: 'Vinegars', product_type: 'Vinegar' },
+      { sku: 'COND-MUSTARD-DIJON', name: 'Dijon Mustard', price: 399.00, stock: 120, brand: 'FrenchTaste', sub_category: 'Mustards', product_type: 'Mustard' },
+      { sku: 'COND-KETCHUP-ORGANIC', name: 'Organic Ketchup', price: 249.00, stock: 150, brand: 'NaturalTaste', sub_category: 'Sauces', product_type: 'Ketchup' },
+      { sku: 'COND-MAYO-AVOCADO', name: 'Avocado Mayo', price: 349.00, stock: 90, brand: 'HealthyChoice', sub_category: 'Spreads', product_type: 'Mayonnaise' },
+      { sku: 'COND-HOT-SAUCE', name: 'Hot Sauce Variety Pack', price: 599.00, stock: 70, brand: 'SpiceMaster', sub_category: 'Hot Sauces', product_type: 'Hot Sauce' },
+      { sku: 'COND-WORCESTERSHIRE', name: 'Worcestershire Sauce', price: 199.00, stock: 110, brand: 'ClassicTaste', sub_category: 'Sauces', product_type: 'Worcestershire Sauce' },
+      { sku: 'COND-TAHINI', name: 'Sesame Tahini Paste', price: 449.00, stock: 85, brand: 'MiddleEastern', sub_category: 'Spreads', product_type: 'Tahini' },
+      { sku: 'COND-FISH-SAUCE', name: 'Fish Sauce Premium', price: 299.00, stock: 75, brand: 'AsianCuisine', sub_category: 'Sauces', product_type: 'Fish Sauce' },
+      { sku: 'COND-MISO-PASTE', name: 'White Miso Paste', price: 399.00, stock: 65, brand: 'JapaneseFlavor', sub_category: 'Sauces', product_type: 'Miso Paste' },
+      { sku: 'COND-SESAME-OIL', name: 'Toasted Sesame Oil', price: 349.00, stock: 95, brand: 'AsianEssence', sub_category: 'Oils', product_type: 'Sesame Oil' }
     ];
 
     for (const product of condimentsProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Condiments & Sauces','${product.category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"preservative_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Condiments & Sauces','${product.sub_category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"preservative_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Snacks - 12 products
     const snacksProducts = [
-      { sku: 'SNACK-CHIPS-POTATO', name: 'Potato Chips Classic', price: 199.00, stock: 200, brand: 'CrispyCo', category: 'Chips' },
-      { sku: 'SNACK-NUTS-ALMOND', name: 'Roasted Almonds', price: 499.00, stock: 150, brand: 'NuttyGood', category: 'Nuts' },
-      { sku: 'SNACK-CRACKERS-CHEESE', name: 'Cheese Crackers', price: 299.00, stock: 180, brand: 'CrackerMax', category: 'Crackers' },
-      { sku: 'SNACK-POPCORN-BUTTER', name: 'Butter Popcorn', price: 149.00, stock: 250, brand: 'PopMaster', category: 'Popcorn' },
-      { sku: 'SNACK-PRETZELS-SALTED', name: 'Salted Pretzels', price: 249.00, stock: 160, brand: 'PretzelPro', category: 'Pretzels' },
-      { sku: 'SNACK-TRAIL-MIX', name: 'Trail Mix Deluxe', price: 399.00, stock: 120, brand: 'TrailMaster', category: 'Mixed' },
-      { sku: 'SNACK-COOKIES-CHOC', name: 'Chocolate Cookies', price: 349.00, stock: 140, brand: 'CookieCo', category: 'Cookies' },
-      { sku: 'SNACK-GRANOLA-BARS', name: 'Granola Bars 6-pack', price: 449.00, stock: 100, brand: 'GranolaPro', category: 'Bars' },
-      { sku: 'SNACK-DRIED-MANGO', name: 'Dried Mango Slices', price: 399.00, stock: 90, brand: 'FruitSnack', category: 'Dried Fruit' },
-      { sku: 'SNACK-PISTACHIOS', name: 'Shelled Pistachios', price: 599.00, stock: 80, brand: 'PistachioPro', category: 'Nuts' },
-      { sku: 'SNACK-CASHEWS-ROASTED', name: 'Roasted Cashews', price: 449.00, stock: 110, brand: 'CashewCo', category: 'Nuts' },
-      { sku: 'SNACK-RICE-CAKES', name: 'Brown Rice Cakes', price: 199.00, stock: 170, brand: 'RiceSnack', category: 'Rice' }
+      { sku: 'SNACK-CHIPS-POTATO', name: 'Potato Chips Classic', price: 199.00, stock: 200, brand: 'CrispyCo', sub_category: 'Chips', product_type: 'Potato Chips' },
+      { sku: 'SNACK-NUTS-ALMOND', name: 'Roasted Almonds', price: 499.00, stock: 150, brand: 'NuttyGood', sub_category: 'Nuts', product_type: 'Almonds' },
+      { sku: 'SNACK-CRACKERS-CHEESE', name: 'Cheese Crackers', price: 299.00, stock: 180, brand: 'CrackerMax', sub_category: 'Crackers', product_type: 'Crackers' },
+      { sku: 'SNACK-POPCORN-BUTTER', name: 'Butter Popcorn', price: 149.00, stock: 250, brand: 'PopMaster', sub_category: 'Popcorn', product_type: 'Popcorn' },
+      { sku: 'SNACK-PRETZELS-SALTED', name: 'Salted Pretzels', price: 249.00, stock: 160, brand: 'PretzelPro', sub_category: 'Pretzels', product_type: 'Pretzels' },
+      { sku: 'SNACK-TRAIL-MIX', name: 'Trail Mix Deluxe', price: 399.00, stock: 120, brand: 'TrailMaster', sub_category: 'Mixed Snacks', product_type: 'Trail Mix' },
+      { sku: 'SNACK-COOKIES-CHOC', name: 'Chocolate Cookies', price: 349.00, stock: 140, brand: 'CookieCo', sub_category: 'Cookies', product_type: 'Cookies' },
+      { sku: 'SNACK-GRANOLA-BARS', name: 'Granola Bars 6-pack', price: 449.00, stock: 100, brand: 'GranolaPro', sub_category: 'Bars', product_type: 'Granola Bar' },
+      { sku: 'SNACK-DRIED-MANGO', name: 'Dried Mango Slices', price: 399.00, stock: 90, brand: 'FruitSnack', sub_category: 'Snacks', product_type: 'Dried Fruit' },
+      { sku: 'SNACK-PISTACHIOS', name: 'Shelled Pistachios', price: 599.00, stock: 80, brand: 'PistachioPro', sub_category: 'Nuts', product_type: 'Pistachios' },
+      { sku: 'SNACK-CASHEWS-ROASTED', name: 'Roasted Cashews', price: 449.00, stock: 110, brand: 'CashewCo', sub_category: 'Nuts', product_type: 'Cashews' },
+      { sku: 'SNACK-RICE-CAKES', name: 'Brown Rice Cakes', price: 199.00, stock: 170, brand: 'RiceSnack', sub_category: 'Rice Snacks', product_type: 'Rice Cake' }
     ];
 
     for (const product of snacksProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Snacks','${product.category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"no_artificial\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Snacks','${product.sub_category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"no_artificial\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Peripherals - 12 products
     const peripheralsProducts = [
-      { sku: 'PERI-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2999.00, stock: 50, brand: 'GameMax', category: 'Mice' },
-      { sku: 'PERI-KEYBOARD-MECH', name: 'Mechanical Keyboard', price: 3999.00, stock: 40, brand: 'KeyMaster', category: 'Keyboards' },
-      { sku: 'PERI-MONITOR-27', name: '27-inch Gaming Monitor', price: 15999.00, stock: 25, brand: 'DisplayPro', category: 'Monitors' },
-      { sku: 'PERI-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 30, brand: 'StreamCam', category: 'Cameras' },
-      { sku: 'PERI-SPEAKERS-2.1', name: '2.1 Speaker System', price: 4999.00, stock: 35, brand: 'AudioMax', category: 'Speakers' },
-      { sku: 'PERI-HEADPHONES-WIRELESS', name: 'Wireless Headphones', price: 5999.00, stock: 45, brand: 'SoundPro', category: 'Headphones' },
-      { sku: 'PERI-MICROPHONE-STREAM', name: 'Streaming Microphone', price: 3999.00, stock: 20, brand: 'MicPro', category: 'Microphones' },
-      { sku: 'PERI-DOCKING-STATION', name: 'USB-C Docking Station', price: 2999.00, stock: 60, brand: 'DockMax', category: 'Docks' },
-      { sku: 'PERI-CABLE-HDMI', name: 'HDMI Cable 2m', price: 999.00, stock: 100, brand: 'CablePro', category: 'Cables' },
-      { sku: 'PERI-USB-HUB', name: 'USB 3.0 Hub 4-port', price: 1499.00, stock: 80, brand: 'HubMax', category: 'Hubs' },
-      { sku: 'PERI-GRAPHICS-TABLET', name: 'Drawing Graphics Tablet', price: 8999.00, stock: 15, brand: 'DrawPro', category: 'Tablets' },
-      { sku: 'PERI-LAPTOP-STAND', name: 'Adjustable Laptop Stand', price: 1999.00, stock: 70, brand: 'StandPro', category: 'Stands' }
+      { sku: 'PERI-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2999.00, stock: 50, brand: 'GameMax', sub_category: 'Input Devices', product_type: 'Gaming Mouse' },
+      { sku: 'PERI-KEYBOARD-MECH', name: 'Mechanical Keyboard', price: 3999.00, stock: 40, brand: 'KeyMaster', sub_category: 'Input Devices', product_type: 'Mechanical Keyboard' },
+      { sku: 'PERI-MONITOR-27', name: '27-inch Gaming Monitor', price: 15999.00, stock: 25, brand: 'DisplayPro', sub_category: 'Display', product_type: 'Gaming Monitor' },
+      { sku: 'PERI-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 30, brand: 'StreamCam', sub_category: 'Video', product_type: 'Webcam' },
+      { sku: 'PERI-SPEAKERS-2.1', name: '2.1 Speaker System', price: 4999.00, stock: 35, brand: 'AudioMax', sub_category: 'Audio', product_type: 'Speaker' },
+      { sku: 'PERI-HEADPHONES-WIRELESS', name: 'Wireless Headphones', price: 5999.00, stock: 45, brand: 'SoundPro', sub_category: 'Audio', product_type: 'Wireless Headphones' },
+      { sku: 'PERI-MICROPHONE-STREAM', name: 'Streaming Microphone', price: 3999.00, stock: 20, brand: 'MicPro', sub_category: 'Audio', product_type: 'USB Streaming Microphone' },
+      { sku: 'PERI-DOCKING-STATION', name: 'USB-C Docking Station', price: 2999.00, stock: 60, brand: 'DockMax', sub_category: 'Connectivity', product_type: 'Laptop Docking Station' },
+      { sku: 'PERI-CABLE-HDMI', name: 'HDMI Cable 2m', price: 999.00, stock: 100, brand: 'CablePro', sub_category: 'Cables', product_type: 'HDMI Cable' },
+      { sku: 'PERI-USB-HUB', name: 'USB 3.0 Hub 4-port', price: 1499.00, stock: 80, brand: 'HubMax', sub_category: 'Connectivity', product_type: 'USB Hub' },
+      { sku: 'PERI-GRAPHICS-TABLET', name: 'Drawing Graphics Tablet', price: 8999.00, stock: 15, brand: 'DrawPro', sub_category: 'Input Devices', product_type: 'Graphics Tablet' },
+      { sku: 'PERI-LAPTOP-STAND', name: 'Adjustable Laptop Stand', price: 1999.00, stock: 70, brand: 'StandPro', sub_category: 'Cooling', product_type: 'Laptop Cooling Pad' }
     ];
 
     for (const product of peripheralsProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Peripherals','${product.category}',${product.price},${product.stock},'{\\\"compatibility\\\":\\\"universal\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.sub_category.toLowerCase()}','${product.brand}','Peripherals','${product.sub_category}',${product.price},${product.stock},'{\\\"compatibility\\\":\\\"universal\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Fragrances - 12 products
     const fragrancesProducts = [
-      { sku: 'FRAG-PERFUME-WOMEN', name: 'Womens Perfume 50ml', price: 2999.00, stock: 40, brand: 'Elegance', category: 'Perfumes' },
-      { sku: 'FRAG-COLOGNE-MEN', name: 'Mens Cologne 100ml', price: 2499.00, stock: 50, brand: 'Masculine', category: 'Colognes' },
-      { sku: 'FRAG-BODY-SPRAY', name: 'Body Spray Fresh', price: 899.00, stock: 80, brand: 'FreshSpray', category: 'Body Sprays' },
-      { sku: 'FRAG-DIFFUSER-REED', name: 'Reed Diffuser Set', price: 1299.00, stock: 60, brand: 'AromaHome', category: 'Home Fragrance' },
-      { sku: 'FRAG-CANDLE-SCENTED', name: 'Scented Candle Vanilla', price: 699.00, stock: 100, brand: 'CandleCo', category: 'Candles' },
-      { sku: 'FRAG-ROOM-SPRAY', name: 'Room Spray Lavender', price: 499.00, stock: 120, brand: 'RoomFresh', category: 'Room Sprays' },
-      { sku: 'FRAG-PERFUME-ROLL', name: 'Roll-on Perfume Oil', price: 1199.00, stock: 70, brand: 'RollOn', category: 'Perfume Oils' },
-      { sku: 'FRAG-SOAP-LUXURY', name: 'Luxury Scented Soap', price: 399.00, stock: 150, brand: 'SoapLux', category: 'Soaps' },
-      { sku: 'FRAG-LOTION-BODY', name: 'Body Lotion Fragrant', price: 799.00, stock: 90, brand: 'LotionPro', category: 'Body Care' },
-      { sku: 'FRAG-SHAMPOO-SCENTED', name: 'Scented Shampoo', price: 599.00, stock: 110, brand: 'HairCare', category: 'Hair Care' },
-      { sku: 'FRAG-DEO-STICK', name: 'Deodorant Stick', price: 299.00, stock: 200, brand: 'DeoMax', category: 'Deodorants' },
-      { sku: 'FRAG-SACHET-CAR', name: 'Car Sachet Freshener', price: 199.00, stock: 180, brand: 'CarFresh', category: 'Car Fragrance' }
+      { sku: 'FRAG-PERFUME-WOMEN', name: 'Womens Perfume 50ml', price: 2999.00, stock: 40, brand: 'Elegance', sub_category: 'Perfumes', product_type: 'Eau de Parfum' },
+      { sku: 'FRAG-COLOGNE-MEN', name: 'Mens Cologne 100ml', price: 2499.00, stock: 50, brand: 'Masculine', sub_category: 'Colognes', product_type: 'Cologne' },
+      { sku: 'FRAG-BODY-SPRAY', name: 'Body Spray Fresh', price: 899.00, stock: 80, brand: 'FreshSpray', sub_category: 'Body Sprays', product_type: 'Body Spray' },
+      { sku: 'FRAG-DIFFUSER-REED', name: 'Reed Diffuser Set', price: 1299.00, stock: 60, brand: 'AromaHome', sub_category: 'Home Fragrances', product_type: 'Reed Diffuser' },
+      { sku: 'FRAG-CANDLE-SCENTED', name: 'Scented Candle Vanilla', price: 699.00, stock: 100, brand: 'CandleCo', sub_category: 'Home Fragrances', product_type: 'Scented Candle' },
+      { sku: 'FRAG-ROOM-SPRAY', name: 'Room Spray Lavender', price: 499.00, stock: 120, brand: 'RoomFresh', sub_category: 'Home Fragrances', product_type: 'Air Freshener' },
+      { sku: 'FRAG-PERFUME-ROLL', name: 'Roll-on Perfume Oil', price: 1199.00, stock: 70, brand: 'RollOn', sub_category: 'Perfumes', product_type: 'Perfume Roller' },
+      { sku: 'FRAG-SOAP-LUXURY', name: 'Luxury Scented Soap', price: 399.00, stock: 150, brand: 'SoapLux', sub_category: 'Body Care', product_type: 'Body Lotion' },
+      { sku: 'FRAG-LOTION-BODY', name: 'Body Lotion Fragrant', price: 799.00, stock: 90, brand: 'LotionPro', sub_category: 'Body Care', product_type: 'Body Lotion' },
+      { sku: 'FRAG-SHAMPOO-SCENTED', name: 'Scented Shampoo', price: 599.00, stock: 110, brand: 'HairCare', sub_category: 'Hair Care', product_type: 'Shampoo' },
+      { sku: 'FRAG-DEO-STICK', name: 'Deodorant Stick', price: 299.00, stock: 200, brand: 'DeoMax', sub_category: 'Body Care', product_type: 'Body Mist' },
+      { sku: 'FRAG-SACHET-CAR', name: 'Car Sachet Freshener', price: 199.00, stock: 180, brand: 'CarFresh', sub_category: 'Home Fragrances', product_type: 'Sachet' }
     ];
 
     for (const product of fragrancesProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Fragrances','${product.category}',${product.price},${product.stock},'{\\\"long_lasting\\\":true,\\\"natural_ingredients\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Fragrances','${product.sub_category}',${product.price},${product.stock},'{\\\"long_lasting\\\":true,\\\"natural_ingredients\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Computer Components - 12 products
     const componentsProducts = [
-      { sku: 'COMP-RAM-16GB', name: '16GB DDR4 RAM', price: 4999.00, stock: 30, brand: 'MemoryMax', category: 'Memory' },
-      { sku: 'COMP-SSD-1TB', name: '1TB NVMe SSD', price: 6999.00, stock: 25, brand: 'StoragePro', category: 'Storage' },
-      { sku: 'COMP-GPU-RTX4060', name: 'RTX 4060 Graphics Card', price: 25999.00, stock: 15, brand: 'GraphicsMax', category: 'Graphics' },
-      { sku: 'COMP-CPU-RYZEN7', name: 'Ryzen 7 Processor', price: 18999.00, stock: 20, brand: 'ProcessorPro', category: 'Processors' },
-      { sku: 'COMP-MOTHERBOARD-B550', name: 'B550 Motherboard', price: 8999.00, stock: 18, brand: 'BoardMax', category: 'Motherboards' },
-      { sku: 'COMP-PSU-750W', name: '750W Power Supply', price: 5999.00, stock: 22, brand: 'PowerMax', category: 'Power Supplies' },
-      { sku: 'COMP-COOLER-AIO', name: 'AIO Liquid Cooler', price: 3999.00, stock: 35, brand: 'CoolMax', category: 'Cooling' },
-      { sku: 'COMP-CASE-MID', name: 'Mid Tower Case', price: 2999.00, stock: 40, brand: 'CasePro', category: 'Cases' },
-      { sku: 'COMP-FAN-120MM', name: '120mm Case Fan', price: 999.00, stock: 80, brand: 'FanMax', category: 'Fans' },
-      { sku: 'COMP-CABLE-SATA', name: 'SATA Cable Set', price: 499.00, stock: 100, brand: 'CablePro', category: 'Cables' },
-      { sku: 'COMP-THERMAL-PASTE', name: 'Thermal Paste', price: 299.00, stock: 120, brand: 'ThermalPro', category: 'Thermal' },
-      { sku: 'COMP-SCREW-SET', name: 'PC Building Screw Set', price: 199.00, stock: 150, brand: 'HardwareMax', category: 'Hardware' }
+      { sku: 'COMP-RAM-16GB', name: '16GB DDR4 RAM', price: 4999.00, stock: 30, brand: 'MemoryMax', sub_category: 'Memory', product_type: 'RAM' },
+      { sku: 'COMP-SSD-1TB', name: '1TB NVMe SSD', price: 6999.00, stock: 25, brand: 'StoragePro', sub_category: 'Storage', product_type: 'SSD' },
+      { sku: 'COMP-GPU-RTX4060', name: 'RTX 4060 Graphics Card', price: 25999.00, stock: 15, brand: 'GraphicsMax', sub_category: 'Graphics', product_type: 'Graphics Card' },
+      { sku: 'COMP-CPU-RYZEN7', name: 'Ryzen 7 Processor', price: 18999.00, stock: 20, brand: 'ProcessorPro', sub_category: 'Processors', product_type: 'Processor' },
+      { sku: 'COMP-MOTHERBOARD-B550', name: 'B550 Motherboard', price: 8999.00, stock: 18, brand: 'BoardMax', sub_category: 'Motherboards', product_type: 'Motherboard' },
+      { sku: 'COMP-PSU-750W', name: '750W Power Supply', price: 5999.00, stock: 22, brand: 'PowerMax', sub_category: 'Power', product_type: 'Power Supply' },
+      { sku: 'COMP-COOLER-AIO', name: 'AIO Liquid Cooler', price: 3999.00, stock: 35, brand: 'CoolMax', sub_category: 'Cooling', product_type: 'CPU Cooler' },
+      { sku: 'COMP-CASE-MID', name: 'Mid Tower Case', price: 2999.00, stock: 40, brand: 'CasePro', sub_category: 'Cases', product_type: 'Gaming Case' },
+      { sku: 'COMP-FAN-120MM', name: '120mm Case Fan', price: 999.00, stock: 80, brand: 'FanMax', sub_category: 'Cooling', product_type: 'Case Fan' },
+      { sku: 'COMP-CABLE-SATA', name: 'SATA Cable Set', price: 499.00, stock: 100, brand: 'CablePro', sub_category: 'Accessories', product_type: 'SATA Cable' },
+      { sku: 'COMP-THERMAL-PASTE', name: 'Thermal Paste', price: 299.00, stock: 120, brand: 'ThermalPro', sub_category: 'Accessories', product_type: 'Thermal Paste' },
+      { sku: 'COMP-SCREW-SET', name: 'PC Building Screw Set', price: 199.00, stock: 150, brand: 'HardwareMax', sub_category: 'Accessories', product_type: 'Hardware' }
     ];
 
     for (const product of componentsProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High performance ${product.category.toLowerCase()}','${product.brand}','Computer Components','${product.category}',${product.price},${product.stock},'{\\\"high_performance\\\":true,\\\"warranty\\\":\\\"2 years\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High performance ${product.sub_category.toLowerCase()}','${product.brand}','Computer Components','${product.sub_category}',${product.price},${product.stock},'{\\\"high_performance\\\":true,\\\"warranty\\\":\\\"2 years\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Hair Care - 12 products
     const hairCareProducts = [
-      { sku: 'HAIR-SHAMPOO-CLEAR', name: 'Clarifying Shampoo', price: 699.00, stock: 80, brand: 'HairClear', category: 'Shampoos' },
-      { sku: 'HAIR-CONDITIONER-DEEP', name: 'Deep Conditioning Treatment', price: 899.00, stock: 70, brand: 'HairSoft', category: 'Conditioners' },
-      { sku: 'HAIR-MASK-REPAIR', name: 'Repair Hair Mask', price: 1199.00, stock: 60, brand: 'HairRepair', category: 'Masks' },
-      { sku: 'HAIR-SERUM-ANTI-FRIZZ', name: 'Anti-Frizz Serum', price: 799.00, stock: 90, brand: 'FrizzFree', category: 'Serums' },
-      { sku: 'HAIR-OIL-ARGAN', name: 'Argan Oil Treatment', price: 999.00, stock: 50, brand: 'OilPro', category: 'Oils' },
-      { sku: 'HAIR-SPRAY-HOLD', name: 'Strong Hold Hair Spray', price: 599.00, stock: 100, brand: 'HoldMax', category: 'Styling' },
-      { sku: 'HAIR-GEL-STYLING', name: 'Styling Gel', price: 399.00, stock: 120, brand: 'StyleGel', category: 'Styling' },
-      { sku: 'HAIR-MOUSSE-VOLUME', name: 'Volume Mousse', price: 499.00, stock: 85, brand: 'VolumeMax', category: 'Styling' },
-      { sku: 'HAIR-BRUSH-DETANGLE', name: 'Detangling Brush', price: 299.00, stock: 150, brand: 'BrushPro', category: 'Tools' },
-      { sku: 'HAIR-DRYER-PROFESSIONAL', name: 'Professional Hair Dryer', price: 2999.00, stock: 25, brand: 'DryPro', category: 'Tools' },
-      { sku: 'HAIR-STRAIGHTENER-CERAMIC', name: 'Ceramic Straightener', price: 1999.00, stock: 30, brand: 'StraightPro', category: 'Tools' },
-      { sku: 'HAIR-CURLER-WAND', name: 'Curling Wand Set', price: 1499.00, stock: 35, brand: 'CurlPro', category: 'Tools' }
+      { sku: 'HAIR-SHAMPOO-CLEAR', name: 'Clarifying Shampoo', price: 699.00, stock: 80, brand: 'HairClear', sub_category: 'Shampoos', product_type: 'Shampoo' },
+      { sku: 'HAIR-CONDITIONER-DEEP', name: 'Deep Conditioning Treatment', price: 899.00, stock: 70, brand: 'HairSoft', sub_category: 'Conditioners', product_type: 'Conditioner' },
+      { sku: 'HAIR-MASK-REPAIR', name: 'Repair Hair Mask', price: 1199.00, stock: 60, brand: 'HairRepair', sub_category: 'Masks', product_type: 'Hair Mask' },
+      { sku: 'HAIR-SERUM-ANTI-FRIZZ', name: 'Anti-Frizz Serum', price: 799.00, stock: 90, brand: 'FrizzFree', sub_category: 'Serums', product_type: 'Hair Serum' },
+      { sku: 'HAIR-OIL-ARGAN', name: 'Argan Oil Treatment', price: 999.00, stock: 50, brand: 'OilPro', sub_category: 'Treatments', product_type: 'Hair Oil' },
+      { sku: 'HAIR-SPRAY-HOLD', name: 'Strong Hold Hair Spray', price: 599.00, stock: 100, brand: 'HoldMax', sub_category: 'Styling', product_type: 'Hair Spray' },
+      { sku: 'HAIR-GEL-STYLING', name: 'Styling Gel', price: 399.00, stock: 120, brand: 'StyleGel', sub_category: 'Styling', product_type: 'Styling Gel' },
+      { sku: 'HAIR-MOUSSE-VOLUME', name: 'Volume Mousse', price: 499.00, stock: 85, brand: 'VolumeMax', sub_category: 'Styling', product_type: 'Volumizing Foam' },
+      { sku: 'HAIR-BRUSH-DETANGLE', name: 'Detangling Brush', price: 299.00, stock: 150, brand: 'BrushPro', sub_category: 'Accessories', product_type: 'Hair Brush' },
+      { sku: 'HAIR-DRYER-PROFESSIONAL', name: 'Professional Hair Dryer', price: 2999.00, stock: 25, brand: 'DryPro', sub_category: 'Tools', product_type: 'Hair Dryer' },
+      { sku: 'HAIR-STRAIGHTENER-CERAMIC', name: 'Ceramic Straightener', price: 1999.00, stock: 30, brand: 'StraightPro', sub_category: 'Tools', product_type: 'Hair Straightener' },
+      { sku: 'HAIR-CURLER-WAND', name: 'Curling Wand Set', price: 1499.00, stock: 35, brand: 'CurlPro', sub_category: 'Tools', product_type: 'Hair Straightener' }
     ];
 
     for (const product of hairCareProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Professional ${product.category.toLowerCase()}','${product.brand}','Hair Care','${product.category}',${product.price},${product.stock},'{\\\"professional_grade\\\":true,\\\"salon_quality\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Professional ${product.sub_category.toLowerCase()}','${product.brand}','Hair Care','${product.sub_category}',${product.price},${product.stock},'{\\\"professional_grade\\\":true,\\\"salon_quality\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Baking Supplies - 12 products
     const bakingProducts = [
-      { sku: 'BAKE-FLOUR-ALL-PURPOSE', name: 'All-Purpose Flour 2kg', price: 299.00, stock: 100, brand: 'FlourMax', category: 'Flours' },
-      { sku: 'BAKE-SUGAR-GRANULATED', name: 'Granulated Sugar 1kg', price: 199.00, stock: 150, brand: 'SugarPro', category: 'Sugars' },
-      { sku: 'BAKE-BUTTER-UNSALTED', name: 'Unsalted Butter 500g', price: 399.00, stock: 80, brand: 'ButterCo', category: 'Dairy' },
-      { sku: 'BAKE-EGGS-FRESH', name: 'Fresh Eggs 12-pack', price: 249.00, stock: 120, brand: 'EggFarm', category: 'Dairy' },
-      { sku: 'BAKE-VANILLA-EXTRACT', name: 'Pure Vanilla Extract', price: 599.00, stock: 60, brand: 'VanillaPro', category: 'Extracts' },
-      { sku: 'BAKE-BAKING-POWDER', name: 'Baking Powder 200g', price: 149.00, stock: 200, brand: 'BakeRise', category: 'Leavening' },
-      { sku: 'BAKE-COCOA-POWDER', name: 'Cocoa Powder 250g', price: 349.00, stock: 90, brand: 'CocoaMax', category: 'Chocolate' },
-      { sku: 'BAKE-CHOCOLATE-CHIPS', name: 'Chocolate Chips 300g', price: 449.00, stock: 110, brand: 'ChipCo', category: 'Chocolate' },
-      { sku: 'BAKE-MIXING-BOWL', name: 'Stainless Steel Mixing Bowl', price: 799.00, stock: 40, brand: 'BowlPro', category: 'Tools' },
-      { sku: 'BAKE-WHISK-HAND', name: 'Hand Whisk', price: 299.00, stock: 70, brand: 'WhiskMax', category: 'Tools' },
-      { sku: 'BAKE-MEASURING-CUPS', name: 'Measuring Cups Set', price: 399.00, stock: 50, brand: 'MeasurePro', category: 'Tools' },
-      { sku: 'BAKE-PARCHMENT-PAPER', name: 'Parchment Paper Roll', price: 199.00, stock: 130, brand: 'PaperPro', category: 'Paper' }
+      { sku: 'BAKE-FLOUR-ALL-PURPOSE', name: 'All-Purpose Flour 2kg', price: 299.00, stock: 100, brand: 'FlourMax', sub_category: 'Flour', product_type: 'All-Purpose Flour' },
+      { sku: 'BAKE-SUGAR-GRANULATED', name: 'Granulated Sugar 1kg', price: 199.00, stock: 150, brand: 'SugarPro', sub_category: 'Sugar', product_type: 'White Sugar' },
+      { sku: 'BAKE-BUTTER-UNSALTED', name: 'Unsalted Butter 500g', price: 399.00, stock: 80, brand: 'ButterCo', sub_category: 'Dairy', product_type: 'Butter' },
+      { sku: 'BAKE-EGGS-FRESH', name: 'Fresh Eggs 12-pack', price: 249.00, stock: 120, brand: 'EggFarm', sub_category: 'Egg Products', product_type: 'Egg' },
+      { sku: 'BAKE-VANILLA-EXTRACT', name: 'Pure Vanilla Extract', price: 599.00, stock: 60, brand: 'VanillaPro', sub_category: 'Extracts', product_type: 'Vanilla Extract' },
+      { sku: 'BAKE-BAKING-POWDER', name: 'Baking Powder 200g', price: 149.00, stock: 200, brand: 'BakeRise', sub_category: 'Leavening', product_type: 'Baking Powder' },
+      { sku: 'BAKE-COCOA-POWDER', name: 'Cocoa Powder 250g', price: 349.00, stock: 90, brand: 'CocoaMax', sub_category: 'Cocoa', product_type: 'Cocoa Powder' },
+      { sku: 'BAKE-CHOCOLATE-CHIPS', name: 'Chocolate Chips 300g', price: 449.00, stock: 110, brand: 'ChipCo', sub_category: 'Mix-ins', product_type: 'Chocolate Chips' },
+      { sku: 'BAKE-MIXING-BOWL', name: 'Stainless Steel Mixing Bowl', price: 799.00, stock: 40, brand: 'BowlPro', sub_category: 'Accessories', product_type: 'Mixing Bowl' },
+      { sku: 'BAKE-WHISK-HAND', name: 'Hand Whisk', price: 299.00, stock: 70, brand: 'WhiskMax', sub_category: 'Accessories', product_type: 'Whisk' },
+      { sku: 'BAKE-MEASURING-CUPS', name: 'Measuring Cups Set', price: 399.00, stock: 50, brand: 'MeasurePro', sub_category: 'Accessories', product_type: 'Measuring Cups' },
+      { sku: 'BAKE-PARCHMENT-PAPER', name: 'Parchment Paper Roll', price: 199.00, stock: 130, brand: 'PaperPro', sub_category: 'Accessories', product_type: 'Paper' }
     ];
 
     for (const product of bakingProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Baking Supplies','${product.category}',${product.price},${product.stock},'{\\\"food_grade\\\":true,\\\"fresh\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Baking Supplies','${product.sub_category}',${product.price},${product.stock},'{\\\"food_grade\\\":true,\\\"fresh\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Gaming - 11 products
     const gamingProducts = [
-      { sku: 'GAME-CONTROLLER-XBOX', name: 'Xbox Controller', price: 3999.00, stock: 30, brand: 'GamePad', category: 'Controllers' },
-      { sku: 'GAME-HEADSET-GAMING', name: 'Gaming Headset RGB', price: 2999.00, stock: 40, brand: 'GameAudio', category: 'Audio' },
-      { sku: 'GAME-MOUSE-PAD', name: 'Gaming Mouse Pad', price: 999.00, stock: 80, brand: 'PadPro', category: 'Accessories' },
-      { sku: 'GAME-KEYBOARD-MECH', name: 'Mechanical Gaming Keyboard', price: 4999.00, stock: 25, brand: 'KeyGame', category: 'Keyboards' },
-      { sku: 'GAME-MOUSE-GAMING', name: 'Gaming Mouse 16000 DPI', price: 2499.00, stock: 35, brand: 'MouseGame', category: 'Mice' },
-      { sku: 'GAME-MONITOR-144HZ', name: '144Hz Gaming Monitor', price: 18999.00, stock: 15, brand: 'MonitorGame', category: 'Monitors' },
-      { sku: 'GAME-CHAIR-RACING', name: 'Racing Gaming Chair', price: 12999.00, stock: 20, brand: 'ChairGame', category: 'Furniture' },
-      { sku: 'GAME-DESK-GAMING', name: 'Gaming Desk', price: 8999.00, stock: 12, brand: 'DeskGame', category: 'Furniture' },
-      { sku: 'GAME-LED-STRIP', name: 'RGB LED Strip', price: 1499.00, stock: 60, brand: 'LEDGame', category: 'Lighting' },
-      { sku: 'GAME-CABLE-MANAGEMENT', name: 'Cable Management Kit', price: 799.00, stock: 100, brand: 'CableGame', category: 'Accessories' },
-      { sku: 'GAME-WRIST-REST', name: 'Gaming Wrist Rest', price: 599.00, stock: 90, brand: 'RestGame', category: 'Accessories' }
+      { sku: 'GAME-CONTROLLER-XBOX', name: 'Xbox Controller', price: 3999.00, stock: 30, brand: 'GamePad', sub_category: 'Controllers', product_type: 'Wireless Controller' },
+      { sku: 'GAME-HEADSET-GAMING', name: 'Gaming Headset RGB', price: 2999.00, stock: 40, brand: 'GameAudio', sub_category: 'Audio', product_type: 'Gaming Headset' },
+      { sku: 'GAME-MOUSE-PAD', name: 'Gaming Mouse Pad', price: 999.00, stock: 80, brand: 'PadPro', sub_category: 'Accessories', product_type: 'Gaming Mouse Pad' },
+      { sku: 'GAME-KEYBOARD-MECH', name: 'Mechanical Gaming Keyboard', price: 4999.00, stock: 25, brand: 'KeyGame', sub_category: 'Peripherals', product_type: 'Mechanical Keyboard' },
+      { sku: 'GAME-MOUSE-GAMING', name: 'Gaming Mouse 16000 DPI', price: 2499.00, stock: 35, brand: 'MouseGame', sub_category: 'Peripherals', product_type: 'Gaming Mouse' },
+      { sku: 'GAME-MONITOR-144HZ', name: '144Hz Gaming Monitor', price: 18999.00, stock: 15, brand: 'MonitorGame', sub_category: 'Display', product_type: 'Gaming Monitor' },
+      { sku: 'GAME-CHAIR-RACING', name: 'Racing Gaming Chair', price: 12999.00, stock: 20, brand: 'ChairGame', sub_category: 'Furniture', product_type: 'Gaming Chair' },
+      { sku: 'GAME-DESK-GAMING', name: 'Gaming Desk', price: 8999.00, stock: 12, brand: 'DeskGame', sub_category: 'Furniture', product_type: 'Gaming Desk' },
+      { sku: 'GAME-LED-STRIP', name: 'RGB LED Strip', price: 1499.00, stock: 60, brand: 'LEDGame', sub_category: 'Lighting', product_type: 'LED Strip' },
+      { sku: 'GAME-CABLE-MANAGEMENT', name: 'Cable Management Kit', price: 799.00, stock: 100, brand: 'CableGame', sub_category: 'Accessories', product_type: 'Cable Kit' },
+      { sku: 'GAME-WRIST-REST', name: 'Gaming Wrist Rest', price: 599.00, stock: 90, brand: 'RestGame', sub_category: 'Accessories', product_type: 'Wrist Rest' }
     ];
 
     for (const product of gamingProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Professional ${product.category.toLowerCase()}','${product.brand}','Gaming','${product.category}',${product.price},${product.stock},'{\\\"gaming_optimized\\\":true,\\\"rgb_lighting\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Professional ${product.sub_category.toLowerCase()}','${product.brand}','Gaming','${product.sub_category}',${product.price},${product.stock},'{\\\"gaming_optimized\\\":true,\\\"rgb_lighting\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Drinks - 7 products
     const drinksProducts = [
-      { sku: 'DRINK-COFFEE-BEANS', name: 'Premium Coffee Beans', price: 899.00, stock: 50, brand: 'BeanMax', category: 'Coffee' },
-      { sku: 'DRINK-TEA-GREEN', name: 'Green Tea Bags', price: 299.00, stock: 100, brand: 'TeaLeaf', category: 'Tea' },
-      { sku: 'DRINK-JUICE-ORANGE', name: 'Fresh Orange Juice', price: 199.00, stock: 80, brand: 'JuiceFresh', category: 'Juices' },
-      { sku: 'DRINK-WATER-SPARKLING', name: 'Sparkling Water', price: 149.00, stock: 120, brand: 'WaterBubble', category: 'Water' },
-      { sku: 'DRINK-ENERGY-NATURAL', name: 'Natural Energy Drink', price: 249.00, stock: 90, brand: 'EnergyNatural', category: 'Energy' },
-      { sku: 'DRINK-SMOOTHIE-MIX', name: 'Smoothie Mix Pack', price: 399.00, stock: 70, brand: 'SmoothiePro', category: 'Mixes' },
-      { sku: 'DRINK-COLD-BREW', name: 'Cold Brew Coffee', price: 349.00, stock: 60, brand: 'BrewCold', category: 'Coffee' }
+      { sku: 'DRINK-COFFEE-BEANS', name: 'Premium Coffee Beans', price: 899.00, stock: 50, brand: 'BeanMax', sub_category: 'Beverages', product_type: 'Coffee' },
+      { sku: 'DRINK-TEA-GREEN', name: 'Green Tea Bags', price: 299.00, stock: 100, brand: 'TeaLeaf', sub_category: 'Beverages', product_type: 'Tea' },
+      { sku: 'DRINK-JUICE-ORANGE', name: 'Fresh Orange Juice', price: 199.00, stock: 80, brand: 'JuiceFresh', sub_category: 'Beverages', product_type: 'Juice' },
+      { sku: 'DRINK-WATER-SPARKLING', name: 'Sparkling Water', price: 149.00, stock: 120, brand: 'WaterBubble', sub_category: 'Beverages', product_type: 'Sparkling Water' },
+      { sku: 'DRINK-ENERGY-NATURAL', name: 'Natural Energy Drink', price: 249.00, stock: 90, brand: 'EnergyNatural', sub_category: 'Beverages', product_type: 'Energy Drink' },
+      { sku: 'DRINK-SMOOTHIE-MIX', name: 'Smoothie Mix Pack', price: 399.00, stock: 70, brand: 'SmoothiePro', sub_category: 'Beverages', product_type: 'Smoothie Mix' },
+      { sku: 'DRINK-COLD-BREW', name: 'Cold Brew Coffee', price: 349.00, stock: 60, brand: 'BrewCold', sub_category: 'Beverages', product_type: 'Coffee' }
     ];
 
     for (const product of drinksProducts) {
-      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Drinks','${product.category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"refreshing\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images,product_type) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.sub_category.toLowerCase()}','${product.brand}','Drinks','${product.sub_category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"refreshing\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb,'${product.product_type}' FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
     // Accounts for demo owners
     execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Electra Shop','active' FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
