@@ -323,7 +323,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     const fileError = validateImage(file, 'product');
     if (fileError) {
       console.log('File validation failed:', fileError);
-      setErrorWithTimeout('productImages', fileError);
+      setValidationErrors(prev => ({ ...prev, productImages: fileError }));
       return;
     }
     
@@ -332,7 +332,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     const dimensionError = await validateImageDimensions(file, 'product');
     if (dimensionError) {
       console.log('Dimension validation failed:', dimensionError);
-      setErrorWithTimeout('productImages', dimensionError);
+      setValidationErrors(prev => ({ ...prev, productImages: dimensionError }));
       return;
     }
     
@@ -370,7 +370,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
       setHasHadImages(true);
     } catch (error) {
       console.error('Upload error:', error);
-      setErrorWithTimeout('productImages', error instanceof Error ? error.message : 'Upload failed');
+      setValidationErrors(prev => ({ ...prev, productImages: error instanceof Error ? error.message : 'Upload failed' }));
     }
   };
 
@@ -382,18 +382,19 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     
     // Clear previous errors
     setErrors(prev => ({ ...prev, promoImage: '' }));
+    setValidationErrors(prev => ({ ...prev, promoImage: '' }));
     
     // Validate file
     const fileError = validateImage(file, 'promo');
     if (fileError) {
-      setErrorWithTimeout('promoImage', fileError);
+      setValidationErrors(prev => ({ ...prev, promoImage: fileError }));
       return;
     }
     
     // Validate dimensions
     const dimensionError = await validateImageDimensions(file, 'promo');
     if (dimensionError) {
-      setErrorWithTimeout('promoImage', dimensionError);
+      setValidationErrors(prev => ({ ...prev, promoImage: dimensionError }));
       return;
     }
     
@@ -418,7 +419,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
       setPromoImage(result.url);
     } catch (error) {
       console.error('Promo image upload error:', error);
-      setErrorWithTimeout('promoImage', error instanceof Error ? error.message : 'Upload failed');
+      setValidationErrors(prev => ({ ...prev, promoImage: error instanceof Error ? error.message : 'Upload failed' }));
     }
   };
 
@@ -429,11 +430,12 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     
     // Clear previous errors
     setErrors(prev => ({ ...prev, video: '' }));
+    setValidationErrors(prev => ({ ...prev, video: '' }));
     
     // Validate file type - only MP4 allowed
     if (file.type !== 'video/mp4') {
       const error = 'Invalid file type. Only MP4 files are allowed.';
-      setErrorWithTimeout('video', error);
+      setValidationErrors(prev => ({ ...prev, video: error }));
       return;
     }
     
@@ -441,7 +443,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
       const error = 'File too large. Maximum size is 100MB.';
-      setErrorWithTimeout('video', error);
+      setValidationErrors(prev => ({ ...prev, video: error }));
       return;
     }
     
@@ -484,7 +486,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
       setVideoFileName(file.name);
     } catch (error) {
       console.error('Video upload error:', error);
-      setErrorWithTimeout('video', error instanceof Error ? error.message : 'Video upload failed');
+      setValidationErrors(prev => ({ ...prev, video: error instanceof Error ? error.message : 'Video upload failed' }));
     }
   };
 
@@ -837,7 +839,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                                             setValidationErrors(prev => ({ ...prev, productImages: '' }));
                                                         }
                                                         if (newImages.length === 0 && hasHadImages) {
-                                                            setErrorWithTimeout('productImages', 'Image is missing. Please upload at least 1 image.');
+                                                            setValidationErrors(prev => ({ ...prev, productImages: 'Image is missing. Please upload at least 1 image.' }));
                                                         }
                                                     }}
                                                     className="invisible absolute inset-0 flex items-center justify-center bg-black/60 text-white group-hover:visible"
@@ -927,8 +929,8 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 									)}
 								</span>
 							</div>
-                            {errors.promoImage && (
-                                <div className="mt-2 text-xs text-red-600">{errors.promoImage}</div>
+                            {validationErrors.promoImage && (
+                                <div className="mt-2 text-xs text-red-600">{validationErrors.promoImage}</div>
                             )}
 						</div>
 								</div>
@@ -973,8 +975,8 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                             <div>New Video might take up to 36 hours to be approved by Lazada</div>
                                         </div>
                                     </div>
-                                    {errors.video && (
-                                        <div className="mt-2 text-xs text-red-600">{errors.video}</div>
+                                    {validationErrors.video && (
+                                        <div className="mt-2 text-xs text-red-600">{validationErrors.video}</div>
                                     )}
                                 </div>
 							</div>
