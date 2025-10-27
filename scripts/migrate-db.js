@@ -3,7 +3,7 @@
 /**
  * Database Migration Script
  * This script handles database schema changes and new table creation
- * Works with both local PostgreSQL and Docker containers
+ * Uses Docker PostgreSQL container
  * 
  * Usage:
  *   node scripts/migrate-db.js add-table <table_name>
@@ -14,33 +14,17 @@
 const { Pool } = require('pg');
 const { execSync } = require('child_process');
 
-// Database configuration preferring DATABASE_URL; Docker/local fallback otherwise
+// Database configuration - Docker only
 function getDatabaseConfig() {
   if (process.env.DATABASE_URL) {
     console.log('🔗 Using DATABASE_URL environment variable');
     return {
       connectionString: process.env.DATABASE_URL,
-      // For Railway/tunnel, use SSL but do not reject self-signed certs
       ssl: { rejectUnauthorized: false }
     };
   }
 
-  const isDockerAvailable = checkDockerAvailability();
-  const isDockerPostgresRunning = isDockerAvailable && checkDockerPostgresRunning();
-  
-  if (isDockerPostgresRunning) {
-    console.log('🐳 Using Docker PostgreSQL configuration');
-    return {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'datadrip',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres', // Docker default password
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    };
-  }
-
-  console.log('💻 Using local PostgreSQL configuration');
+  console.log('🐳 Using Docker PostgreSQL configuration');
   return {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),
@@ -49,38 +33,6 @@ function getDatabaseConfig() {
     password: process.env.DB_PASSWORD || 'postgres',
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   };
-}
-
-// Create database if it doesn't exist (for local/direct connections)
-async function createDatabaseIfNotExists() {
-  const config = getDatabaseConfig();
-  // Skip if using DATABASE_URL
-  if (config.connectionString) return true;
-  try {
-    const adminConfig = { ...config, database: 'postgres' };
-    const adminPool = new Pool(adminConfig);
-    const result = await adminPool.query('SELECT 1 FROM pg_database WHERE datname = $1', [config.database]);
-    if (result.rows.length === 0) {
-      console.log(`📦 Creating database '${config.database}'...`);
-      await adminPool.query(`CREATE DATABASE "${config.database}"`);
-      console.log(`✅ Database '${config.database}' created successfully`);
-    }
-    await adminPool.end();
-    return true;
-  } catch (error) {
-    console.error('⚠️  Could not ensure database exists:', error.message);
-    return false;
-  }
-}
-
-// Check if Docker is available
-function checkDockerAvailability() {
-  try {
-    execSync('docker --version', { stdio: 'ignore' });
-    return true;
-  } catch (error) {
-    return false;
-  }
 }
 
 // Check if Docker PostgreSQL container is running
@@ -431,6 +383,144 @@ async function resetDatabase(pool) {
   }
 }
 
+// Migrate products table from VARCHAR taxonomy fields to foreign keys
+async function migrateProductsToTaxonomy(pool) {
+  try {
+    console.log('🔄 Starting products table migration to taxonomy system...');
+    
+    // Check if migration is needed
+    const needsMigration = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'products' 
+      AND column_name IN ('category', 'subcategory', 'product_type')
+    `);
+    
+    if (needsMigration.rows.length === 0) {
+      console.log('✅ Products table already uses foreign keys. No migration needed.');
+      return;
+    }
+    
+    // Check if new columns exist
+    const newColumnsExist = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'products' 
+      AND column_name IN ('category_id', 'subcategory_id', 'product_type_id')
+    `);
+    
+    if (newColumnsExist.rows.length < 3) {
+      console.log('📝 Adding new foreign key columns...');
+      
+      // Add new foreign key columns (one at a time)
+      await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER`);
+      await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory_id INTEGER`);
+      await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type_id INTEGER`);
+      
+      // Add foreign key constraints
+      await pool.query(`
+        ALTER TABLE products 
+        ADD CONSTRAINT IF NOT EXISTS fk_products_category 
+        FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE SET NULL
+      `);
+      
+      await pool.query(`
+        ALTER TABLE products 
+        ADD CONSTRAINT IF NOT EXISTS fk_products_subcategory 
+        FOREIGN KEY (subcategory_id) REFERENCES subcategories(subcategory_id) ON DELETE SET NULL
+      `);
+      
+      await pool.query(`
+        ALTER TABLE products 
+        ADD CONSTRAINT IF NOT EXISTS fk_products_product_type 
+        FOREIGN KEY (product_type_id) REFERENCES product_types(product_type_id) ON DELETE SET NULL
+      `);
+      
+      console.log('✅ Foreign key columns and constraints added');
+    } else {
+      console.log('✅ Foreign key columns already exist');
+    }
+    
+    // Migrate existing data
+    console.log('🔄 Migrating existing product data...');
+    const products = await pool.query(`
+      SELECT product_id, category, subcategory, product_type 
+      FROM products 
+      WHERE category IS NOT NULL OR subcategory IS NOT NULL OR product_type IS NOT NULL
+    `);
+    
+    console.log(`📊 Found ${products.rows.length} products to migrate`);
+    
+    let migratedCount = 0;
+    let skippedCount = 0;
+    
+    for (const product of products.rows) {
+      try {
+        let categoryId = null;
+        let subcategoryId = null;
+        let productTypeId = null;
+        
+        // Map category
+        if (product.category) {
+          const categoryResult = await pool.query(
+            'SELECT category_id FROM categories WHERE name = $1',
+            [product.category]
+          );
+          if (categoryResult.rows.length > 0) {
+            categoryId = categoryResult.rows[0].category_id;
+          }
+        }
+        
+        // Map subcategory
+        if (product.subcategory && categoryId) {
+          const subcategoryResult = await pool.query(
+            'SELECT subcategory_id FROM subcategories WHERE name = $1 AND category_id = $2',
+            [product.subcategory, categoryId]
+          );
+          if (subcategoryResult.rows.length > 0) {
+            subcategoryId = subcategoryResult.rows[0].subcategory_id;
+          }
+        }
+        
+        // Map product type
+        if (product.product_type && subcategoryId) {
+          const productTypeResult = await pool.query(
+            'SELECT product_type_id FROM product_types WHERE name = $1 AND subcategory_id = $2',
+            [product.product_type, subcategoryId]
+          );
+          if (productTypeResult.rows.length > 0) {
+            productTypeId = productTypeResult.rows[0].product_type_id;
+          }
+        }
+        
+        // Update the product with new foreign keys
+        await pool.query(`
+          UPDATE products 
+          SET category_id = $1, subcategory_id = $2, product_type_id = $3
+          WHERE product_id = $4
+        `, [categoryId, subcategoryId, productTypeId, product.product_id]);
+        
+        migratedCount++;
+        
+        if (migratedCount % 10 === 0) {
+          console.log(`📈 Migrated ${migratedCount}/${products.rows.length} products...`);
+        }
+        
+      } catch (error) {
+        console.error(`⚠️  Failed to migrate product ${product.product_id}:`, error.message);
+        skippedCount++;
+      }
+    }
+    
+    console.log(`✅ Data migration completed: ${migratedCount} migrated, ${skippedCount} skipped`);
+    console.log('🎉 Products table migration completed successfully!');
+    
+  } catch (error) {
+    console.error('❌ Products table migration failed:', error);
+    throw error;
+  }
+}
+
 // Main function
 async function main() {
   const args = process.argv.slice(2);
@@ -447,26 +537,26 @@ Usage:
 Commands:
   list-tables              List all tables in the database
   add-table <table_name>   Add a new table (products, orders, order_items, categories, user_sessions)
+  migrate-products         Migrate products table from VARCHAR taxonomy to foreign keys
   reset-db                 Reset database (drop all tables except users)
   help                     Show this help message
 
 Examples:
   node scripts/migrate-db.js list-tables
   node scripts/migrate-db.js add-table products
+  node scripts/migrate-db.js migrate-products
   node scripts/migrate-db.js reset-db
     `);
     process.exit(0);
   }
 
   const config = getDatabaseConfig();
-  // Ensure the target database exists for local setups
-  await createDatabaseIfNotExists();
   const pool = new Pool(config);
 
   try {
     // Test connection
     const isConnected = await testConnection(pool);
-    const dockerAvailable = checkDockerAvailability() && checkDockerPostgresRunning();
+    const dockerAvailable = checkDockerPostgresRunning();
 
     // Run on direct target if connected
     if (isConnected) {
@@ -482,6 +572,9 @@ Examples:
             process.exit(1);
           }
           await addTable(pool, tableName);
+          break;
+        case 'migrate-products':
+          await migrateProductsToTaxonomy(pool);
           break;
         case 'reset-db':
           await resetDatabase(pool);
@@ -511,6 +604,9 @@ Examples:
             process.exit(1);
           }
           await addTableWithDocker(tableName);
+          break;
+        case 'migrate-products':
+          console.log('⚠️  Products migration requires direct database connection. Skipping Docker execution.');
           break;
         case 'reset-db':
           await resetDatabaseWithDocker();

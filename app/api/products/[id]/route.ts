@@ -49,9 +49,9 @@ export async function PATCH(
       highlights,
       in_box,
       brand,
-      category,
-      subcategory,
-      product_type,
+      category_id,
+      subcategory_id,
+      product_type_id,
       price,
       special_price,
       stock,
@@ -105,17 +105,17 @@ export async function PATCH(
       updateFields.push(`brand = $${paramCount++}`);
       values.push(brand && brand.trim() ? brand.trim() : null);
     }
-    if (category !== undefined) {
-      updateFields.push(`category = $${paramCount++}`);
-      values.push(category && category.trim() ? category.trim() : null);
+    if (category_id !== undefined) {
+      updateFields.push(`category_id = $${paramCount++}`);
+      values.push(category_id ? parseInt(category_id) : null);
     }
-    if (subcategory !== undefined) {
-      updateFields.push(`subcategory = $${paramCount++}`);
-      values.push(subcategory && subcategory.trim() ? subcategory.trim() : null);
+    if (subcategory_id !== undefined) {
+      updateFields.push(`subcategory_id = $${paramCount++}`);
+      values.push(subcategory_id ? parseInt(subcategory_id) : null);
     }
-    if (product_type !== undefined) {
-      updateFields.push(`product_type = $${paramCount++}`);
-      values.push(product_type && product_type.trim() ? product_type.trim() : null);
+    if (product_type_id !== undefined) {
+      updateFields.push(`product_type_id = $${paramCount++}`);
+      values.push(product_type_id ? parseInt(product_type_id) : null);
     }
     if (price !== undefined) {
       updateFields.push(`price = $${paramCount++}`);

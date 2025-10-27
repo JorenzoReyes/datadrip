@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import dynamic from 'next/dynamic';
@@ -15,9 +15,12 @@ export type Product = {
   highlights: string | null;
   in_box: string | null;
   brand: string | null;
-  category: string | null;
-  subcategory: string | null;
-  product_type: string | null;
+  category_id: number | null;
+  subcategory_id: number | null;
+  product_type_id: number | null;
+  category_name: string | null;
+  subcategory_name: string | null;
+  product_type_name: string | null;
   price: number;
   special_price: number | null;
   cost: number | null;
@@ -75,43 +78,43 @@ export default function ProductsPage() {
   }, [user, isLoading, router]);
 
   // Fetch products from the database
-  useEffect(() => {
-    async function loadProducts() {
-      if (!user?.email) return;
-      
-      try {
-        setLoadingProducts(true);
-        const email = encodeURIComponent(user.email);
-        
-        // Build date range parameters
-        let dateParams = '';
-        if (dateRange === 'custom') {
-          dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
-        } else {
-          dateParams = `&days=${dateRange}`;
-        }
-        
-        const res = await fetch(`/api/products?email=${email}${dateParams}`, { cache: 'no-store' });
-        const json = await res.json();
-        
-        if (json.error) {
-          console.error('Error loading products:', json.error);
-          setProducts([]);
-        } else {
-          setProducts(json.products || []);
-        }
-      } catch (e) {
-        console.error('Failed to fetch products:', e);
-        setProducts([]);
-      } finally {
-        setLoadingProducts(false);
-      }
-    }
+  const loadProducts = useCallback(async () => {
+    if (!user?.email) return;
     
+    try {
+      setLoadingProducts(true);
+      const email = encodeURIComponent(user.email);
+      
+      // Build date range parameters
+      let dateParams = '';
+      if (dateRange === 'custom') {
+        dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
+      } else {
+        dateParams = `&days=${dateRange}`;
+      }
+      
+      const res = await fetch(`/api/products?email=${email}${dateParams}`, { cache: 'no-store' });
+      const json = await res.json();
+      
+      if (json.error) {
+        console.error('Error loading products:', json.error);
+        setProducts([]);
+      } else {
+        setProducts(json.products || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch products:', e);
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, [user, dateRange, customDateRange]);
+
+  useEffect(() => {
     if (user) {
       loadProducts();
     }
-  }, [user, dateRange, customDateRange]);
+  }, [user, dateRange, customDateRange, loadProducts]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -150,7 +153,7 @@ export default function ProductsPage() {
   const categories = useMemo(() => {
     const uniqueCategories = new Set<string>();
     products.forEach(p => {
-      if (p.category) uniqueCategories.add(p.category);
+      if (p.category_name) uniqueCategories.add(p.category_name);
     });
     return ['All Categories', ...Array.from(uniqueCategories).sort()];
   }, [products]);
@@ -162,7 +165,7 @@ export default function ProductsPage() {
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
                          p.brand?.toLowerCase().includes(query.toLowerCase()) ||
                          p.sku?.toLowerCase().includes(query.toLowerCase());
-      const matchCategory = category === 'All Categories' ? true : p.category === category;
+      const matchCategory = category === 'All Categories' ? true : p.category_name === category;
       return matchQuery && matchCategory;
     });
 
@@ -241,9 +244,9 @@ export default function ProductsPage() {
     highlights?: string;
     in_box?: string;
     brand?: string;
-    category?: string;
-    subcategory?: string;
-    product_type?: string;
+    category_id?: number;
+    subcategory_id?: number;
+    product_type_id?: number;
     price: number;
     special_price?: number;
     stock: number;
@@ -275,8 +278,8 @@ export default function ProductsPage() {
         throw new Error(json.error || 'Failed to add product');
       }
 
-      // Add the new product to the local products list
-      setProducts([json.product, ...products]);
+      // Reload products from the database to get updated data
+      await loadProducts();
       setShowAddModal(false);
     } catch (error) {
       console.error('Error adding product:', error);
@@ -292,9 +295,9 @@ export default function ProductsPage() {
     highlights?: string;
     in_box?: string;
     brand?: string;
-    category?: string;
-    subcategory?: string;
-    product_type?: string;
+    category_id?: number;
+    subcategory_id?: number;
+    product_type_id?: number;
     price: number;
     special_price?: number;
     stock: number;
@@ -329,10 +332,8 @@ export default function ProductsPage() {
         throw new Error(json.error || 'Failed to update product');
       }
 
-      // Update the product in the local products list
-      setProducts(products.map(p => 
-        p.product_id === editingProduct.product_id ? { ...p, ...json.product } : p
-      ));
+      // Reload products from the database to get updated data
+      await loadProducts();
       setEditingProduct(null);
     } catch (error) {
       console.error('Error updating product:', error);
@@ -356,8 +357,8 @@ export default function ProductsPage() {
         throw new Error(json.error || 'Failed to delete product');
       }
 
-      // Remove the product from the local products list
-      setProducts(products.filter(p => p.product_id !== productId));
+      // Reload products from the database to get updated data
+      await loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
       alert(error instanceof Error ? error.message : 'Failed to delete product');
@@ -537,6 +538,9 @@ export default function ProductsPage() {
                   Category
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
+                  Subcategory
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
                   Product Type
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
@@ -553,13 +557,13 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-gray-200 bg-gray-50">
               {loadingProducts ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
                     Loading products...
                   </td>
                 </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
                     {products.length === 0 ? 'No products found. Click "Add Products" to get started.' : 'No products match your search criteria.'}
                   </td>
                 </tr>
@@ -576,20 +580,20 @@ export default function ProductsPage() {
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-header">{p.name}</span>
                           <span className="text-xs text-subheader">
-                            {p.brand ? `${p.brand} • ` : ''}{p.category || 'Uncategorized'}
+                            {p.brand ? `${p.brand} • ` : ''}{p.category_name || 'Uncategorized'}
                           </span>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
                     <td className="px-4 py-3 text-sm text-header">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{p.category || 'Uncategorized'}</span>
-                        {p.subcategory && <span className="text-xs text-gray-500">{p.subcategory}</span>}
-                      </div>
+                      {p.category_name || 'Uncategorized'}
                     </td>
                     <td className="px-4 py-3 text-sm text-header">
-                      {p.product_type || '-'}
+                      {p.subcategory_name || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-header">
+                      {p.product_type_name || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-header">
                       <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>

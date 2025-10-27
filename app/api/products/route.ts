@@ -9,9 +9,12 @@ type Product = {
   highlights: string | null;
   in_box: string | null;
   brand: string | null;
-  category: string | null;
-  subcategory: string | null;
-  product_type: string | null;
+  category_id: number | null;
+  subcategory_id: number | null;
+  product_type_id: number | null;
+  category_name: string | null;
+  subcategory_name: string | null;
+  product_type_name: string | null;
   price: number;
   special_price: number | null;
   cost: number | null;
@@ -54,46 +57,52 @@ export async function GET(req: Request) {
       return NextResponse.json({ products: [] });
     }
 
-    // Get all products owned by this user
+    // Get all products owned by this user with taxonomy names
     const products = await query<Product>(
       `SELECT 
-        product_id,
-        sku,
-        name,
-        description,
-        highlights,
-        in_box,
-        brand,
-        category,
-        subcategory,
-        product_type,
-        price,
-        special_price,
-        cost,
-        currency,
-        stock,
-        reorder_level,
-        sales_count,
-        sales_revenue,
-        weight_value,
-        weight_unit,
-        length_cm,
-        width_cm,
-        height_cm,
-        has_dangerous,
-        warranty_type,
-        warranty_period,
-        warranty_policy,
-        status,
-        images,
-        videos,
-        promotion_image,
-        attributes,
-        created_at,
-        updated_at
-       FROM products
-       WHERE owner_user_id = $1
-       ORDER BY created_at DESC`,
+        p.product_id,
+        p.sku,
+        p.name,
+        p.description,
+        p.highlights,
+        p.in_box,
+        p.brand,
+        p.category_id,
+        p.subcategory_id,
+        p.product_type_id,
+        c.name as category_name,
+        sc.name as subcategory_name,
+        pt.name as product_type_name,
+        p.price,
+        p.special_price,
+        p.cost,
+        p.currency,
+        p.stock,
+        p.reorder_level,
+        p.sales_count,
+        p.sales_revenue,
+        p.weight_value,
+        p.weight_unit,
+        p.length_cm,
+        p.width_cm,
+        p.height_cm,
+        p.has_dangerous,
+        p.warranty_type,
+        p.warranty_period,
+        p.warranty_policy,
+        p.status,
+        p.images,
+        p.videos,
+        p.promotion_image,
+        p.attributes,
+        p.created_at,
+        p.updated_at
+       FROM products p
+       LEFT JOIN categories c ON p.category_id = c.category_id
+       LEFT JOIN subcategories sc ON p.subcategory_id = sc.subcategory_id
+       LEFT JOIN product_types pt ON p.product_type_id = pt.product_type_id
+       WHERE p.owner_user_id = $1
+       ORDER BY p.created_at DESC`,
       [owner.user_id]
     );
 
@@ -129,7 +138,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const body = await req.json();
-    const { name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, videos, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy, attributes } = body;
+    const { name, sku, description, highlights, in_box, brand, category_id, subcategory_id, product_type_id, price, special_price, stock, images, videos, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy, attributes } = body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -165,7 +174,7 @@ export async function POST(req: Request) {
     // Insert the product
     const newProduct = await queryOne<Product>(
       `INSERT INTO products 
-        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category, subcategory, product_type, price, special_price, stock, images, videos, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy, attributes)
+        (owner_user_id, account_id, name, sku, description, highlights, in_box, brand, category_id, subcategory_id, product_type_id, price, special_price, stock, images, videos, promotion_image, status, weight_value, weight_unit, length_cm, width_cm, height_cm, has_dangerous, warranty_type, warranty_period, warranty_policy, attributes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
        RETURNING 
         product_id,
@@ -175,9 +184,9 @@ export async function POST(req: Request) {
         highlights,
         in_box,
         brand,
-        category,
-        subcategory,
-        product_type,
+        category_id,
+        subcategory_id,
+        product_type_id,
         price,
         special_price,
         cost,
@@ -211,9 +220,9 @@ export async function POST(req: Request) {
         highlights && highlights.trim() ? highlights.trim() : null,
         in_box && in_box.trim() ? in_box.trim() : null,
         brand && brand.trim() ? brand.trim() : null,
-        category && category.trim() ? category.trim() : null,
-        subcategory && subcategory.trim() ? subcategory.trim() : null,
-        product_type && product_type.trim() ? product_type.trim() : null,
+        category_id ? parseInt(category_id) : null,
+        subcategory_id ? parseInt(subcategory_id) : null,
+        product_type_id ? parseInt(product_type_id) : null,
         parseFloat(price),
         special_price && !isNaN(parseFloat(special_price)) ? parseFloat(special_price) : null,
         stock && !isNaN(parseInt(stock)) ? parseInt(stock) : 0,
