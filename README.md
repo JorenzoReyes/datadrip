@@ -119,6 +119,9 @@ psql -h localhost -p 5432 -U postgres -d datadrip
 # Build the image
 docker build -t datadrip .
 
+docker-compose -f docker-compose.dev.yml up
+docker-compose -f docker-compose.dev.yml down
+
 # Run the container
 docker run -p 3000:3000 datadrip
 ```

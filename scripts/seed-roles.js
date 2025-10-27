@@ -20,6 +20,22 @@ function checkDockerPostgresRunning() {
   } catch { return false; }
 }
 
+function getDockerContainerName() {
+  try {
+    const out = execSync('docker ps --filter "name=postgres" --format "{{.Names}}"', { encoding: 'utf8' });
+    const containers = out.trim().split('\n').filter(name => name.includes('postgres') || name.includes('datadrip'));
+    return containers.length > 0 ? containers[0] : '${containerName}';
+  } catch { 
+    return '${containerName}'; 
+  }
+}
+
+function getDockerPort() {
+  // Check if we're using the dev compose (port 5433) or production (port 5432)
+  const port = process.env.DB_PORT || '5432';
+  return port === '5433' ? '5433' : '5432';
+}
+
 function getDatabaseConfig() {
   // Prefer a single DATABASE_URL (Railway/tunnel). Use SSL but allow self-signed.
   if (process.env.DATABASE_URL) {
@@ -1153,41 +1169,49 @@ async function seedDirect() {
 }
 
 function seedDocker() {
-  console.log('🔄 Attempting to seed via Docker...');
+  if (!checkDockerAvailability() || !checkDockerPostgresRunning()) {
+    console.log('🐳 Docker PostgreSQL not available, skipping Docker seeding');
+    return true;
+  }
+  
+  const containerName = getDockerContainerName();
+  const dockerPort = getDockerPort();
+  console.log(`🔄 Attempting to seed via Docker (${containerName}:${dockerPort})...`);
+  
   const rolesSql = `INSERT INTO roles (name, description) VALUES ('business_owner','Business owner with access to Insights and business modules'),('admin','Administrator with elevated privileges'),('system_admin','System administrator with full platform control') ON CONFLICT (name) DO NOTHING;`;
   const permsSql = `INSERT INTO permissions (name, description) VALUES ('create','Create resources'),('read','Read resources'),('update','Update resources'),('deactivate','Deactivate resources'),('view_dashboard','Access user dashboard'),('view_settings','Access settings page'),('view_products','Access products'),('view_insights','Access insights module'),('view_admin_dashboard','Access admin dashboard'),('view_admin_manage_users','Access admin manage users'),('view_admin_integrations','Access admin integrations'),('view_admin_system_health','Access admin system health') ON CONFLICT (name) DO NOTHING;`;
   try {
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${rolesSql}"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${permsSql}"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "${rolesSql}"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "${permsSql}"`, { stdio: 'inherit' });
     // users (demo only)
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'demo_user','Demo','User','user@example.com','password123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='user@example.com');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'demo_admin','Demo','Admin','admin@example.com','admin123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='admin@example.com');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'demo_system_admin','Demo','SystemAdmin','system.admin@example.com','system123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='system.admin@example.com');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'demo_user','Demo','User','user@example.com','password123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='user@example.com');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'demo_admin','Demo','Admin','admin@example.com','admin123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='admin@example.com');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'demo_system_admin','Demo','SystemAdmin','system.admin@example.com','system123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='system.admin@example.com');"`, { stdio: 'inherit' });
     // user_roles (demo only)
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='user@example.com' AND r.name='business_owner' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='admin@example.com' AND r.name='admin' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='system.admin@example.com' AND r.name='system_admin' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='user@example.com' AND r.name='business_owner' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='admin@example.com' AND r.name='admin' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE u.email='system.admin@example.com' AND r.name='system_admin' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
     // role_permissions: business_owner
     const bo = ['view_dashboard','view_settings','view_products','view_insights','read','update'];
     for (const p of bo) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO role_permissions (permission_id,role_id,permission) SELECT pe.permission_id,r.role_id,pe.name FROM permissions pe, roles r WHERE pe.name='${p}' AND r.name='business_owner' AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.permission_id=pe.permission_id AND rp.role_id=r.role_id);"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO role_permissions (permission_id,role_id,permission) SELECT pe.permission_id,r.role_id,pe.name FROM permissions pe, roles r WHERE pe.name='${p}' AND r.name='business_owner' AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.permission_id=pe.permission_id AND rp.role_id=r.role_id);"`, { stdio: 'inherit' });
     }
     // admin
     const ad = ['view_admin_dashboard','view_admin_manage_users','view_admin_integrations','view_admin_system_health','read','update','deactivate'];
     for (const p of ad) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO role_permissions (permission_id,role_id,permission) SELECT pe.permission_id,r.role_id,pe.name FROM permissions pe, roles r WHERE pe.name='${p}' AND r.name='admin' AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.permission_id=pe.permission_id AND rp.role_id=r.role_id);"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO role_permissions (permission_id,role_id,permission) SELECT pe.permission_id,r.role_id,pe.name FROM permissions pe, roles r WHERE pe.name='${p}' AND r.name='admin' AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.permission_id=pe.permission_id AND rp.role_id=r.role_id);"`, { stdio: 'inherit' });
     }
     // system_admin: all perms
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO role_permissions (permission_id,role_id,permission) SELECT pe.permission_id,r.role_id,pe.name FROM permissions pe, roles r WHERE r.name='system_admin' AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.permission_id=pe.permission_id AND rp.role_id=r.role_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO role_permissions (permission_id,role_id,permission) SELECT pe.permission_id,r.role_id,pe.name FROM permissions pe, roles r WHERE r.name='system_admin' AND NOT EXISTS (SELECT 1 FROM role_permissions rp WHERE rp.permission_id=pe.permission_id AND rp.role_id=r.role_id);"`, { stdio: 'inherit' });
 
     // Additional demo users (idempotent)
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'electronics_owner','Electra','Shop','electronics.owner@example.com','electra123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='electronics.owner@example.com');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'cosmetics_owner','Cosma','Beauty','cosmetics.owner@example.com','cosma123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='cosmetics.owner@example.com');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'food_owner','Gusto','Bites','food.owner@example.com','gusto123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='food.owner@example.com');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'electronics_owner','Electra','Shop','electronics.owner@example.com','electra123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='electronics.owner@example.com');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'cosmetics_owner','Cosma','Beauty','cosmetics.owner@example.com','cosma123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='cosmetics.owner@example.com');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO users (username,fname,lname,email,password) SELECT 'food_owner','Gusto','Bites','food.owner@example.com','gusto123' WHERE NOT EXISTS (SELECT 1 FROM users WHERE email='food.owner@example.com');"`, { stdio: 'inherit' });
     // Map shop demo users to business_owner role
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO user_roles (user_id,role_id) SELECT u.user_id,r.role_id FROM users u, roles r WHERE r.name='business_owner' AND u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id=u.user_id AND ur.role_id=r.role_id);"`, { stdio: 'inherit' });
 
     // Electronics products (15 total)
     const electronicsDockerProducts = [
@@ -1209,7 +1233,7 @@ function seedDocker() {
     ];
 
     for (const product of electronicsDockerProducts) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Electronics','${product.category}',${product.price},${product.stock},'{\\\"color\\\":\\\"black\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Electronics','${product.category}',${product.price},${product.stock},'{\\\"color\\\":\\\"black\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
     // Cosmetics products (15 total)
     const cosmeticsDockerProducts = [
@@ -1231,7 +1255,7 @@ function seedDocker() {
     ];
 
     for (const product of cosmeticsDockerProducts) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Cosmetics','${product.category}',${product.price},${product.stock},'{\\\"skin_type\\\":\\\"all\\\",\\\"cruelty_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Cosmetics','${product.category}',${product.price},${product.stock},'{\\\"skin_type\\\":\\\"all\\\",\\\"cruelty_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
 
     // Food & Drinks products (15 total)
@@ -1254,36 +1278,292 @@ function seedDocker() {
     ];
 
     for (const product of foodDockerProducts) {
-      execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Food & Drinks','${product.category}',${product.price},${product.stock},'{\\\"organic\\\":true,\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Food & Drinks','${product.category}',${product.price},${product.stock},'{\\\"organic\\\":true,\\\"gluten_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Additional categories for comprehensive seeding
+    // Appliances - 12 products
+    const appliancesProducts = [
+      { sku: 'APP-WASHER-8KG', name: 'Front Load Washer 8kg', price: 25999.00, stock: 15, brand: 'CleanMax', category: 'Laundry' },
+      { sku: 'APP-DRYER-8KG', name: 'Heat Pump Dryer 8kg', price: 22999.00, stock: 12, brand: 'DryPro', category: 'Laundry' },
+      { sku: 'APP-FRIDGE-500L', name: 'French Door Refrigerator', price: 45999.00, stock: 8, brand: 'CoolMax', category: 'Kitchen' },
+      { sku: 'APP-OVEN-ELECTRIC', name: 'Electric Convection Oven', price: 18999.00, stock: 20, brand: 'BakePro', category: 'Kitchen' },
+      { sku: 'APP-DISHWASHER-12', name: 'Built-in Dishwasher 12-place', price: 19999.00, stock: 18, brand: 'WashMax', category: 'Kitchen' },
+      { sku: 'APP-MICROWAVE-25L', name: '25L Convection Microwave', price: 8999.00, stock: 25, brand: 'MicroPro', category: 'Kitchen' },
+      { sku: 'APP-AIRCOND-1HP', name: '1HP Inverter Air Conditioner', price: 15999.00, stock: 30, brand: 'CoolAir', category: 'Climate' },
+      { sku: 'APP-VACUUM-ROBOT', name: 'Robot Vacuum Cleaner', price: 12999.00, stock: 22, brand: 'CleanBot', category: 'Cleaning' },
+      { sku: 'APP-BLENDER-PRO', name: 'Professional Blender', price: 6999.00, stock: 35, brand: 'BlendMax', category: 'Kitchen' },
+      { sku: 'APP-COFFEE-ESPRESSO', name: 'Espresso Coffee Machine', price: 14999.00, stock: 15, brand: 'BrewPro', category: 'Kitchen' },
+      { sku: 'APP-WATER-HEATER', name: 'Tankless Water Heater', price: 17999.00, stock: 10, brand: 'HeatMax', category: 'Plumbing' },
+      { sku: 'APP-FAN-CEILING', name: 'Smart Ceiling Fan', price: 4999.00, stock: 40, brand: 'AirFlow', category: 'Climate' }
+    ];
+
+    for (const product of appliancesProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Appliances','${product.category}',${product.price},${product.stock},'{\\\"energy_rating\\\":\\\"A+\\\",\\\"warranty\\\":\\\"2 years\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Skincare - 12 products
+    const skincareProducts = [
+      { sku: 'SKIN-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', category: 'Cleansers' },
+      { sku: 'SKIN-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', category: 'Moisturizers' },
+      { sku: 'SKIN-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', category: 'Serums' },
+      { sku: 'SKIN-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', category: 'Sunscreen' },
+      { sku: 'SKIN-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', category: 'Toners' },
+      { sku: 'SKIN-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', category: 'Masks' },
+      { sku: 'SKIN-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', category: 'Exfoliators' },
+      { sku: 'SKIN-EYE-CREAM', name: 'Anti-Aging Eye Cream', price: 1199.00, stock: 90, brand: 'EyeCare', category: 'Eye Care' },
+      { sku: 'SKIN-NIGHT-CREAM', name: 'Repair Night Cream', price: 1399.00, stock: 85, brand: 'NightRepair', category: 'Night Care' },
+      { sku: 'SKIN-VITAMIN-C', name: 'Vitamin C Brightening Serum', price: 1099.00, stock: 95, brand: 'BrightSkin', category: 'Serums' },
+      { sku: 'SKIN-RETINOL-CREAM', name: 'Retinol Anti-Aging Cream', price: 1599.00, stock: 70, brand: 'RetinolPro', category: 'Anti-Aging' },
+      { sku: 'SKIN-HYALURONIC-ACID', name: 'Hyaluronic Acid Serum', price: 899.00, stock: 130, brand: 'HydraMax', category: 'Serums' }
+    ];
+
+    for (const product of skincareProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Skincare','${product.category}',${product.price},${product.stock},'{\\\"dermatologist_tested\\\":true,\\\"hypoallergenic\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Fashion - 12 products
+    const fashionProducts = [
+      { sku: 'FASH-SHIRT-COTTON', name: 'Cotton Button-Down Shirt', price: 1299.00, stock: 50, brand: 'StyleCo', category: 'Tops' },
+      { sku: 'FASH-JEANS-SLIM', name: 'Slim Fit Jeans', price: 1899.00, stock: 40, brand: 'DenimPro', category: 'Bottoms' },
+      { sku: 'FASH-DRESS-CASUAL', name: 'Casual Summer Dress', price: 1599.00, stock: 35, brand: 'DressUp', category: 'Dresses' },
+      { sku: 'FASH-JACKET-DENIM', name: 'Denim Jacket', price: 2199.00, stock: 25, brand: 'JacketMax', category: 'Outerwear' },
+      { sku: 'FASH-SHOES-SNEAKERS', name: 'Canvas Sneakers', price: 2499.00, stock: 60, brand: 'ShoePro', category: 'Footwear' },
+      { sku: 'FASH-BAG-TOTE', name: 'Canvas Tote Bag', price: 899.00, stock: 45, brand: 'BagMaster', category: 'Accessories' },
+      { sku: 'FASH-SCARF-SILK', name: 'Silk Scarf', price: 699.00, stock: 30, brand: 'SilkStyle', category: 'Accessories' },
+      { sku: 'FASH-BELT-LEATHER', name: 'Genuine Leather Belt', price: 1199.00, stock: 55, brand: 'LeatherPro', category: 'Accessories' },
+      { sku: 'FASH-WATCH-CLASSIC', name: 'Classic Leather Watch', price: 2999.00, stock: 20, brand: 'TimeStyle', category: 'Accessories' },
+      { sku: 'FASH-SUNGLASSES', name: 'UV Protection Sunglasses', price: 1499.00, stock: 40, brand: 'SunStyle', category: 'Accessories' },
+      { sku: 'FASH-HAT-BASEBALL', name: 'Baseball Cap', price: 599.00, stock: 80, brand: 'CapStyle', category: 'Accessories' },
+      { sku: 'FASH-SOCKS-PACK', name: 'Cotton Socks 6-pack', price: 399.00, stock: 100, brand: 'SockPro', category: 'Underwear' }
+    ];
+
+    for (const product of fashionProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Fashion','${product.category}',${product.price},${product.stock},'{\\\"material\\\":\\\"quality\\\",\\\"size_range\\\":\\\"various\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Home & Living - 12 products
+    const homeProducts = [
+      { sku: 'HOME-CUSHION-SET', name: 'Decorative Cushion Set', price: 899.00, stock: 60, brand: 'ComfortCo', category: 'Decor' },
+      { sku: 'HOME-LAMP-TABLE', name: 'Modern Table Lamp', price: 1299.00, stock: 40, brand: 'LightStyle', category: 'Lighting' },
+      { sku: 'HOME-RUG-WOOL', name: 'Wool Area Rug', price: 2999.00, stock: 25, brand: 'RugMaster', category: 'Flooring' },
+      { sku: 'HOME-CURTAINS-SET', name: 'Blackout Curtains Set', price: 1899.00, stock: 30, brand: 'WindowStyle', category: 'Window Treatments' },
+      { sku: 'HOME-VASE-CERAMIC', name: 'Ceramic Decorative Vase', price: 699.00, stock: 50, brand: 'PotteryPro', category: 'Decor' },
+      { sku: 'HOME-MIRROR-WALL', name: 'Wall Mirror 60cm', price: 1499.00, stock: 35, brand: 'MirrorMax', category: 'Decor' },
+      { sku: 'HOME-PLANT-POT', name: 'Plant Pot with Saucer', price: 399.00, stock: 80, brand: 'PlantStyle', category: 'Garden' },
+      { sku: 'HOME-CANDLE-SET', name: 'Scented Candle Set', price: 599.00, stock: 45, brand: 'AromaCo', category: 'Fragrance' },
+      { sku: 'HOME-THROW-BLANKET', name: 'Soft Throw Blanket', price: 999.00, stock: 55, brand: 'CozyStyle', category: 'Textiles' },
+      { sku: 'HOME-PHOTO-FRAME', name: 'Photo Frame Set 5pc', price: 499.00, stock: 70, brand: 'FramePro', category: 'Decor' },
+      { sku: 'HOME-COASTER-SET', name: 'Cork Coaster Set', price: 299.00, stock: 90, brand: 'TableStyle', category: 'Tableware' },
+      { sku: 'HOME-BOOKEND-PAIR', name: 'Decorative Bookends', price: 799.00, stock: 40, brand: 'BookStyle', category: 'Decor' }
+    ];
+
+    for (const product of homeProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Home & Living','${product.category}',${product.price},${product.stock},'{\\\"eco_friendly\\\":true,\\\"durable\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Additional categories to match local database
+    // Condiments & Sauces - 12 products
+    const condimentsProducts = [
+      { sku: 'COND-SOY-SAUCE', name: 'Premium Soy Sauce 500ml', price: 299.00, stock: 100, brand: 'AsianFlavor', category: 'Sauces' },
+      { sku: 'COND-OLIVE-OIL', name: 'Extra Virgin Olive Oil', price: 899.00, stock: 80, brand: 'Mediterranean', category: 'Oils' },
+      { sku: 'COND-BALSAMIC', name: 'Aged Balsamic Vinegar', price: 699.00, stock: 60, brand: 'ItalianStyle', category: 'Vinegars' },
+      { sku: 'COND-MUSTARD-DIJON', name: 'Dijon Mustard', price: 399.00, stock: 120, brand: 'FrenchTaste', category: 'Condiments' },
+      { sku: 'COND-KETCHUP-ORGANIC', name: 'Organic Ketchup', price: 249.00, stock: 150, brand: 'NaturalTaste', category: 'Sauces' },
+      { sku: 'COND-MAYO-AVOCADO', name: 'Avocado Mayo', price: 349.00, stock: 90, brand: 'HealthyChoice', category: 'Condiments' },
+      { sku: 'COND-HOT-SAUCE', name: 'Hot Sauce Variety Pack', price: 599.00, stock: 70, brand: 'SpiceMaster', category: 'Sauces' },
+      { sku: 'COND-WORCESTERSHIRE', name: 'Worcestershire Sauce', price: 199.00, stock: 110, brand: 'ClassicTaste', category: 'Sauces' },
+      { sku: 'COND-TAHINI', name: 'Sesame Tahini Paste', price: 449.00, stock: 85, brand: 'MiddleEastern', category: 'Pastes' },
+      { sku: 'COND-FISH-SAUCE', name: 'Fish Sauce Premium', price: 299.00, stock: 75, brand: 'AsianCuisine', category: 'Sauces' },
+      { sku: 'COND-MISO-PASTE', name: 'White Miso Paste', price: 399.00, stock: 65, brand: 'JapaneseFlavor', category: 'Pastes' },
+      { sku: 'COND-SESAME-OIL', name: 'Toasted Sesame Oil', price: 349.00, stock: 95, brand: 'AsianEssence', category: 'Oils' }
+    ];
+
+    for (const product of condimentsProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Condiments & Sauces','${product.category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"preservative_free\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Snacks - 12 products
+    const snacksProducts = [
+      { sku: 'SNACK-CHIPS-POTATO', name: 'Potato Chips Classic', price: 199.00, stock: 200, brand: 'CrispyCo', category: 'Chips' },
+      { sku: 'SNACK-NUTS-ALMOND', name: 'Roasted Almonds', price: 499.00, stock: 150, brand: 'NuttyGood', category: 'Nuts' },
+      { sku: 'SNACK-CRACKERS-CHEESE', name: 'Cheese Crackers', price: 299.00, stock: 180, brand: 'CrackerMax', category: 'Crackers' },
+      { sku: 'SNACK-POPCORN-BUTTER', name: 'Butter Popcorn', price: 149.00, stock: 250, brand: 'PopMaster', category: 'Popcorn' },
+      { sku: 'SNACK-PRETZELS-SALTED', name: 'Salted Pretzels', price: 249.00, stock: 160, brand: 'PretzelPro', category: 'Pretzels' },
+      { sku: 'SNACK-TRAIL-MIX', name: 'Trail Mix Deluxe', price: 399.00, stock: 120, brand: 'TrailMaster', category: 'Mixed' },
+      { sku: 'SNACK-COOKIES-CHOC', name: 'Chocolate Cookies', price: 349.00, stock: 140, brand: 'CookieCo', category: 'Cookies' },
+      { sku: 'SNACK-GRANOLA-BARS', name: 'Granola Bars 6-pack', price: 449.00, stock: 100, brand: 'GranolaPro', category: 'Bars' },
+      { sku: 'SNACK-DRIED-MANGO', name: 'Dried Mango Slices', price: 399.00, stock: 90, brand: 'FruitSnack', category: 'Dried Fruit' },
+      { sku: 'SNACK-PISTACHIOS', name: 'Shelled Pistachios', price: 599.00, stock: 80, brand: 'PistachioPro', category: 'Nuts' },
+      { sku: 'SNACK-CASHEWS-ROASTED', name: 'Roasted Cashews', price: 449.00, stock: 110, brand: 'CashewCo', category: 'Nuts' },
+      { sku: 'SNACK-RICE-CAKES', name: 'Brown Rice Cakes', price: 199.00, stock: 170, brand: 'RiceSnack', category: 'Rice' }
+    ];
+
+    for (const product of snacksProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Snacks','${product.category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"no_artificial\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Peripherals - 12 products
+    const peripheralsProducts = [
+      { sku: 'PERI-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2999.00, stock: 50, brand: 'GameMax', category: 'Mice' },
+      { sku: 'PERI-KEYBOARD-MECH', name: 'Mechanical Keyboard', price: 3999.00, stock: 40, brand: 'KeyMaster', category: 'Keyboards' },
+      { sku: 'PERI-MONITOR-27', name: '27-inch Gaming Monitor', price: 15999.00, stock: 25, brand: 'DisplayPro', category: 'Monitors' },
+      { sku: 'PERI-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 30, brand: 'StreamCam', category: 'Cameras' },
+      { sku: 'PERI-SPEAKERS-2.1', name: '2.1 Speaker System', price: 4999.00, stock: 35, brand: 'AudioMax', category: 'Speakers' },
+      { sku: 'PERI-HEADPHONES-WIRELESS', name: 'Wireless Headphones', price: 5999.00, stock: 45, brand: 'SoundPro', category: 'Headphones' },
+      { sku: 'PERI-MICROPHONE-STREAM', name: 'Streaming Microphone', price: 3999.00, stock: 20, brand: 'MicPro', category: 'Microphones' },
+      { sku: 'PERI-DOCKING-STATION', name: 'USB-C Docking Station', price: 2999.00, stock: 60, brand: 'DockMax', category: 'Docks' },
+      { sku: 'PERI-CABLE-HDMI', name: 'HDMI Cable 2m', price: 999.00, stock: 100, brand: 'CablePro', category: 'Cables' },
+      { sku: 'PERI-USB-HUB', name: 'USB 3.0 Hub 4-port', price: 1499.00, stock: 80, brand: 'HubMax', category: 'Hubs' },
+      { sku: 'PERI-GRAPHICS-TABLET', name: 'Drawing Graphics Tablet', price: 8999.00, stock: 15, brand: 'DrawPro', category: 'Tablets' },
+      { sku: 'PERI-LAPTOP-STAND', name: 'Adjustable Laptop Stand', price: 1999.00, stock: 70, brand: 'StandPro', category: 'Stands' }
+    ];
+
+    for (const product of peripheralsProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High quality ${product.category.toLowerCase()}','${product.brand}','Peripherals','${product.category}',${product.price},${product.stock},'{\\\"compatibility\\\":\\\"universal\\\",\\\"warranty\\\":\\\"1 year\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Fragrances - 12 products
+    const fragrancesProducts = [
+      { sku: 'FRAG-PERFUME-WOMEN', name: 'Womens Perfume 50ml', price: 2999.00, stock: 40, brand: 'Elegance', category: 'Perfumes' },
+      { sku: 'FRAG-COLOGNE-MEN', name: 'Mens Cologne 100ml', price: 2499.00, stock: 50, brand: 'Masculine', category: 'Colognes' },
+      { sku: 'FRAG-BODY-SPRAY', name: 'Body Spray Fresh', price: 899.00, stock: 80, brand: 'FreshSpray', category: 'Body Sprays' },
+      { sku: 'FRAG-DIFFUSER-REED', name: 'Reed Diffuser Set', price: 1299.00, stock: 60, brand: 'AromaHome', category: 'Home Fragrance' },
+      { sku: 'FRAG-CANDLE-SCENTED', name: 'Scented Candle Vanilla', price: 699.00, stock: 100, brand: 'CandleCo', category: 'Candles' },
+      { sku: 'FRAG-ROOM-SPRAY', name: 'Room Spray Lavender', price: 499.00, stock: 120, brand: 'RoomFresh', category: 'Room Sprays' },
+      { sku: 'FRAG-PERFUME-ROLL', name: 'Roll-on Perfume Oil', price: 1199.00, stock: 70, brand: 'RollOn', category: 'Perfume Oils' },
+      { sku: 'FRAG-SOAP-LUXURY', name: 'Luxury Scented Soap', price: 399.00, stock: 150, brand: 'SoapLux', category: 'Soaps' },
+      { sku: 'FRAG-LOTION-BODY', name: 'Body Lotion Fragrant', price: 799.00, stock: 90, brand: 'LotionPro', category: 'Body Care' },
+      { sku: 'FRAG-SHAMPOO-SCENTED', name: 'Scented Shampoo', price: 599.00, stock: 110, brand: 'HairCare', category: 'Hair Care' },
+      { sku: 'FRAG-DEO-STICK', name: 'Deodorant Stick', price: 299.00, stock: 200, brand: 'DeoMax', category: 'Deodorants' },
+      { sku: 'FRAG-SACHET-CAR', name: 'Car Sachet Freshener', price: 199.00, stock: 180, brand: 'CarFresh', category: 'Car Fragrance' }
+    ];
+
+    for (const product of fragrancesProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Fragrances','${product.category}',${product.price},${product.stock},'{\\\"long_lasting\\\":true,\\\"natural_ingredients\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Computer Components - 12 products
+    const componentsProducts = [
+      { sku: 'COMP-RAM-16GB', name: '16GB DDR4 RAM', price: 4999.00, stock: 30, brand: 'MemoryMax', category: 'Memory' },
+      { sku: 'COMP-SSD-1TB', name: '1TB NVMe SSD', price: 6999.00, stock: 25, brand: 'StoragePro', category: 'Storage' },
+      { sku: 'COMP-GPU-RTX4060', name: 'RTX 4060 Graphics Card', price: 25999.00, stock: 15, brand: 'GraphicsMax', category: 'Graphics' },
+      { sku: 'COMP-CPU-RYZEN7', name: 'Ryzen 7 Processor', price: 18999.00, stock: 20, brand: 'ProcessorPro', category: 'Processors' },
+      { sku: 'COMP-MOTHERBOARD-B550', name: 'B550 Motherboard', price: 8999.00, stock: 18, brand: 'BoardMax', category: 'Motherboards' },
+      { sku: 'COMP-PSU-750W', name: '750W Power Supply', price: 5999.00, stock: 22, brand: 'PowerMax', category: 'Power Supplies' },
+      { sku: 'COMP-COOLER-AIO', name: 'AIO Liquid Cooler', price: 3999.00, stock: 35, brand: 'CoolMax', category: 'Cooling' },
+      { sku: 'COMP-CASE-MID', name: 'Mid Tower Case', price: 2999.00, stock: 40, brand: 'CasePro', category: 'Cases' },
+      { sku: 'COMP-FAN-120MM', name: '120mm Case Fan', price: 999.00, stock: 80, brand: 'FanMax', category: 'Fans' },
+      { sku: 'COMP-CABLE-SATA', name: 'SATA Cable Set', price: 499.00, stock: 100, brand: 'CablePro', category: 'Cables' },
+      { sku: 'COMP-THERMAL-PASTE', name: 'Thermal Paste', price: 299.00, stock: 120, brand: 'ThermalPro', category: 'Thermal' },
+      { sku: 'COMP-SCREW-SET', name: 'PC Building Screw Set', price: 199.00, stock: 150, brand: 'HardwareMax', category: 'Hardware' }
+    ];
+
+    for (const product of componentsProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - High performance ${product.category.toLowerCase()}','${product.brand}','Computer Components','${product.category}',${product.price},${product.stock},'{\\\"high_performance\\\":true,\\\"warranty\\\":\\\"2 years\\\"}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Hair Care - 12 products
+    const hairCareProducts = [
+      { sku: 'HAIR-SHAMPOO-CLEAR', name: 'Clarifying Shampoo', price: 699.00, stock: 80, brand: 'HairClear', category: 'Shampoos' },
+      { sku: 'HAIR-CONDITIONER-DEEP', name: 'Deep Conditioning Treatment', price: 899.00, stock: 70, brand: 'HairSoft', category: 'Conditioners' },
+      { sku: 'HAIR-MASK-REPAIR', name: 'Repair Hair Mask', price: 1199.00, stock: 60, brand: 'HairRepair', category: 'Masks' },
+      { sku: 'HAIR-SERUM-ANTI-FRIZZ', name: 'Anti-Frizz Serum', price: 799.00, stock: 90, brand: 'FrizzFree', category: 'Serums' },
+      { sku: 'HAIR-OIL-ARGAN', name: 'Argan Oil Treatment', price: 999.00, stock: 50, brand: 'OilPro', category: 'Oils' },
+      { sku: 'HAIR-SPRAY-HOLD', name: 'Strong Hold Hair Spray', price: 599.00, stock: 100, brand: 'HoldMax', category: 'Styling' },
+      { sku: 'HAIR-GEL-STYLING', name: 'Styling Gel', price: 399.00, stock: 120, brand: 'StyleGel', category: 'Styling' },
+      { sku: 'HAIR-MOUSSE-VOLUME', name: 'Volume Mousse', price: 499.00, stock: 85, brand: 'VolumeMax', category: 'Styling' },
+      { sku: 'HAIR-BRUSH-DETANGLE', name: 'Detangling Brush', price: 299.00, stock: 150, brand: 'BrushPro', category: 'Tools' },
+      { sku: 'HAIR-DRYER-PROFESSIONAL', name: 'Professional Hair Dryer', price: 2999.00, stock: 25, brand: 'DryPro', category: 'Tools' },
+      { sku: 'HAIR-STRAIGHTENER-CERAMIC', name: 'Ceramic Straightener', price: 1999.00, stock: 30, brand: 'StraightPro', category: 'Tools' },
+      { sku: 'HAIR-CURLER-WAND', name: 'Curling Wand Set', price: 1499.00, stock: 35, brand: 'CurlPro', category: 'Tools' }
+    ];
+
+    for (const product of hairCareProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Professional ${product.category.toLowerCase()}','${product.brand}','Hair Care','${product.category}',${product.price},${product.stock},'{\\\"professional_grade\\\":true,\\\"salon_quality\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Baking Supplies - 12 products
+    const bakingProducts = [
+      { sku: 'BAKE-FLOUR-ALL-PURPOSE', name: 'All-Purpose Flour 2kg', price: 299.00, stock: 100, brand: 'FlourMax', category: 'Flours' },
+      { sku: 'BAKE-SUGAR-GRANULATED', name: 'Granulated Sugar 1kg', price: 199.00, stock: 150, brand: 'SugarPro', category: 'Sugars' },
+      { sku: 'BAKE-BUTTER-UNSALTED', name: 'Unsalted Butter 500g', price: 399.00, stock: 80, brand: 'ButterCo', category: 'Dairy' },
+      { sku: 'BAKE-EGGS-FRESH', name: 'Fresh Eggs 12-pack', price: 249.00, stock: 120, brand: 'EggFarm', category: 'Dairy' },
+      { sku: 'BAKE-VANILLA-EXTRACT', name: 'Pure Vanilla Extract', price: 599.00, stock: 60, brand: 'VanillaPro', category: 'Extracts' },
+      { sku: 'BAKE-BAKING-POWDER', name: 'Baking Powder 200g', price: 149.00, stock: 200, brand: 'BakeRise', category: 'Leavening' },
+      { sku: 'BAKE-COCOA-POWDER', name: 'Cocoa Powder 250g', price: 349.00, stock: 90, brand: 'CocoaMax', category: 'Chocolate' },
+      { sku: 'BAKE-CHOCOLATE-CHIPS', name: 'Chocolate Chips 300g', price: 449.00, stock: 110, brand: 'ChipCo', category: 'Chocolate' },
+      { sku: 'BAKE-MIXING-BOWL', name: 'Stainless Steel Mixing Bowl', price: 799.00, stock: 40, brand: 'BowlPro', category: 'Tools' },
+      { sku: 'BAKE-WHISK-HAND', name: 'Hand Whisk', price: 299.00, stock: 70, brand: 'WhiskMax', category: 'Tools' },
+      { sku: 'BAKE-MEASURING-CUPS', name: 'Measuring Cups Set', price: 399.00, stock: 50, brand: 'MeasurePro', category: 'Tools' },
+      { sku: 'BAKE-PARCHMENT-PAPER', name: 'Parchment Paper Roll', price: 199.00, stock: 130, brand: 'PaperPro', category: 'Paper' }
+    ];
+
+    for (const product of bakingProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Baking Supplies','${product.category}',${product.price},${product.stock},'{\\\"food_grade\\\":true,\\\"fresh\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Gaming - 11 products
+    const gamingProducts = [
+      { sku: 'GAME-CONTROLLER-XBOX', name: 'Xbox Controller', price: 3999.00, stock: 30, brand: 'GamePad', category: 'Controllers' },
+      { sku: 'GAME-HEADSET-GAMING', name: 'Gaming Headset RGB', price: 2999.00, stock: 40, brand: 'GameAudio', category: 'Audio' },
+      { sku: 'GAME-MOUSE-PAD', name: 'Gaming Mouse Pad', price: 999.00, stock: 80, brand: 'PadPro', category: 'Accessories' },
+      { sku: 'GAME-KEYBOARD-MECH', name: 'Mechanical Gaming Keyboard', price: 4999.00, stock: 25, brand: 'KeyGame', category: 'Keyboards' },
+      { sku: 'GAME-MOUSE-GAMING', name: 'Gaming Mouse 16000 DPI', price: 2499.00, stock: 35, brand: 'MouseGame', category: 'Mice' },
+      { sku: 'GAME-MONITOR-144HZ', name: '144Hz Gaming Monitor', price: 18999.00, stock: 15, brand: 'MonitorGame', category: 'Monitors' },
+      { sku: 'GAME-CHAIR-RACING', name: 'Racing Gaming Chair', price: 12999.00, stock: 20, brand: 'ChairGame', category: 'Furniture' },
+      { sku: 'GAME-DESK-GAMING', name: 'Gaming Desk', price: 8999.00, stock: 12, brand: 'DeskGame', category: 'Furniture' },
+      { sku: 'GAME-LED-STRIP', name: 'RGB LED Strip', price: 1499.00, stock: 60, brand: 'LEDGame', category: 'Lighting' },
+      { sku: 'GAME-CABLE-MANAGEMENT', name: 'Cable Management Kit', price: 799.00, stock: 100, brand: 'CableGame', category: 'Accessories' },
+      { sku: 'GAME-WRIST-REST', name: 'Gaming Wrist Rest', price: 599.00, stock: 90, brand: 'RestGame', category: 'Accessories' }
+    ];
+
+    for (const product of gamingProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Professional ${product.category.toLowerCase()}','${product.brand}','Gaming','${product.category}',${product.price},${product.stock},'{\\\"gaming_optimized\\\":true,\\\"rgb_lighting\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
+    }
+
+    // Drinks - 7 products
+    const drinksProducts = [
+      { sku: 'DRINK-COFFEE-BEANS', name: 'Premium Coffee Beans', price: 899.00, stock: 50, brand: 'BeanMax', category: 'Coffee' },
+      { sku: 'DRINK-TEA-GREEN', name: 'Green Tea Bags', price: 299.00, stock: 100, brand: 'TeaLeaf', category: 'Tea' },
+      { sku: 'DRINK-JUICE-ORANGE', name: 'Fresh Orange Juice', price: 199.00, stock: 80, brand: 'JuiceFresh', category: 'Juices' },
+      { sku: 'DRINK-WATER-SPARKLING', name: 'Sparkling Water', price: 149.00, stock: 120, brand: 'WaterBubble', category: 'Water' },
+      { sku: 'DRINK-ENERGY-NATURAL', name: 'Natural Energy Drink', price: 249.00, stock: 90, brand: 'EnergyNatural', category: 'Energy' },
+      { sku: 'DRINK-SMOOTHIE-MIX', name: 'Smoothie Mix Pack', price: 399.00, stock: 70, brand: 'SmoothiePro', category: 'Mixes' },
+      { sku: 'DRINK-COLD-BREW', name: 'Cold Brew Coffee', price: 349.00, stock: 60, brand: 'BrewCold', category: 'Coffee' }
+    ];
+
+    for (const product of drinksProducts) {
+      execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO products (owner_user_id,account_id,name,sku,description,brand,category,subcategory,price,stock,attributes,images) SELECT u.user_id,a.account_id,'${product.name}','${product.sku}','${product.name} - Premium ${product.category.toLowerCase()}','${product.brand}','Drinks','${product.category}',${product.price},${product.stock},'{\\\"natural\\\":true,\\\"refreshing\\\":true}'::jsonb,'[\\\"https://example.com/${product.sku.toLowerCase()}.jpg\\\"]'::jsonb FROM users u JOIN accounts a ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM products p WHERE p.sku='${product.sku}');"`, { stdio: 'inherit' });
     }
     // Accounts for demo owners
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Electra Shop','active' FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Cosma Beauty','active' FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Gusto Bites','active' FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Electra Shop','active' FROM users u WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Cosma Beauty','active' FROM users u WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO accounts (owner_user_id,name,status) SELECT u.user_id,'Gusto Bites','active' FROM users u WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.owner_user_id=u.user_id);"`, { stdio: 'inherit' });
 
     // Shops per account
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,products_count,followers_count,following_count,chat_performance_percent,rating_value,rating_count,joined_at,metadata) SELECT a.account_id,'Electra Main','shopee','SHP-ELECTRA','https://shopee.ph/electra','active',0,13600,3,96.0,4.9,23800,NOW() - INTERVAL '6 years','{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='shopee');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,products_count,followers_count,following_count,chat_performance_percent,rating_value,rating_count,joined_at,metadata) SELECT a.account_id,'Cosma Main','lazada','LZD-COSMA','https://www.lazada.com.ph/shop/cosma','active',0,12000,5,95.0,4.8,15000,NOW() - INTERVAL '4 years','{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,products_count,followers_count,following_count,chat_performance_percent,rating_value,rating_count,joined_at,metadata) SELECT a.account_id,'Gusto Main','tiktok','TT-GUSTO','https://www.tiktok.com/@gustobites','active',0,8000,2,97.0,4.9,9000,NOW() - INTERVAL '2 years','{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='tiktok');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,products_count,followers_count,following_count,chat_performance_percent,rating_value,rating_count,joined_at,metadata) SELECT a.account_id,'Electra Main','shopee','SHP-ELECTRA','https://shopee.ph/electra','active',0,13600,3,96.0,4.9,23800,NOW() - INTERVAL '6 years','{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='shopee');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,products_count,followers_count,following_count,chat_performance_percent,rating_value,rating_count,joined_at,metadata) SELECT a.account_id,'Cosma Main','lazada','LZD-COSMA','https://www.lazada.com.ph/shop/cosma','active',0,12000,5,95.0,4.8,15000,NOW() - INTERVAL '4 years','{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,products_count,followers_count,following_count,chat_performance_percent,rating_value,rating_count,joined_at,metadata) SELECT a.account_id,'Gusto Main','tiktok','TT-GUSTO','https://www.tiktok.com/@gustobites','active',0,8000,2,97.0,4.9,9000,NOW() - INTERVAL '2 years','{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='tiktok');"`, { stdio: 'inherit' });
 
     // Additional shops with varied followers
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Electra Main','lazada','LZD-ELECTRA','https://www.lazada.com.ph/shop/electra','active',9800,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Electra Main','tiktok','TT-ELECTRA','https://www.tiktok.com/@electra','active',15400,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='tiktok');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Cosma Main','shopee','SHP-COSMA','https://shopee.ph/cosma','active',11000,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='shopee');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Cosma Main','tiktok','TT-COSMA','https://www.tiktok.com/@cosma','active',9000,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='tiktok');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Gusto Main','shopee','SHP-GUSTO','https://shopee.ph/gustobites','active',7000,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='shopee');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Gusto Main','lazada','LZD-GUSTO','https://www.lazada.com.ph/shop/gusto-bites','active',6200,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Electra Main','lazada','LZD-ELECTRA','https://www.lazada.com.ph/shop/electra','active',9800,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Electra Main','tiktok','TT-ELECTRA','https://www.tiktok.com/@electra','active',15400,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='tiktok');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Cosma Main','shopee','SHP-COSMA','https://shopee.ph/cosma','active',11000,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='shopee');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Cosma Main','tiktok','TT-COSMA','https://www.tiktok.com/@cosma','active',9000,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='tiktok');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Gusto Main','shopee','SHP-GUSTO','https://shopee.ph/gustobites','active',7000,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='shopee');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Gusto Main','lazada','LZD-GUSTO','https://www.lazada.com.ph/shop/gusto-bites','active',6200,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');"`, { stdio: 'inherit' });
 
     // Product listings linking
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'shopee',p.sku,p.name,p.price*0.97,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='shopee' WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='shopee');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'lazada',p.sku,p.name,p.price*1.02,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='lazada' WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='lazada');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'tiktok',p.sku,p.name,p.price*0.93,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='tiktok' WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='tiktok');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'shopee',p.sku,p.name,p.price*0.97,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='shopee' WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='shopee');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'lazada',p.sku,p.name,p.price*1.02,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='lazada' WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='lazada');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'tiktok',p.sku,p.name,p.price*0.93,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='tiktok' WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='tiktok');"`, { stdio: 'inherit' });
 
     // Generate sales data for Docker
     console.log('🔄 Generating sales data...');
     
     // Get all products with their account info
-    const productsResult = execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "SELECT p.product_id, p.account_id, p.price, s.shop_id FROM products p JOIN shops s ON s.account_id = p.account_id ORDER BY p.product_id;"`, { encoding: 'utf8' });
+    const productsResult = execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "SELECT p.product_id, p.account_id, p.price, s.shop_id FROM products p JOIN shops s ON s.account_id = p.account_id ORDER BY p.product_id;"`, { encoding: 'utf8' });
     const products = productsResult.trim().split('\n').slice(2, -2).map(line => {
       const [product_id, account_id, price, shop_id] = line.split('|').map(x => x.trim());
       return { product_id: parseInt(product_id), account_id: parseInt(account_id), price: parseFloat(price), shop_id: parseInt(shop_id) };
@@ -1320,7 +1600,7 @@ function seedDocker() {
         const orderId = `ORD-${saleDate.replace(/-/g, '')}-${String(i + 1).padStart(3, '0')}`;
 
         try {
-          execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "INSERT INTO product_sales (account_id, product_id, shop_id, platform, sale_date, quantity_sold, unit_price, total_sales, order_id) VALUES (${randomProduct.account_id}, ${randomProduct.product_id}, ${randomProduct.shop_id}, '${platform}', '${saleDate}', ${quantity}, ${unitPrice.toFixed(2)}, ${totalSales.toFixed(2)}, '${orderId}');"`, { stdio: 'inherit' });
+          execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_sales (account_id, product_id, shop_id, platform, sale_date, quantity_sold, unit_price, total_sales, order_id) VALUES (${randomProduct.account_id}, ${randomProduct.product_id}, ${randomProduct.shop_id}, '${platform}', '${saleDate}', ${quantity}, ${unitPrice.toFixed(2)}, ${totalSales.toFixed(2)}, '${orderId}');"`, { stdio: 'inherit' });
         } catch (error) {
           console.log(`⚠️ Failed to insert sale for product ${randomProduct.product_id}: ${error.message}`);
         }

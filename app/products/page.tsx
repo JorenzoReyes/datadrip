@@ -576,7 +576,7 @@ export default function ProductsPage() {
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-header">{p.name}</span>
                           <span className="text-xs text-subheader">
-                            {p.brand ? `${p.brand} • ` : ''}{p.category || 'Uncategorized'}
+                            {p.brand ? `${p.brand} ` : ''}
                           </span>
                         </div>
                       </div>

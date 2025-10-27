@@ -649,7 +649,7 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={revenueByCategory}
+                      data={revenueByCategory.slice(0, 5)}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -658,10 +658,9 @@ export default function DashboardPage() {
                       dataKey="revenue"
                       nameKey="category"
                     >
-                      {revenueByCategory.map((entry, index) => {
+                      {revenueByCategory.slice(0, 5).map((entry, index) => {
                         const colors = [
-                          '#EE4D2D', '#0F146D', '#000000', '#059669', '#DC2626', 
-                          '#7C3AED', '#EA580C', '#0891B2', '#BE185D', '#65A30D'
+                          '#EE4D2D', '#0F146D', '#000000', '#059669', '#DC2626'
                         ];
                         return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
                       })}
