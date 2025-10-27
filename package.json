@@ -24,7 +24,8 @@
     "jenkins:setup:complete": "bash scripts/setup-jenkins-complete.sh",
     "jenkins:plugins": "bash scripts/install-jenkins-plugins.sh",
     "jenkins:logs": "docker logs datadrip-jenkins -f",
-    "db:seed:roles": "node scripts/seed-roles.js"
+    "db:seed:roles": "node scripts/seed-roles.js",
+    "db:seed:categories": "node scripts/seed-categories.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

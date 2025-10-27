@@ -215,6 +215,50 @@ async function createTables(pool) {
     );
   `;
 
+  // Categories table
+  const createCategoriesTable = `
+    CREATE TABLE IF NOT EXISTS categories (
+      category_id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      icon VARCHAR(50),
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  // Subcategories table
+  const createSubcategoriesTable = `
+    CREATE TABLE IF NOT EXISTS subcategories (
+      subcategory_id SERIAL PRIMARY KEY,
+      category_id INTEGER REFERENCES categories(category_id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (category_id, name)
+    );
+  `;
+
+  // Product types table
+  const createProductTypesTable = `
+    CREATE TABLE IF NOT EXISTS product_types (
+      product_type_id SERIAL PRIMARY KEY,
+      subcategory_id INTEGER REFERENCES subcategories(subcategory_id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (subcategory_id, name)
+    );
+  `;
+
   // Shops table (per-platform store under an account)
   const createShopsTable = `
     CREATE TABLE IF NOT EXISTS shops (
@@ -307,6 +351,10 @@ async function createTables(pool) {
   await pool.query(createUsersTable);
   await pool.query(createAccountsTable);
   
+  // Create reference tables for products
+  await pool.query(createCategoriesTable);
+  await pool.query(createSubcategoriesTable);
+  await pool.query(createProductTypesTable);
 
   await pool.query(createShopsTable);
   await pool.query(createProductsTable);
@@ -535,6 +583,7 @@ async function initializeDatabaseWithDocker() {
         brand VARCHAR(100),
         category VARCHAR(100),
         subcategory VARCHAR(100),
+        product_type VARCHAR(100),
         price DECIMAL(12,2) NOT NULL DEFAULT 0,
         special_price DECIMAL(12,2),
         cost DECIMAL(12,2),

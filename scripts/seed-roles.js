@@ -263,21 +263,19 @@ async function seedDirect() {
     // ==================== ELECTRA SHOP PRODUCTS ====================
     // Electronics - 15 products
     const electronicsProducts = [
-      { sku: 'ELEC-TV-55-4K', name: '4K Smart TV 55-inch', price: 25999.00, stock: 25, brand: 'Electra', category: 'TV & Video' },
-      { sku: 'ELEC-HEAD-NC', name: 'Noise-Cancelling Headphones', price: 7999.00, stock: 100, brand: 'SonicX', category: 'Audio' },
-      { sku: 'ELEC-PHONE-128', name: 'Smartphone 128GB', price: 15999.00, stock: 50, brand: 'TechCore', category: 'Mobile' },
-      { sku: 'ELEC-LAPTOP-16', name: 'Gaming Laptop 16GB RAM', price: 45999.00, stock: 15, brand: 'GameMax', category: 'Computers' },
-      { sku: 'ELEC-TABLET-10', name: '10-inch Tablet', price: 12999.00, stock: 75, brand: 'TabPro', category: 'Tablets' },
-      { sku: 'ELEC-SPEAKER-BT', name: 'Bluetooth Speaker', price: 2999.00, stock: 200, brand: 'SoundWave', category: 'Audio' },
-      { sku: 'ELEC-CAMERA-4K', name: '4K Action Camera', price: 8999.00, stock: 60, brand: 'ActionCam', category: 'Cameras' },
-      { sku: 'ELEC-SMARTWATCH', name: 'Smart Watch Pro', price: 5999.00, stock: 120, brand: 'WearTech', category: 'Wearables' },
-      { sku: 'ELEC-CHARGER-WIRELESS', name: 'Wireless Charger', price: 1999.00, stock: 300, brand: 'ChargeMax', category: 'Accessories' },
-      { sku: 'ELEC-ROUTER-WIFI6', name: 'WiFi 6 Router', price: 12999.00, stock: 40, brand: 'NetMax', category: 'Networking' },
-      { sku: 'ELEC-POWERBANK-20K', name: '20,000mAh Power Bank', price: 3499.00, stock: 180, brand: 'PowerMax', category: 'Accessories' },
-      { sku: 'ELEC-EARBUDS-PRO', name: 'Wireless Earbuds Pro', price: 4999.00, stock: 150, brand: 'AudioTech', category: 'Audio' },
-      { sku: 'ELEC-PROJECTOR-FHD', name: 'Full HD Projector', price: 19999.00, stock: 20, brand: 'ViewMax', category: 'TV & Video' },
-      { sku: 'ELEC-DRONE-4K', name: '4K Camera Drone', price: 29999.00, stock: 25, brand: 'SkyView', category: 'Cameras' },
-      { sku: 'ELEC-SECURITY-CAM', name: 'Smart Security Camera', price: 3999.00, stock: 100, brand: 'SafeWatch', category: 'Security' }
+      { sku: 'ELEC-TV-55-4K', name: '4K Smart TV 55-inch', price: 25999.00, stock: 25, brand: 'Electra', sub_category: 'TV & Video', product_type: 'Smart TV' },
+      { sku: 'ELEC-HEAD-NC', name: 'Noise-Cancelling Headphones', price: 7999.00, stock: 100, brand: 'SonicX',  sub_category: 'Audio', product_type: 'Headphones' },
+      { sku: 'ELEC-PHONE-128', name: 'Smartphone 128GB', price: 15999.00, stock: 50, brand: 'TechCore', sub_category: 'Mobile', product_type: 'Smartphone' },
+      { sku: 'ELEC-LAPTOP-16', name: 'Gaming Laptop 16GB RAM', price: 45999.00, stock: 15, brand: 'GameMax', sub_category: 'Computers', product_type: 'Laptop' },
+      { sku: 'ELEC-TABLET-10', name: '10-inch Tablet', price: 12999.00, stock: 75, brand: 'TabPro', sub_category: 'Tablets', product_type: 'Tablet' },
+      { sku: 'ELEC-SPEAKER-BT', name: 'Bluetooth Speaker', price: 2999.00, stock: 200, brand: 'SoundWave', sub_category: 'Audio', product_type: 'Speaker' },
+      { sku: 'ELEC-CAMERA-4K', name: '4K Action Camera', price: 8999.00, stock: 60, brand: 'ActionCam', sub_category: 'Cameras', product_type: 'Action Camera' },
+      { sku: 'ELEC-SMARTWATCH', name: 'Smart Watch Pro', price: 5999.00, stock: 120, brand: 'WearTech', sub_category: 'Wearables', product_type: 'Smart Watch' },
+      { sku: 'ELEC-CHARGER-WIRELESS', name: 'Wireless Charger', price: 1999.00, stock: 300, brand: 'ChargeMax', sub_category: 'Accessories', product_type: 'Wireless Charger' },
+      { sku: 'ELEC-ROUTER-WIFI6', name: 'WiFi 6 Router', price: 12999.00, stock: 40, brand: 'NetMax', sub_category: 'Networking', product_type: 'Router' },
+      { sku: 'ELEC-POWERBANK-20K', name: '20,000mAh Power Bank', price: 3499.00, stock: 180, brand: 'PowerMax', sub_category: 'Accessories', product_type: 'Power Bank' },
+      { sku: 'ELEC-EARBUDS-PRO', name: 'Wireless Earbuds Pro', price: 4999.00, stock: 150, brand: 'AudioTech', sub_category: 'Audio', product_type: 'Wireless Earbuds' },
+      { sku: 'ELEC-PROJECTOR-FHD', name: 'Full HD Projector', price: 19999.00, stock: 30, brand: 'ProjectorPro', sub_category: 'TV & Video', product_type: 'Projector' },
     ];
 
     for (const product of electronicsProducts) {
@@ -302,9 +300,9 @@ async function seedDirect() {
         }
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Electronics', $7, $8, $9, '{"color":"black","warranty":"1 year"}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - High quality ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Electronics', $7, $8, $9, '{"color":"black","warranty":"1 year"}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - High quality ${product.category.toLowerCase()}`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -312,18 +310,18 @@ async function seedDirect() {
 
     // Appliances - 12 products
     const appliancesProducts = [
-      { sku: 'APPL-FRIDGE-2D', name: 'Two-Door Refrigerator 14cuft', price: 18999.00, stock: 20, brand: 'CoolMax', category: 'Kitchen' },
-      { sku: 'APPL-MICROWAVE-30L', name: 'Microwave Oven 30L', price: 5999.00, stock: 40, brand: 'HeatWave', category: 'Kitchen' },
-      { sku: 'APPL-WASHER-AUTO', name: 'Automatic Washing Machine 8kg', price: 15999.00, stock: 25, brand: 'CleanCycle', category: 'Laundry' },
-      { sku: 'APPL-AIRCOND-1HP', name: 'Air Conditioner 1HP', price: 22999.00, stock: 30, brand: 'CoolAir', category: 'Climate' },
-      { sku: 'APPL-RICE-COOKER', name: 'Digital Rice Cooker 1.8L', price: 2999.00, stock: 80, brand: 'RicePro', category: 'Kitchen' },
-      { sku: 'APPL-BLENDER-1000W', name: 'High-Power Blender 1000W', price: 3499.00, stock: 60, brand: 'BlendMaster', category: 'Kitchen' },
-      { sku: 'APPL-IRON-STEAM', name: 'Steam Iron 2000W', price: 1999.00, stock: 100, brand: 'PressRight', category: 'Laundry' },
-      { sku: 'APPL-FAN-STAND', name: 'Stand Fan 16-inch', price: 1499.00, stock: 150, brand: 'AirFlow', category: 'Climate' },
-      { sku: 'APPL-VACUUM-CORDLESS', name: 'Cordless Vacuum Cleaner', price: 8999.00, stock: 45, brand: 'CleanSweep', category: 'Cleaning' },
-      { sku: 'APPL-TOASTER-4SLICE', name: '4-Slice Toaster', price: 2499.00, stock: 70, brand: 'ToastMaster', category: 'Kitchen' },
-      { sku: 'APPL-KETTLE-ELEC', name: 'Electric Kettle 1.7L', price: 1299.00, stock: 120, brand: 'BoilFast', category: 'Kitchen' },
-      { sku: 'APPL-AIRFRYER-5L', name: 'Air Fryer 5L Capacity', price: 4999.00, stock: 55, brand: 'CrispyCook', category: 'Kitchen' }
+      { sku: 'APPL-FRIDGE-2D', name: 'Two-Door Refrigerator 14cuft', price: 18999.00, stock: 20, brand: 'CoolMax', sub_category: 'Kitchen', product_type: 'Refrigerator' },
+      { sku: 'APPL-MICROWAVE-30L', name: 'Microwave Oven 30L', price: 5999.00, stock: 40, brand: 'HeatWave', category: 'Kitchen', sub_category: 'Microwave Oven' },
+      { sku: 'APPL-WASHER-AUTO', name: 'Automatic Washing Machine 8kg', price: 15999.00, stock: 25, brand: 'CleanCycle', sub_category: 'Laundry', product_type: 'Washing Machine' },
+      { sku: 'APPL-AIRCOND-1HP', name: 'Air Conditioner 1HP', price: 22999.00, stock: 30, brand: 'CoolAir', sub_category: 'Climate', product_type: 'Air Conditioner' },
+      { sku: 'APPL-RICE-COOKER', name: 'Digital Rice Cooker 1.8L', price: 2999.00, stock: 80, brand: 'RicePro', sub_category: 'Kitchen', product_type: 'Rice Cooker' },
+      { sku: 'APPL-BLENDER-1000W', name: 'High-Power Blender 1000W', price: 3499.00, stock: 60, brand: 'BlendMaster', sub_category: 'Kitchen', product_type: 'Blender' },
+      { sku: 'APPL-IRON-STEAM', name: 'Steam Iron 2000W', price: 1999.00, stock: 100, brand: 'PressRight', sub_category: 'Laundry', product_type: 'Steam Iron' },
+      { sku: 'APPL-FAN-STAND', name: 'Stand Fan 16-inch', price: 1499.00, stock: 150, brand: 'AirFlow', sub_category: 'Climate', product_type: 'Stand Fan' },
+      { sku: 'APPL-VACUUM-CORDLESS', name: 'Cordless Vacuum Cleaner', price: 8999.00, stock: 45, brand: 'CleanSweep', sub_category: 'Cleaning', product_type: 'Cordless Vacuum Cleaner' },
+      { sku: 'APPL-TOASTER-4SLICE', name: '4-Slice Toaster', price: 2499.00, stock: 70, brand: 'ToastMaster', sub_category: 'Kitchen', product_type: 'Toaster' },
+      { sku: 'APPL-KETTLE-ELEC', name: 'Electric Kettle 1.7L', price: 1299.00, stock: 120, brand: 'BoilFast', sub_category: 'Kitchen', product_type: 'Electric Kettle' },
+      { sku: 'APPL-AIRFRYER-5L', name: 'Air Fryer 5L Capacity', price: 4999.00, stock: 55, brand: 'CrispyCook', sub_category: 'Kitchen', product_type: 'Air Fryer' }
     ];
 
     for (const product of appliancesProducts) {
@@ -340,9 +338,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Appliances', $7, $8, $9, '{"energy_rating":"A+","warranty":"2 years"}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Efficient ${product.category.toLowerCase()} appliance`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Appliances', $7, $8, $9, '{"energy_rating":"A+","warranty":"2 years"}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Efficient ${product.category.toLowerCase()} appliance`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -350,18 +348,18 @@ async function seedDirect() {
 
     // Peripherals - 12 products
     const peripheralsProducts = [
-      { sku: 'PERI-KEYBOARD-MECH', name: 'Mechanical Keyboard RGB', price: 3999.00, stock: 80, brand: 'KeyMaster', category: 'Input Devices' },
-      { sku: 'PERI-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2499.00, stock: 150, brand: 'GameGear', category: 'Input Devices' },
-      { sku: 'PERI-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 90, brand: 'StreamCam', category: 'Video' },
-      { sku: 'PERI-HEADSET-USB', name: 'USB Gaming Headset', price: 4499.00, stock: 100, brand: 'AudioGame', category: 'Audio' },
-      { sku: 'PERI-MONITOR-27', name: '27-inch Gaming Monitor 144Hz', price: 18999.00, stock: 30, brand: 'DisplayPro', category: 'Display' },
-      { sku: 'PERI-MOUSEPAD-XXL', name: 'XXL Gaming Mouse Pad', price: 999.00, stock: 200, brand: 'DeskMat', category: 'Accessories' },
-      { sku: 'PERI-USB-HUB-7PORT', name: '7-Port USB Hub', price: 1499.00, stock: 120, brand: 'ConnectPlus', category: 'Connectivity' },
-      { sku: 'PERI-CABLE-HDMI', name: 'HDMI Cable 2m 4K', price: 599.00, stock: 300, brand: 'CablePro', category: 'Cables' },
-      { sku: 'PERI-MIC-STREAMING', name: 'USB Streaming Microphone', price: 5999.00, stock: 60, brand: 'VoiceClear', category: 'Audio' },
-      { sku: 'PERI-DOCK-LAPTOP', name: 'Laptop Docking Station', price: 7999.00, stock: 40, brand: 'DockMaster', category: 'Connectivity' },
-      { sku: 'PERI-COOLER-LAPTOP', name: 'Laptop Cooling Pad RGB', price: 1999.00, stock: 110, brand: 'CoolLap', category: 'Cooling' },
-      { sku: 'PERI-ADAPTER-USBC', name: 'USB-C Multi Adapter', price: 1299.00, stock: 180, brand: 'AdaptAll', category: 'Connectivity' }
+      { sku: 'PERI-KEYBOARD-MECH', name: 'Mechanical Keyboard RGB', price: 3999.00, stock: 80, brand: 'KeyMaster', sub_category: 'Input Devices', product_type: 'Mechanical Keyboard' },
+      { sku: 'PERI-MOUSE-GAMING', name: 'Gaming Mouse RGB', price: 2499.00, stock: 150, brand: 'GameGear', sub_category: 'Input Devices', product_type: 'Gaming Mouse' },
+      { sku: 'PERI-WEBCAM-4K', name: '4K Webcam Pro', price: 6999.00, stock: 90, brand: 'StreamCam', sub_category: 'Video', product_type: 'Webcam' },
+      { sku: 'PERI-HEADSET-USB', name: 'USB Gaming Headset', price: 4499.00, stock: 100, brand: 'AudioGame', sub_category: 'Audio', product_type: 'USB Gaming Headset' },
+      { sku: 'PERI-MONITOR-27', name: '27-inch Gaming Monitor 144Hz', price: 18999.00, stock: 30, brand: 'DisplayPro', sub_category: 'Display', product_type: 'Gaming Monitor' },
+      { sku: 'PERI-MOUSEPAD-XXL', name: 'XXL Gaming Mouse Pad', price: 999.00, stock: 200, brand: 'DeskMat', sub_category: 'Accessories', product_type: 'Gaming Mouse Pad' },
+      { sku: 'PERI-USB-HUB-7PORT', name: '7-Port USB Hub', price: 1499.00, stock: 120, brand: 'ConnectPlus', sub_category: 'Connectivity', product_type: 'USB Hub' },
+      { sku: 'PERI-CABLE-HDMI', name: 'HDMI Cable 2m 4K', price: 599.00, stock: 300, brand: 'CablePro', sub_category: 'Cables', product_type: 'HDMI Cable' },
+      { sku: 'PERI-MIC-STREAMING', name: 'USB Streaming Microphone', price: 5999.00, stock: 60, brand: 'VoiceClear', sub_category: 'Audio', product_type: 'USB Streaming Microphone' },
+      { sku: 'PERI-DOCK-LAPTOP', name: 'Laptop Docking Station', price: 7999.00, stock: 40, brand: 'DockMaster', sub_category: 'Connectivity', product_type: 'Laptop Docking Station' },
+      { sku: 'PERI-COOLER-LAPTOP', name: 'Laptop Cooling Pad RGB', price: 1999.00, stock: 110, brand: 'CoolLap', sub_category: 'Cooling', product_type: 'Laptop Cooling Pad' },
+      { sku: 'PERI-ADAPTER-USBC', name: 'USB-C Multi Adapter', price: 1299.00, stock: 180, brand: 'AdaptAll', sub_category: 'Connectivity', product_type: 'USB-C Multi Adapter' }
     ];
 
     for (const product of peripheralsProducts) {
@@ -378,9 +376,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Peripherals', $7, $8, $9, '{"plug_and_play":true,"warranty":"1 year"}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Peripherals', $7, $8, $9, '{"plug_and_play":true,"warranty":"1 year"}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.category.toLowerCase()}`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -388,18 +386,18 @@ async function seedDirect() {
 
     // Computer Components - 12 products
     const componentsProducts = [
-      { sku: 'COMP-RAM-16GB', name: 'DDR4 RAM 16GB 3200MHz', price: 3999.00, stock: 80, brand: 'MemoryPro', category: 'Memory' },
-      { sku: 'COMP-SSD-1TB', name: 'NVMe SSD 1TB M.2', price: 5999.00, stock: 60, brand: 'SpeedDrive', category: 'Storage' },
-      { sku: 'COMP-GPU-RTX', name: 'Graphics Card RTX 6GB', price: 35999.00, stock: 15, brand: 'GraphicMax', category: 'Graphics' },
-      { sku: 'COMP-CPU-I5', name: 'Intel i5 Processor 12th Gen', price: 12999.00, stock: 30, brand: 'IntelCore', category: 'Processors' },
-      { sku: 'COMP-MOBO-B550', name: 'B550 Motherboard ATX', price: 8999.00, stock: 25, brand: 'BoardMaster', category: 'Motherboards' },
-      { sku: 'COMP-PSU-750W', name: 'Power Supply 750W Modular', price: 6499.00, stock: 40, brand: 'PowerTech', category: 'Power' },
-      { sku: 'COMP-CASE-ATX', name: 'ATX Gaming Case RGB', price: 4999.00, stock: 35, brand: 'CasePro', category: 'Cases' },
-      { sku: 'COMP-COOLER-CPU', name: 'CPU Cooler RGB Tower', price: 2999.00, stock: 50, brand: 'CoolCPU', category: 'Cooling' },
-      { sku: 'COMP-HDD-2TB', name: 'Hard Drive 2TB 7200RPM', price: 3499.00, stock: 70, brand: 'DataStore', category: 'Storage' },
-      { sku: 'COMP-THERMAL-PASTE', name: 'Thermal Paste Premium', price: 499.00, stock: 150, brand: 'CoolPaste', category: 'Accessories' },
-      { sku: 'COMP-FAN-CASE-RGB', name: 'RGB Case Fan 120mm 3-Pack', price: 1999.00, stock: 90, brand: 'AirRGB', category: 'Cooling' },
-      { sku: 'COMP-CABLE-SATA', name: 'SATA Cable 3-Pack', price: 399.00, stock: 200, brand: 'CableConnect', category: 'Accessories' }
+      { sku: 'COMP-RAM-16GB', name: 'DDR4 RAM 16GB 3200MHz', price: 3999.00, stock: 80, brand: 'MemoryPro', sub_category: 'Memory', product_type: 'RAM' },
+      { sku: 'COMP-SSD-1TB', name: 'NVMe SSD 1TB M.2', price: 5999.00, stock: 60, brand: 'SpeedDrive', sub_category: 'Storage', product_type: 'SSD' },
+      { sku: 'COMP-GPU-RTX', name: 'Graphics Card RTX 6GB', price: 35999.00, stock: 15, brand: 'GraphicMax', sub_category: 'Graphics', product_type: 'Graphics Card' },
+      { sku: 'COMP-CPU-I5', name: 'Intel i5 Processor 12th Gen', price: 12999.00, stock: 30, brand: 'IntelCore', sub_category: 'Processors', product_type: 'Processor' },
+      { sku: 'COMP-MOBO-B550', name: 'B550 Motherboard ATX', price: 8999.00, stock: 25, brand: 'BoardMaster', sub_category: 'Motherboards', product_type: 'Motherboard' },
+      { sku: 'COMP-PSU-750W', name: 'Power Supply 750W Modular', price: 6499.00, stock: 40, brand: 'PowerTech', sub_category: 'Power', product_type: 'Power Supply' },
+      { sku: 'COMP-CASE-ATX', name: 'ATX Gaming Case RGB', price: 4999.00, stock: 35, brand: 'CasePro', sub_category: 'Cases', product_type: 'Gaming Case' },
+      { sku: 'COMP-COOLER-CPU', name: 'CPU Cooler RGB Tower', price: 2999.00, stock: 50, brand: 'CoolCPU', sub_category: 'Cooling', product_type: 'CPU Cooler' },
+      { sku: 'COMP-HDD-2TB', name: 'Hard Drive 2TB 7200RPM', price: 3499.00, stock: 70, brand: 'DataStore', sub_category: 'Storage', product_type: 'Hard Drive' },
+      { sku: 'COMP-THERMAL-PASTE', name: 'Thermal Paste Premium', price: 499.00, stock: 150, brand: 'CoolPaste', sub_category: 'Accessories', product_type: 'Thermal Paste' },
+      { sku: 'COMP-FAN-CASE-RGB', name: 'RGB Case Fan 120mm 3-Pack', price: 1999.00, stock: 90, brand: 'AirRGB', sub_category: 'Cooling', product_type: 'Case Fan' },
+      { sku: 'COMP-CABLE-SATA', name: 'SATA Cable 3-Pack', price: 399.00, stock: 200, brand: 'CableConnect', sub_category: 'Accessories', product_type: 'SATA Cable' }
     ];
 
     for (const product of componentsProducts) {
@@ -416,9 +414,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Computer Components', $7, $8, $9, '{"compatible":"PC","warranty":"3 years"}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - High-performance ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, sub_category, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Computer Components', $7, $8, $9, '{"compatible":"PC","warranty":"3 years"}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - High-performance ${product.category.toLowerCase()}`, product.brand, product.category, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -426,18 +424,18 @@ async function seedDirect() {
 
     // Gaming - 12 products
     const gamingProducts = [
-      { sku: 'GAME-CONSOLE-PS5', name: 'Gaming Console PS5', price: 28999.00, stock: 20, brand: 'PlayStation', category: 'Consoles' },
-      { sku: 'GAME-CONTROLLER-XBOX', name: 'Wireless Controller Xbox', price: 3499.00, stock: 80, brand: 'Xbox', category: 'Controllers' },
-      { sku: 'GAME-CHAIR-RACING', name: 'Gaming Chair Racing Style', price: 12999.00, stock: 25, brand: 'SeatComfort', category: 'Furniture' },
-      { sku: 'GAME-DESK-RGB', name: 'Gaming Desk with RGB', price: 15999.00, stock: 15, brand: 'DeskGamer', category: 'Furniture' },
-      { sku: 'GAME-HEADSET-7.1', name: '7.1 Surround Gaming Headset', price: 5999.00, stock: 60, brand: 'SoundGame', category: 'Audio' },
-      { sku: 'GAME-KEYBOARD-TKL', name: 'TKL Mechanical Gaming Keyboard', price: 4499.00, stock: 50, brand: 'GameKeys', category: 'Peripherals' },
-      { sku: 'GAME-MOUSE-ULTRA', name: 'Ultra-Light Gaming Mouse', price: 2999.00, stock: 90, brand: 'MousePro', category: 'Peripherals' },
-      { sku: 'GAME-CAPTURE-CARD', name: 'Game Capture Card 4K60', price: 9999.00, stock: 30, brand: 'StreamCapture', category: 'Streaming' },
-      { sku: 'GAME-STEERING-WHEEL', name: 'Racing Wheel with Pedals', price: 18999.00, stock: 20, brand: 'RaceSim', category: 'Controllers' },
-      { sku: 'GAME-VR-HEADSET', name: 'VR Gaming Headset', price: 24999.00, stock: 18, brand: 'VirtualReality', category: 'VR' },
-      { sku: 'GAME-LED-STRIP', name: 'LED Strip Lights RGB 5m', price: 1299.00, stock: 150, brand: 'LightSetup', category: 'Lighting' },
-      { sku: 'GAME-CONTROLLER-FIGHT', name: 'Fight Stick Arcade Controller', price: 7999.00, stock: 35, brand: 'FightPro', category: 'Controllers' }
+      { sku: 'GAME-CONSOLE-PS5', name: 'Gaming Console PS5', price: 28999.00, stock: 20, brand: 'PlayStation', sub_category: 'Consoles', product_type: 'Gaming Console' },
+      { sku: 'GAME-CONTROLLER-XBOX', name: 'Wireless Controller Xbox', price: 3499.00, stock: 80, brand: 'Xbox', sub_category: 'Controllers', product_type: 'Wireless Controller' },
+      { sku: 'GAME-CHAIR-RACING', name: 'Gaming Chair Racing Style', price: 12999.00, stock: 25, brand: 'SeatComfort', sub_category: 'Furniture', product_type: 'Gaming Chair' },
+      { sku: 'GAME-DESK-RGB', name: 'Gaming Desk with RGB', price: 15999.00, stock: 15, brand: 'DeskGamer', sub_category: 'Furniture', product_type: 'Gaming Desk' },
+      { sku: 'GAME-HEADSET-7.1', name: '7.1 Surround Gaming Headset', price: 5999.00, stock: 60, brand: 'SoundGame', sub_category: 'Audio', product_type: 'Gaming Headset' },
+      { sku: 'GAME-KEYBOARD-TKL', name: 'TKL Mechanical Gaming Keyboard', price: 4499.00, stock: 50, brand: 'GameKeys', sub_category: 'Peripherals', product_type: 'Mechanical Keyboard' },
+      { sku: 'GAME-MOUSE-ULTRA', name: 'Ultra-Light Gaming Mouse', price: 2999.00, stock: 90, brand: 'MousePro', sub_category: 'Peripherals', product_type: 'Gaming Mouse' },
+      { sku: 'GAME-CAPTURE-CARD', name: 'Game Capture Card 4K60', price: 9999.00, stock: 30, brand: 'StreamCapture', sub_category: 'Streaming', product_type: 'Capture Card' },
+      { sku: 'GAME-STEERING-WHEEL', name: 'Racing Wheel with Pedals', price: 18999.00, stock: 20, brand: 'RaceSim', sub_category: 'Controllers', product_type: 'Racing Wheel' },
+      { sku: 'GAME-VR-HEADSET', name: 'VR Gaming Headset', price: 24999.00, stock: 18, brand: 'VirtualReality', sub_category: 'VR', product_type: 'VR Headset' },
+      { sku: 'GAME-LED-STRIP', name: 'LED Strip Lights RGB 5m', price: 1299.00, stock: 150, brand: 'LightSetup', sub_category: 'Lighting', product_type: 'LED Strip' },
+      { sku: 'GAME-CONTROLLER-FIGHT', name: 'Fight Stick Arcade Controller', price: 7999.00, stock: 35, brand: 'FightPro', sub_category: 'Controllers', product_type: 'Fight Stick' }
     ];
 
     for (const product of gamingProducts) {
@@ -454,9 +452,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Gaming', $7, $8, $9, '{"gaming_grade":"pro","warranty":"1 year"}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Pro-level ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Gaming', $7, $8, $9, '{"gaming_grade":"pro","warranty":"1 year"}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Pro-level ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -465,21 +463,21 @@ async function seedDirect() {
     // ==================== COSMA BEAUTY SHOP PRODUCTS ====================
     // Cosmetics - 15 products
     const cosmeticsProducts = [
-      { sku: 'COS-LIP-MATTE', name: 'Matte Lipstick', price: 499.00, stock: 300, brand: 'Chroma', category: 'Makeup' },
-      { sku: 'COS-FOUNDATION-30', name: 'Full Coverage Foundation', price: 899.00, stock: 150, brand: 'BeautyBase', category: 'Makeup' },
-      { sku: 'COS-MASCARA-VOL', name: 'Volumizing Mascara', price: 599.00, stock: 250, brand: 'LashPro', category: 'Makeup' },
-      { sku: 'COS-EYESHADOW-PAL', name: 'Eyeshadow Palette', price: 1299.00, stock: 100, brand: 'ColorPop', category: 'Makeup' },
-      { sku: 'COS-CONCEALER-FULL', name: 'Full Coverage Concealer', price: 649.00, stock: 175, brand: 'HideIt', category: 'Makeup' },
-      { sku: 'COS-LIPGLOSS-SHINE', name: 'Shiny Lip Gloss', price: 399.00, stock: 220, brand: 'Glossy', category: 'Makeup' },
-      { sku: 'COS-BLUSH-PINK', name: 'Pink Blush Compact', price: 749.00, stock: 140, brand: 'Cheeky', category: 'Makeup' },
-      { sku: 'COS-EYELINER-WING', name: 'Winged Eyeliner Pen', price: 449.00, stock: 190, brand: 'WingMaster', category: 'Makeup' },
-      { sku: 'COS-POWDER-SET', name: 'Setting Powder Translucent', price: 799.00, stock: 130, brand: 'SetPro', category: 'Makeup' },
-      { sku: 'COS-PRIMER-FACE', name: 'Face Primer Smoothing', price: 899.00, stock: 110, brand: 'PrimePerfect', category: 'Makeup' },
-      { sku: 'COS-BRONZER-CONT', name: 'Bronzer Contour Palette', price: 1099.00, stock: 90, brand: 'Sculpt', category: 'Makeup' },
-      { sku: 'COS-BROW-KIT', name: 'Eyebrow Kit with Brush', price: 699.00, stock: 160, brand: 'BrowPro', category: 'Makeup' },
-      { sku: 'COS-LIPLINER-SET', name: 'Lip Liner Set 5 Colors', price: 899.00, stock: 120, brand: 'LineMaster', category: 'Makeup' },
-      { sku: 'COS-HIGHLIGHT-GLOW', name: 'Highlighter Glow Palette', price: 999.00, stock: 100, brand: 'ShineOn', category: 'Makeup' },
-      { sku: 'COS-MAKEUP-REMOVER', name: 'Makeup Remover Wipes 50pc', price: 349.00, stock: 250, brand: 'CleanOff', category: 'Makeup' }
+      { sku: 'COS-LIP-MATTE', name: 'Matte Lipstick', price: 499.00, stock: 300, brand: 'Chroma', sub_category: 'Makeup', product_type: 'Lipstick' },
+      { sku: 'COS-FOUNDATION-30', name: 'Full Coverage Foundation', price: 899.00, stock: 150, brand: 'BeautyBase', sub_category: 'Makeup', product_type: 'Foundation' },
+      { sku: 'COS-MASCARA-VOL', name: 'Volumizing Mascara', price: 599.00, stock: 250, brand: 'LashPro', sub_category: 'Makeup', product_type: 'Mascara' },
+      { sku: 'COS-EYESHADOW-PAL', name: 'Eyeshadow Palette', price: 1299.00, stock: 100, brand: 'ColorPop', sub_category: 'Makeup', product_type: 'Eyeshadow' },
+      { sku: 'COS-CONCEALER-FULL', name: 'Full Coverage Concealer', price: 649.00, stock: 175, brand: 'HideIt', sub_category: 'Makeup', product_type: 'Concealer' },
+      { sku: 'COS-LIPGLOSS-SHINE', name: 'Shiny Lip Gloss', price: 399.00, stock: 220, brand: 'Glossy', sub_category: 'Makeup', product_type: 'Lip Gloss' },
+      { sku: 'COS-BLUSH-PINK', name: 'Pink Blush Compact', price: 749.00, stock: 140, brand: 'Cheeky', sub_category: 'Makeup', product_type: 'Blush' },
+      { sku: 'COS-EYELINER-WING', name: 'Winged Eyeliner Pen', price: 449.00, stock: 190, brand: 'WingMaster', sub_category: 'Makeup', product_type: 'Eyeliner' },
+      { sku: 'COS-POWDER-SET', name: 'Setting Powder Translucent', price: 799.00, stock: 130, brand: 'SetPro', sub_category: 'Makeup', product_type: 'Setting Powder' },
+      { sku: 'COS-PRIMER-FACE', name: 'Face Primer Smoothing', price: 899.00, stock: 110, brand: 'PrimePerfect', sub_category: 'Makeup', product_type: 'Primer' },
+      { sku: 'COS-BRONZER-CONT', name: 'Bronzer Contour Palette', price: 1099.00, stock: 90, brand: 'Sculpt', sub_category: 'Makeup', product_type: 'Bronzer' },
+      { sku: 'COS-BROW-KIT', name: 'Eyebrow Kit with Brush', price: 699.00, stock: 160, brand: 'BrowPro', sub_category: 'Makeup', product_type: 'Eyebrow Kit' },
+      { sku: 'COS-LIPLINER-SET', name: 'Lip Liner Set 5 Colors', price: 899.00, stock: 120, brand: 'LineMaster', sub_category: 'Makeup', product_type: 'Lip Liner' },
+      { sku: 'COS-HIGHLIGHT-GLOW', name: 'Highlighter Glow Palette', price: 999.00, stock: 100, brand: 'ShineOn', sub_category: 'Makeup', product_type: 'Highlighter' },
+      { sku: 'COS-MAKEUP-REMOVER', name: 'Makeup Remover Wipes 50pc', price: 349.00, stock: 250, brand: 'CleanOff', sub_category: 'Makeup', product_type: 'Makeup Remover' }
     ];
 
     for (const product of cosmeticsProducts) {
@@ -504,9 +502,9 @@ async function seedDirect() {
         }
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Cosmetics', $7, $8, $9, '{"skin_type":"all","cruelty_free":true}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Cosmetics', $7, $8, $9, '{"skin_type":"all","cruelty_free":true}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -514,18 +512,18 @@ async function seedDirect() {
 
     // Skincare - 12 products
     const skincareProducts = [
-      { sku: 'SKIN-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', category: 'Serums' },
-      { sku: 'SKIN-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', category: 'Cleansers' },
-      { sku: 'SKIN-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', category: 'Moisturizers' },
-      { sku: 'SKIN-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', category: 'Sun Protection' },
-      { sku: 'SKIN-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', category: 'Toners' },
-      { sku: 'SKIN-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', category: 'Masks' },
-      { sku: 'SKIN-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', category: 'Exfoliators' },
-      { sku: 'SKIN-EYECREAM-15ML', name: 'Anti-Aging Eye Cream', price: 1199.00, stock: 90, brand: 'EyeCare', category: 'Eye Care' },
-      { sku: 'SKIN-ESSENCE-100ML', name: 'Brightening Essence', price: 1399.00, stock: 100, brand: 'Bright', category: 'Essences' },
-      { sku: 'SKIN-MICELLAR-400ML', name: 'Micellar Water 400ml', price: 599.00, stock: 150, brand: 'ClearWater', category: 'Cleansers' },
-      { sku: 'SKIN-VITAMIN-C', name: 'Vitamin C Serum 30ml', price: 1599.00, stock: 80, brand: 'VitaGlow', category: 'Serums' },
-      { sku: 'SKIN-RETINOL-NIGHT', name: 'Retinol Night Cream', price: 1799.00, stock: 70, brand: 'RetinolPro', category: 'Night Care' }
+      { sku: 'SKIN-SERUM-30', name: 'Hydrating Serum 30ml', price: 1299.00, stock: 200, brand: 'GlowUp', sub_category: 'Serums', product_type: 'Hydrating Serum' },
+      { sku: 'SKIN-CLEANSER-GEL', name: 'Gentle Gel Cleanser', price: 699.00, stock: 180, brand: 'PureSkin', sub_category: 'Cleansers', product_type: 'Gel Cleanser' },
+      { sku: 'SKIN-MOISTURIZER-50', name: 'Anti-Aging Moisturizer', price: 1499.00, stock: 120, brand: 'AgeDefy', sub_category: 'Moisturizers', product_type: 'Anti-Aging Moisturizer' },
+      { sku: 'SKIN-SUNSCREEN-SPF50', name: 'SPF 50 Sunscreen', price: 799.00, stock: 200, brand: 'SunGuard', sub_category: 'Sun Protection', product_type: 'Sunscreen' },
+      { sku: 'SKIN-TONER-200', name: 'Hydrating Toner', price: 549.00, stock: 160, brand: 'Refresh', sub_category: 'Toners', product_type: 'Hydrating Toner' },
+      { sku: 'SKIN-FACEMASK-5PACK', name: 'Hydrating Face Mask 5-pack', price: 999.00, stock: 80, brand: 'MaskCare', sub_category: 'Masks', product_type: 'Face Mask' },
+      { sku: 'SKIN-EXFOLIATOR-SCRUB', name: 'Gentle Exfoliating Scrub', price: 899.00, stock: 110, brand: 'SmoothSkin', sub_category: 'Exfoliators', product_type: 'Exfoliating Scrub' },
+      { sku: 'SKIN-EYECREAM-15ML', name: 'Anti-Aging Eye Cream', price: 1199.00, stock: 90, brand: 'EyeCare', sub_category: 'Eye Care', product_type: 'Eye Cream' },
+      { sku: 'SKIN-ESSENCE-100ML', name: 'Brightening Essence', price: 1399.00, stock: 100, brand: 'Bright', sub_category: 'Essences', product_type: 'Brightening Essence' },
+      { sku: 'SKIN-MICELLAR-400ML', name: 'Micellar Water 400ml', price: 599.00, stock: 150, brand: 'ClearWater', sub_category: 'Cleansers', product_type: 'Micellar Water' },
+      { sku: 'SKIN-VITAMIN-C', name: 'Vitamin C Serum 30ml', price: 1599.00, stock: 80, brand: 'VitaGlow', sub_category: 'Serums', product_type: 'Vitamin C Serum' },
+      { sku: 'SKIN-RETINOL-NIGHT', name: 'Retinol Night Cream', price: 1799.00, stock: 70, brand: 'RetinolPro', sub_category: 'Night Care', product_type: 'Retinol Cream' }
     ];
 
     for (const product of skincareProducts) {
@@ -542,9 +540,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Skincare', $7, $8, $9, '{"dermatologist_tested":true,"hypoallergenic":true}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Advanced ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Skincare', $7, $8, $9, '{"dermatologist_tested":true,"hypoallergenic":true}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Advanced ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -552,18 +550,18 @@ async function seedDirect() {
 
     // Fashion - 12 products
     const fashionProducts = [
-      { sku: 'FASH-TSHIRT-M', name: 'Cotton T-Shirt Medium', price: 299.00, stock: 500, brand: 'StyleHub', category: 'Clothing' },
-      { sku: 'FASH-JEANS-32', name: 'Denim Jeans Size 32', price: 1299.00, stock: 200, brand: 'DenimCo', category: 'Clothing' },
-      { sku: 'FASH-DRESS-S', name: 'Summer Dress Small', price: 899.00, stock: 150, brand: 'ChicWear', category: 'Clothing' },
-      { sku: 'FASH-SNEAKERS-9', name: 'Running Sneakers Size 9', price: 2499.00, stock: 120, brand: 'SportyFeet', category: 'Footwear' },
-      { sku: 'FASH-HANDBAG', name: 'Leather Handbag', price: 1899.00, stock: 80, brand: 'LuxBags', category: 'Accessories' },
-      { sku: 'FASH-SUNGLASSES', name: 'Polarized Sunglasses', price: 699.00, stock: 250, brand: 'SunStyle', category: 'Accessories' },
-      { sku: 'FASH-WATCH-M', name: 'Analog Wrist Watch', price: 3499.00, stock: 60, brand: 'TimeKeep', category: 'Accessories' },
-      { sku: 'FASH-BELT-L', name: 'Leather Belt Large', price: 499.00, stock: 300, brand: 'BeltCraft', category: 'Accessories' },
-      { sku: 'FASH-HAT-CAP', name: 'Baseball Cap', price: 349.00, stock: 400, brand: 'CapMaster', category: 'Accessories' },
-      { sku: 'FASH-JACKET-XL', name: 'Windbreaker Jacket XL', price: 1999.00, stock: 90, brand: 'OutdoorWear', category: 'Outerwear' },
-      { sku: 'FASH-SCARF', name: 'Wool Scarf', price: 599.00, stock: 180, brand: 'WarmKnit', category: 'Accessories' },
-      { sku: 'FASH-SOCKS-3PACK', name: 'Cotton Socks 3-Pack', price: 199.00, stock: 600, brand: 'ComfyFeet', category: 'Clothing' }
+      { sku: 'FASH-TSHIRT-M', name: 'Cotton T-Shirt Medium', price: 299.00, stock: 500, brand: 'StyleHub', sub_category: 'Clothing', product_type: 'T-Shirt' },
+      { sku: 'FASH-JEANS-32', name: 'Denim Jeans Size 32', price: 1299.00, stock: 200, brand: 'DenimCo', sub_category: 'Clothing', product_type: 'Jeans' },
+      { sku: 'FASH-DRESS-S', name: 'Summer Dress Small', price: 899.00, stock: 150, brand: 'ChicWear', sub_category: 'Clothing', product_type: 'Dress' },
+      { sku: 'FASH-SNEAKERS-9', name: 'Running Sneakers Size 9', price: 2499.00, stock: 120, brand: 'SportyFeet', sub_category: 'Footwear', product_type: 'Sneakers' },
+      { sku: 'FASH-HANDBAG', name: 'Leather Handbag', price: 1899.00, stock: 80, brand: 'LuxBags', sub_category: 'Accessories', product_type: 'Handbag' },
+      { sku: 'FASH-SUNGLASSES', name: 'Polarized Sunglasses', price: 699.00, stock: 250, brand: 'SunStyle', sub_category: 'Accessories', product_type: 'Sunglasses' },
+      { sku: 'FASH-WATCH-M', name: 'Analog Wrist Watch', price: 3499.00, stock: 60, brand: 'TimeKeep', sub_category: 'Accessories', product_type: 'Watch' },
+      { sku: 'FASH-BELT-L', name: 'Leather Belt Large', price: 499.00, stock: 300, brand: 'BeltCraft', sub_category: 'Accessories', product_type: 'Belt' },
+      { sku: 'FASH-HAT-CAP', name: 'Baseball Cap', price: 349.00, stock: 400, brand: 'CapMaster', sub_category: 'Accessories', product_type: 'Cap' },
+      { sku: 'FASH-JACKET-XL', name: 'Windbreaker Jacket XL', price: 1999.00, stock: 90, brand: 'OutdoorWear', sub_category: 'Outerwear', product_type: 'Jacket' },
+      { sku: 'FASH-SCARF', name: 'Wool Scarf', price: 599.00, stock: 180, brand: 'WarmKnit', sub_category: 'Accessories', product_type: 'Scarf' },
+      { sku: 'FASH-SOCKS-3PACK', name: 'Cotton Socks 3-Pack', price: 199.00, stock: 600, brand: 'ComfyFeet', sub_category: 'Clothing', product_type: 'Socks' }
     ];
 
     for (const product of fashionProducts) {
@@ -580,9 +578,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Fashion', $7, $8, $9, '{"material":"quality","size_range":"various"}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Trendy ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Fashion', $7, $8, $9, '{"material":"quality","size_range":"various"}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Trendy ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -590,18 +588,18 @@ async function seedDirect() {
 
     // Home & Living - 12 products
     const homeProducts = [
-      { sku: 'HOME-PILLOW-2', name: 'Memory Foam Pillow 2-Pack', price: 999.00, stock: 100, brand: 'ComfortHome', category: 'Bedding' },
-      { sku: 'HOME-BLANKET-Q', name: 'Queen Size Blanket', price: 1499.00, stock: 80, brand: 'WarmLiving', category: 'Bedding' },
-      { sku: 'HOME-LAMP-LED', name: 'LED Desk Lamp', price: 799.00, stock: 150, brand: 'BrightSpace', category: 'Lighting' },
-      { sku: 'HOME-CURTAIN-SET', name: 'Blackout Curtains Set', price: 1299.00, stock: 70, brand: 'WindowStyle', category: 'Decor' },
-      { sku: 'HOME-VASE-CERAMIC', name: 'Ceramic Flower Vase', price: 599.00, stock: 120, brand: 'ArtDecor', category: 'Decor' },
-      { sku: 'HOME-RUG-6X9', name: 'Area Rug 6x9 feet', price: 2999.00, stock: 50, brand: 'FloorCraft', category: 'Flooring' },
-      { sku: 'HOME-TOWEL-6PACK', name: 'Bath Towel 6-Pack', price: 899.00, stock: 200, brand: 'SoftTouch', category: 'Bathroom' },
-      { sku: 'HOME-ORGANIZER', name: 'Storage Organizer', price: 699.00, stock: 180, brand: 'TidySpace', category: 'Storage' },
-      { sku: 'HOME-MIRROR-WALL', name: 'Wall Mirror Large', price: 1899.00, stock: 60, brand: 'ReflectStyle', category: 'Decor' },
-      { sku: 'HOME-CLOCK-WALL', name: 'Modern Wall Clock', price: 499.00, stock: 220, brand: 'TimeDecor', category: 'Decor' },
-      { sku: 'HOME-CANDLE-SET', name: 'Scented Candle Set', price: 799.00, stock: 140, brand: 'AromaBliss', category: 'Decor' },
-      { sku: 'HOME-PLANT-POT', name: 'Ceramic Plant Pot', price: 399.00, stock: 300, brand: 'GreenSpace', category: 'Garden' }
+      { sku: 'HOME-PILLOW-2', name: 'Memory Foam Pillow 2-Pack', price: 999.00, stock: 100, brand: 'ComfortHome', sub_category: 'Bedding', product_type: 'Pillow' },
+      { sku: 'HOME-BLANKET-Q', name: 'Queen Size Blanket', price: 1499.00, stock: 80, brand: 'WarmLiving', sub_category: 'Bedding', product_type: 'Blanket' },
+      { sku: 'HOME-LAMP-LED', name: 'LED Desk Lamp', price: 799.00, stock: 150, brand: 'BrightSpace', sub_category: 'Lighting', product_type: 'Desk Lamp' },
+      { sku: 'HOME-CURTAIN-SET', name: 'Blackout Curtains Set', price: 1299.00, stock: 70, brand: 'WindowStyle', sub_category: 'Decor', product_type: 'Curtains' },
+      { sku: 'HOME-VASE-CERAMIC', name: 'Ceramic Flower Vase', price: 599.00, stock: 120, brand: 'ArtDecor', sub_category: 'Decor', product_type: 'Vase' },
+      { sku: 'HOME-RUG-6X9', name: 'Area Rug 6x9 feet', price: 2999.00, stock: 50, brand: 'FloorCraft', sub_category: 'Flooring', product_type: 'Area Rug' },
+      { sku: 'HOME-TOWEL-6PACK', name: 'Bath Towel 6-Pack', price: 899.00, stock: 200, brand: 'SoftTouch', sub_category: 'Bathroom', product_type: 'Bath Towel' },
+      { sku: 'HOME-ORGANIZER', name: 'Storage Organizer', price: 699.00, stock: 180, brand: 'TidySpace', sub_category: 'Storage', product_type: 'Storage Organizer' },
+      { sku: 'HOME-MIRROR-WALL', name: 'Wall Mirror Large', price: 1899.00, stock: 60, brand: 'ReflectStyle', sub_category: 'Decor', product_type: 'Wall Mirror' },
+      { sku: 'HOME-CLOCK-WALL', name: 'Modern Wall Clock', price: 499.00, stock: 220, brand: 'TimeDecor', sub_category: 'Decor', product_type: 'Wall Clock' },
+      { sku: 'HOME-CANDLE-SET', name: 'Scented Candle Set', price: 799.00, stock: 140, brand: 'AromaBliss', sub_category: 'Decor', product_type: 'Candles' },
+      { sku: 'HOME-PLANT-POT', name: 'Ceramic Plant Pot', price: 399.00, stock: 300, brand: 'GreenSpace', sub_category: 'Garden', product_type: 'Plant Pot' }
     ];
 
     for (const product of homeProducts) {
@@ -618,9 +616,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Home & Living', $7, $8, $9, '{"eco_friendly":true,"durable":true}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Quality ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Home & Living', $7, $8, $9, '{"eco_friendly":true,"durable":true}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Quality ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -628,18 +626,18 @@ async function seedDirect() {
 
     // Hair Care - 12 products
     const haircareProducts = [
-      { sku: 'HAIR-SHAMPOO-HYDRA', name: 'Hydrating Shampoo 500ml', price: 699.00, stock: 150, brand: 'LuxHair', category: 'Shampoos' },
-      { sku: 'HAIR-CONDITIONER-SMOOTH', name: 'Smoothing Conditioner 500ml', price: 699.00, stock: 140, brand: 'LuxHair', category: 'Conditioners' },
-      { sku: 'HAIR-OIL-ARGAN', name: 'Argan Hair Oil 100ml', price: 999.00, stock: 100, brand: 'OilPure', category: 'Treatments' },
-      { sku: 'HAIR-MASK-REPAIR', name: 'Repairing Hair Mask 300ml', price: 899.00, stock: 80, brand: 'RepairPro', category: 'Masks' },
-      { sku: 'HAIR-SERUM-SHINE', name: 'Shine Serum 50ml', price: 799.00, stock: 120, brand: 'GlossyHair', category: 'Serums' },
-      { sku: 'HAIR-SPRAY-HOLD', name: 'Strong Hold Hair Spray', price: 599.00, stock: 180, brand: 'StyleFix', category: 'Styling' },
-      { sku: 'HAIR-GEL-STYLING', name: 'Styling Gel 200ml', price: 499.00, stock: 200, brand: 'HoldFast', category: 'Styling' },
-      { sku: 'HAIR-FOAM-VOLUME', name: 'Volumizing Foam 150ml', price: 699.00, stock: 110, brand: 'VolumePro', category: 'Styling' },
-      { sku: 'HAIR-TREATMENT-KERATIN', name: 'Keratin Treatment 250ml', price: 1499.00, stock: 60, brand: 'KeratinCare', category: 'Treatments' },
-      { sku: 'HAIR-DRYER-IONIC', name: 'Ionic Hair Dryer 2000W', price: 2999.00, stock: 50, brand: 'DryCare', category: 'Tools' },
-      { sku: 'HAIR-BRUSH-DETANGLE', name: 'Detangling Brush', price: 399.00, stock: 250, brand: 'BrushEase', category: 'Accessories' },
-      { sku: 'HAIR-STRAIGHTENER-PRO', name: 'Pro Hair Straightener', price: 3499.00, stock: 40, brand: 'StraightLine', category: 'Tools' }
+      { sku: 'HAIR-SHAMPOO-HYDRA', name: 'Hydrating Shampoo 500ml', price: 699.00, stock: 150, brand: 'LuxHair', sub_category: 'Shampoos', product_type: 'Shampoo' },
+      { sku: 'HAIR-CONDITIONER-SMOOTH', name: 'Smoothing Conditioner 500ml', price: 699.00, stock: 140, brand: 'LuxHair', sub_category: 'Conditioners', product_type: 'Conditioner' },
+      { sku: 'HAIR-OIL-ARGAN', name: 'Argan Hair Oil 100ml', price: 999.00, stock: 100, brand: 'OilPure', sub_category: 'Treatments', product_type: 'Hair Oil' },
+      { sku: 'HAIR-MASK-REPAIR', name: 'Repairing Hair Mask 300ml', price: 899.00, stock: 80, brand: 'RepairPro', sub_category: 'Masks', product_type: 'Hair Mask' },
+      { sku: 'HAIR-SERUM-SHINE', name: 'Shine Serum 50ml', price: 799.00, stock: 120, brand: 'GlossyHair', sub_category: 'Serums', product_type: 'Hair Serum' },
+      { sku: 'HAIR-SPRAY-HOLD', name: 'Strong Hold Hair Spray', price: 599.00, stock: 180, brand: 'StyleFix', sub_category: 'Styling', product_type: 'Hair Spray' },
+      { sku: 'HAIR-GEL-STYLING', name: 'Styling Gel 200ml', price: 499.00, stock: 200, brand: 'HoldFast', sub_category: 'Styling', product_type: 'Styling Gel' },
+      { sku: 'HAIR-FOAM-VOLUME', name: 'Volumizing Foam 150ml', price: 699.00, stock: 110, brand: 'VolumePro', sub_category: 'Styling', product_type: 'Volumizing Foam' },
+      { sku: 'HAIR-TREATMENT-KERATIN', name: 'Keratin Treatment 250ml', price: 1499.00, stock: 60, brand: 'KeratinCare', sub_category: 'Treatments', product_type: 'Keratin Treatment' },
+      { sku: 'HAIR-DRYER-IONIC', name: 'Ionic Hair Dryer 2000W', price: 2999.00, stock: 50, brand: 'DryCare', sub_category: 'Tools', product_type: 'Hair Dryer' },
+      { sku: 'HAIR-BRUSH-DETANGLE', name: 'Detangling Brush', price: 399.00, stock: 250, brand: 'BrushEase', sub_category: 'Accessories', product_type: 'Hair Brush' },
+      { sku: 'HAIR-STRAIGHTENER-PRO', name: 'Pro Hair Straightener', price: 3499.00, stock: 40, brand: 'StraightLine', sub_category: 'Tools', product_type: 'Hair Straightener' }
     ];
 
     for (const product of haircareProducts) {
@@ -656,9 +654,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Hair Care', $7, $8, $9, '{"sulfate_free":true,"paraben_free":true}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Hair Care', $7, $8, $9, '{"sulfate_free":true,"paraben_free":true}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Professional ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -666,18 +664,18 @@ async function seedDirect() {
 
     // Fragrances - 12 products
     const fragranceProducts = [
-      { sku: 'FRAG-PERFUME-FLORAL', name: 'Floral Eau de Parfum 50ml', price: 2999.00, stock: 60, brand: 'ScentLux', category: 'Perfumes' },
-      { sku: 'FRAG-COLOGNE-FRESH', name: 'Fresh Cologne 100ml', price: 2499.00, stock: 70, brand: 'FreshScent', category: 'Colognes' },
-      { sku: 'FRAG-BODYSPRAY-CITRUS', name: 'Citrus Body Spray 200ml', price: 599.00, stock: 200, brand: 'SprayFresh', category: 'Body Sprays' },
-      { sku: 'FRAG-PERFUME-WOODY', name: 'Woody Eau de Toilette 75ml', price: 2799.00, stock: 50, brand: 'WoodNotes', category: 'Perfumes' },
-      { sku: 'FRAG-DIFFUSER-LAVENDER', name: 'Lavender Reed Diffuser', price: 999.00, stock: 120, brand: 'AromaHome', category: 'Home Fragrances' },
-      { sku: 'FRAG-CANDLE-VANILLA', name: 'Vanilla Scented Candle', price: 799.00, stock: 150, brand: 'CandleGlow', category: 'Home Fragrances' },
-      { sku: 'FRAG-MIST-ROSE', name: 'Rose Body Mist 250ml', price: 699.00, stock: 180, brand: 'MistCare', category: 'Body Mists' },
-      { sku: 'FRAG-OIL-ESSENTIAL', name: 'Essential Oil Set 10pc', price: 1299.00, stock: 90, brand: 'PureEssence', category: 'Essential Oils' },
-      { sku: 'FRAG-SPRAY-AIR', name: 'Air Freshener Spray', price: 399.00, stock: 250, brand: 'FreshAir', category: 'Home Fragrances' },
-      { sku: 'FRAG-LOTION-SCENTED', name: 'Scented Body Lotion 200ml', price: 899.00, stock: 140, brand: 'SoftSmell', category: 'Body Care' },
-      { sku: 'FRAG-SACHET-CLOSET', name: 'Closet Sachet 5-Pack', price: 499.00, stock: 200, brand: 'FreshSpace', category: 'Home Fragrances' },
-      { sku: 'FRAG-ROLLER-TRAVEL', name: 'Travel Perfume Roller 10ml', price: 799.00, stock: 110, brand: 'TravelScent', category: 'Perfumes' }
+      { sku: 'FRAG-PERFUME-FLORAL', name: 'Floral Eau de Parfum 50ml', price: 2999.00, stock: 60, brand: 'ScentLux', sub_category: 'Perfumes', product_type: 'Eau de Parfum' },
+      { sku: 'FRAG-COLOGNE-FRESH', name: 'Fresh Cologne 100ml', price: 2499.00, stock: 70, brand: 'FreshScent', sub_category: 'Colognes', product_type: 'Cologne' },
+      { sku: 'FRAG-BODYSPRAY-CITRUS', name: 'Citrus Body Spray 200ml', price: 599.00, stock: 200, brand: 'SprayFresh', sub_category: 'Body Sprays', product_type: 'Body Spray' },
+      { sku: 'FRAG-PERFUME-WOODY', name: 'Woody Eau de Toilette 75ml', price: 2799.00, stock: 50, brand: 'WoodNotes', sub_category: 'Perfumes', product_type: 'Eau de Toilette' },
+      { sku: 'FRAG-DIFFUSER-LAVENDER', name: 'Lavender Reed Diffuser', price: 999.00, stock: 120, brand: 'AromaHome', sub_category: 'Home Fragrances', product_type: 'Reed Diffuser' },
+      { sku: 'FRAG-CANDLE-VANILLA', name: 'Vanilla Scented Candle', price: 799.00, stock: 150, brand: 'CandleGlow', sub_category: 'Home Fragrances', product_type: 'Scented Candle' },
+      { sku: 'FRAG-MIST-ROSE', name: 'Rose Body Mist 250ml', price: 699.00, stock: 180, brand: 'MistCare', sub_category: 'Body Mists', product_type: 'Body Mist' },
+      { sku: 'FRAG-OIL-ESSENTIAL', name: 'Essential Oil Set 10pc', price: 1299.00, stock: 90, brand: 'PureEssence', sub_category: 'Essential Oils', product_type: 'Essential Oil Set' },
+      { sku: 'FRAG-SPRAY-AIR', name: 'Air Freshener Spray', price: 399.00, stock: 250, brand: 'FreshAir', sub_category: 'Home Fragrances', product_type: 'Air Freshener' },
+      { sku: 'FRAG-LOTION-SCENTED', name: 'Scented Body Lotion 200ml', price: 899.00, stock: 140, brand: 'SoftSmell', sub_category: 'Body Care', product_type: 'Body Lotion' },
+      { sku: 'FRAG-SACHET-CLOSET', name: 'Closet Sachet 5-Pack', price: 499.00, stock: 200, brand: 'FreshSpace', sub_category: 'Home Fragrances', product_type: 'Sachet' },
+      { sku: 'FRAG-ROLLER-TRAVEL', name: 'Travel Perfume Roller 10ml', price: 799.00, stock: 110, brand: 'TravelScent', sub_category: 'Perfumes', product_type: 'Perfume Roller' }
     ];
 
     for (const product of fragranceProducts) {
@@ -694,9 +692,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Fragrances', $7, $8, $9, '{"long_lasting":true,"allergen_free":false}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Luxurious ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Fragrances', $7, $8, $9, '{"long_lasting":true,"allergen_free":false}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Luxurious ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -705,14 +703,14 @@ async function seedDirect() {
     // ==================== GUSTO BITES SHOP PRODUCTS ====================
     // Food - 8 products
     const foodProducts = [
-      { sku: 'FOOD-GRANOLA-500G', name: 'Organic Granola 500g', price: 449.00, stock: 200, brand: 'NatureCrunch', category: 'Breakfast' },
-      { sku: 'FOOD-CHOCOLATE-DARK', name: 'Dark Chocolate 70%', price: 349.00, stock: 300, brand: 'CocoaPure', category: 'Confectionery' },
-      { sku: 'FOOD-HONEY-RAW', name: 'Raw Honey 500g', price: 699.00, stock: 80, brand: 'BeePure', category: 'Sweeteners' },
-      { sku: 'FOOD-DRIED-FRUIT', name: 'Mixed Dried Fruit 300g', price: 399.00, stock: 160, brand: 'FruitMix', category: 'Snacks' },
-      { sku: 'FOOD-CEREAL-HEALTHY', name: 'Healthy Cereal 500g', price: 549.00, stock: 120, brand: 'GrainGood', category: 'Breakfast' },
-      { sku: 'FOOD-PASTA-WHOLE', name: 'Whole Wheat Pasta 500g', price: 299.00, stock: 180, brand: 'PastaPro', category: 'Pantry' },
-      { sku: 'FOOD-RICE-ORGANIC', name: 'Organic Brown Rice 2kg', price: 599.00, stock: 100, brand: 'GrainPure', category: 'Pantry' },
-      { sku: 'FOOD-OATS-ROLLED', name: 'Rolled Oats 1kg', price: 399.00, stock: 150, brand: 'OatGood', category: 'Breakfast' }
+      { sku: 'FOOD-GRANOLA-500G', name: 'Organic Granola 500g', price: 449.00, stock: 200, brand: 'NatureCrunch', sub_category: 'Breakfast', product_type: 'Granola' },
+      { sku: 'FOOD-CHOCOLATE-DARK', name: 'Dark Chocolate 70%', price: 349.00, stock: 300, brand: 'CocoaPure', sub_category: 'Confectionery', product_type: 'Dark Chocolate' },
+      { sku: 'FOOD-HONEY-RAW', name: 'Raw Honey 500g', price: 699.00, stock: 80, brand: 'BeePure', sub_category: 'Sweeteners', product_type: 'Raw Honey' },
+      { sku: 'FOOD-DRIED-FRUIT', name: 'Mixed Dried Fruit 300g', price: 399.00, stock: 160, brand: 'FruitMix', sub_category: 'Snacks', product_type: 'Dried Fruit' },
+      { sku: 'FOOD-CEREAL-HEALTHY', name: 'Healthy Cereal 500g', price: 549.00, stock: 120, brand: 'GrainGood', sub_category: 'Breakfast', product_type: 'Cereal' },
+      { sku: 'FOOD-PASTA-WHOLE', name: 'Whole Wheat Pasta 500g', price: 299.00, stock: 180, brand: 'PastaPro', sub_category: 'Pantry', product_type: 'Pasta' },
+      { sku: 'FOOD-RICE-ORGANIC', name: 'Organic Brown Rice 2kg', price: 599.00, stock: 100, brand: 'GrainPure', sub_category: 'Pantry', product_type: 'Rice' },
+      { sku: 'FOOD-OATS-ROLLED', name: 'Rolled Oats 1kg', price: 399.00, stock: 150, brand: 'OatGood', sub_category: 'Breakfast', product_type: 'Oats' }
     ];
 
     for (const product of foodProducts) {
@@ -737,9 +735,9 @@ async function seedDirect() {
         }
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Food', $7, $8, $9, '{"organic":true,"gluten_free":false}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Food', $7, $8, $9, '{"organic":true,"gluten_free":false}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Premium ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -747,13 +745,13 @@ async function seedDirect() {
 
     // Drinks - 7 products
     const drinksProducts = [
-      { sku: 'DRINK-CBREW-1L', name: 'Cold Brew Coffee 1L', price: 299.00, stock: 150, brand: 'BrewLab', category: 'Beverages' },
-      { sku: 'DRINK-TEA-GREEN', name: 'Green Tea Bags (50-pack)', price: 249.00, stock: 250, brand: 'TeaLeaf', category: 'Beverages' },
-      { sku: 'DRINK-JUICE-ORGANIC', name: 'Organic Apple Juice 1L', price: 199.00, stock: 200, brand: 'FruitFresh', category: 'Beverages' },
-      { sku: 'DRINK-ENERGY-NATURAL', name: 'Natural Energy Drink', price: 149.00, stock: 300, brand: 'EnergyBoost', category: 'Beverages' },
-      { sku: 'DRINK-SMOOTHIE-MIX', name: 'Superfood Smoothie Mix', price: 599.00, stock: 100, brand: 'GreenBoost', category: 'Beverages' },
-      { sku: 'DRINK-WATER-SPARKLING', name: 'Sparkling Water 6-Pack', price: 299.00, stock: 180, brand: 'BubbleWater', category: 'Beverages' },
-      { sku: 'DRINK-MILK-ALMOND', name: 'Almond Milk 1L', price: 249.00, stock: 140, brand: 'NutMilk', category: 'Beverages' }
+      { sku: 'DRINK-CBREW-1L', name: 'Cold Brew Coffee 1L', price: 299.00, stock: 150, brand: 'BrewLab', sub_category: 'Beverages', product_type: 'Coffee' },
+      { sku: 'DRINK-TEA-GREEN', name: 'Green Tea Bags (50-pack)', price: 249.00, stock: 250, brand: 'TeaLeaf', sub_category: 'Beverages', product_type: 'Tea' },
+      { sku: 'DRINK-JUICE-ORGANIC', name: 'Organic Apple Juice 1L', price: 199.00, stock: 200, brand: 'FruitFresh', sub_category: 'Beverages', product_type: 'Juice' },
+      { sku: 'DRINK-ENERGY-NATURAL', name: 'Natural Energy Drink', price: 149.00, stock: 300, brand: 'EnergyBoost', sub_category: 'Beverages', product_type: 'Energy Drink' },
+      { sku: 'DRINK-SMOOTHIE-MIX', name: 'Superfood Smoothie Mix', price: 599.00, stock: 100, brand: 'GreenBoost', sub_category: 'Beverages', product_type: 'Smoothie Mix' },
+      { sku: 'DRINK-WATER-SPARKLING', name: 'Sparkling Water 6-Pack', price: 299.00, stock: 180, brand: 'BubbleWater', sub_category: 'Beverages', product_type: 'Sparkling Water' },
+      { sku: 'DRINK-MILK-ALMOND', name: 'Almond Milk 1L', price: 249.00, stock: 140, brand: 'NutMilk', sub_category: 'Beverages', product_type: 'Plant Milk' }
     ];
 
     for (const product of drinksProducts) {
@@ -770,9 +768,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Drinks', $7, $8, $9, '{"sugar_free":false,"natural":true}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Refreshing ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Drinks', $7, $8, $9, '{"sugar_free":false,"natural":true}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Refreshing ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -780,18 +778,18 @@ async function seedDirect() {
 
     // Snacks - 12 products
     const snacksProducts = [
-      { sku: 'SNACK-CHIPS-BBQ', name: 'BBQ Potato Chips 200g', price: 149.00, stock: 400, brand: 'CrunchyBite', category: 'Chips' },
-      { sku: 'SNACK-POPCORN-BUTTER', name: 'Butter Popcorn 150g', price: 129.00, stock: 350, brand: 'PopCrunch', category: 'Popcorn' },
-      { sku: 'SNACK-COOKIES-CHOCO', name: 'Chocolate Chip Cookies 250g', price: 199.00, stock: 300, brand: 'BakeJoy', category: 'Cookies' },
-      { sku: 'SNACK-PRETZELS-SALT', name: 'Salted Pretzels 200g', price: 169.00, stock: 280, brand: 'TwistSnack', category: 'Pretzels' },
-      { sku: 'SNACK-TRAIL-MIX', name: 'Trail Mix Deluxe 300g', price: 349.00, stock: 200, brand: 'NuttyTrail', category: 'Mixed Snacks' },
-      { sku: 'SNACK-CRACKERS-CHEESE', name: 'Cheese Crackers 180g', price: 159.00, stock: 320, brand: 'CrunchCheese', category: 'Crackers' },
-      { sku: 'SNACK-JERKY-BEEF', name: 'Beef Jerky 100g', price: 299.00, stock: 150, brand: 'MeatSnack', category: 'Protein Snacks' },
-      { sku: 'SNACK-GRANOLA-BAR', name: 'Granola Bars 6-Pack', price: 249.00, stock: 250, brand: 'HealthyBite', category: 'Bars' },
-      { sku: 'SNACK-CANDY-GUMMY', name: 'Gummy Bears 250g', price: 179.00, stock: 380, brand: 'SweetGummy', category: 'Candy' },
-      { sku: 'SNACK-WAFER-HAZELNUT', name: 'Hazelnut Wafer 150g', price: 149.00, stock: 290, brand: 'WaferCrisp', category: 'Wafers' },
-      { sku: 'SNACK-NUTS-CASHEW', name: 'Roasted Cashews 200g', price: 399.00, stock: 160, brand: 'NuttyPremium', category: 'Nuts' },
-      { sku: 'SNACK-RICE-CAKE', name: 'Rice Cakes 10-Pack', price: 99.00, stock: 420, brand: 'LightBite', category: 'Rice Snacks' }
+      { sku: 'SNACK-CHIPS-BBQ', name: 'BBQ Potato Chips 200g', price: 149.00, stock: 400, brand: 'CrunchyBite', sub_category: 'Chips', product_type: 'Potato Chips' },
+      { sku: 'SNACK-POPCORN-BUTTER', name: 'Butter Popcorn 150g', price: 129.00, stock: 350, brand: 'PopCrunch', sub_category: 'Popcorn', product_type: 'Popcorn' },
+      { sku: 'SNACK-COOKIES-CHOCO', name: 'Chocolate Chip Cookies 250g', price: 199.00, stock: 300, brand: 'BakeJoy', sub_category: 'Cookies', product_type: 'Cookies' },
+      { sku: 'SNACK-PRETZELS-SALT', name: 'Salted Pretzels 200g', price: 169.00, stock: 280, brand: 'TwistSnack', sub_category: 'Pretzels', product_type: 'Pretzels' },
+      { sku: 'SNACK-TRAIL-MIX', name: 'Trail Mix Deluxe 300g', price: 349.00, stock: 200, brand: 'NuttyTrail', sub_category: 'Mixed Snacks', product_type: 'Trail Mix' },
+      { sku: 'SNACK-CRACKERS-CHEESE', name: 'Cheese Crackers 180g', price: 159.00, stock: 320, brand: 'CrunchCheese', sub_category: 'Crackers', product_type: 'Crackers' },
+      { sku: 'SNACK-JERKY-BEEF', name: 'Beef Jerky 100g', price: 299.00, stock: 150, brand: 'MeatSnack', sub_category: 'Protein Snacks', product_type: 'Beef Jerky' },
+      { sku: 'SNACK-GRANOLA-BAR', name: 'Granola Bars 6-Pack', price: 249.00, stock: 250, brand: 'HealthyBite', sub_category: 'Bars', product_type: 'Granola Bar' },
+      { sku: 'SNACK-CANDY-GUMMY', name: 'Gummy Bears 250g', price: 179.00, stock: 380, brand: 'SweetGummy', sub_category: 'Candy', product_type: 'Gummy Candy' },
+      { sku: 'SNACK-WAFER-HAZELNUT', name: 'Hazelnut Wafer 150g', price: 149.00, stock: 290, brand: 'WaferCrisp', sub_category: 'Wafers', product_type: 'Wafer' },
+      { sku: 'SNACK-NUTS-CASHEW', name: 'Roasted Cashews 200g', price: 399.00, stock: 160, brand: 'NuttyPremium', sub_category: 'Nuts', product_type: 'Cashews' },
+      { sku: 'SNACK-RICE-CAKE', name: 'Rice Cakes 10-Pack', price: 99.00, stock: 420, brand: 'LightBite', sub_category: 'Rice Snacks', product_type: 'Rice Cake' }
     ];
 
     for (const product of snacksProducts) {
@@ -808,9 +806,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Snacks', $7, $8, $9, '{"preservative_free":false,"tasty":true}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Delicious ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Snacks', $7, $8, $9, '{"preservative_free":false,"tasty":true}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Delicious ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -818,18 +816,18 @@ async function seedDirect() {
 
     // Condiments & Sauces - 12 products
     const condimentsProducts = [
-      { sku: 'COND-KETCHUP-500ML', name: 'Tomato Ketchup 500ml', price: 149.00, stock: 280, brand: 'TomatoKing', category: 'Sauces' },
-      { sku: 'COND-SOY-SAUCE', name: 'Premium Soy Sauce 250ml', price: 199.00, stock: 250, brand: 'SoyMaster', category: 'Sauces' },
-      { sku: 'COND-MAYO-400ML', name: 'Mayonnaise 400ml', price: 179.00, stock: 300, brand: 'CreamySpread', category: 'Spreads' },
-      { sku: 'COND-HOT-SAUCE', name: 'Hot Chili Sauce 150ml', price: 129.00, stock: 220, brand: 'SpicyKick', category: 'Hot Sauces' },
-      { sku: 'COND-MUSTARD-HONEY', name: 'Honey Mustard 250ml', price: 169.00, stock: 200, brand: 'HoneyTang', category: 'Mustards' },
-      { sku: 'COND-VINEGAR-APPLE', name: 'Apple Cider Vinegar 500ml', price: 249.00, stock: 180, brand: 'AppleZest', category: 'Vinegars' },
-      { sku: 'COND-BBQ-SAUCE', name: 'BBQ Sauce Smokey 350ml', price: 199.00, stock: 190, brand: 'SmokeHouse', category: 'BBQ Sauces' },
-      { sku: 'COND-WORCESTER', name: 'Worcestershire Sauce 200ml', price: 179.00, stock: 160, brand: 'TangySauce', category: 'Sauces' },
-      { sku: 'COND-PEANUT-BUTTER', name: 'Creamy Peanut Butter 350g', price: 299.00, stock: 220, brand: 'NutSpread', category: 'Spreads' },
-      { sku: 'COND-JAM-STRAWBERRY', name: 'Strawberry Jam 300g', price: 229.00, stock: 250, brand: 'FruitSweet', category: 'Jams' },
-      { sku: 'COND-OLIVE-OIL', name: 'Extra Virgin Olive Oil 500ml', price: 599.00, stock: 140, brand: 'OlivePure', category: 'Oils' },
-      { sku: 'COND-SALSA-MILD', name: 'Mild Salsa Dip 300g', price: 189.00, stock: 200, brand: 'MexiDip', category: 'Dips' }
+      { sku: 'COND-KETCHUP-500ML', name: 'Tomato Ketchup 500ml', price: 149.00, stock: 280, brand: 'TomatoKing', sub_category: 'Sauces', product_type: 'Ketchup' },
+      { sku: 'COND-SOY-SAUCE', name: 'Premium Soy Sauce 250ml', price: 199.00, stock: 250, brand: 'SoyMaster', sub_category: 'Sauces', product_type: 'Soy Sauce' },
+      { sku: 'COND-MAYO-400ML', name: 'Mayonnaise 400ml', price: 179.00, stock: 300, brand: 'CreamySpread', sub_category: 'Spreads', product_type: 'Mayonnaise' },
+      { sku: 'COND-HOT-SAUCE', name: 'Hot Chili Sauce 150ml', price: 129.00, stock: 220, brand: 'SpicyKick', sub_category: 'Hot Sauces', product_type: 'Hot Sauce' },
+      { sku: 'COND-MUSTARD-HONEY', name: 'Honey Mustard 250ml', price: 169.00, stock: 200, brand: 'HoneyTang', sub_category: 'Mustards', product_type: 'Mustard' },
+      { sku: 'COND-VINEGAR-APPLE', name: 'Apple Cider Vinegar 500ml', price: 249.00, stock: 180, brand: 'AppleZest', sub_category: 'Vinegars', product_type: 'Vinegar' },
+      { sku: 'COND-BBQ-SAUCE', name: 'BBQ Sauce Smokey 350ml', price: 199.00, stock: 190, brand: 'SmokeHouse', sub_category: 'BBQ Sauces', product_type: 'BBQ Sauce' },
+      { sku: 'COND-WORCESTER', name: 'Worcestershire Sauce 200ml', price: 179.00, stock: 160, brand: 'TangySauce', sub_category: 'Sauces', product_type: 'Worcestershire Sauce' },
+      { sku: 'COND-PEANUT-BUTTER', name: 'Creamy Peanut Butter 350g', price: 299.00, stock: 220, brand: 'NutSpread', sub_category: 'Spreads', product_type: 'Peanut Butter' },
+      { sku: 'COND-JAM-STRAWBERRY', name: 'Strawberry Jam 300g', price: 229.00, stock: 250, brand: 'FruitSweet', sub_category: 'Jams', product_type: 'Jam' },
+      { sku: 'COND-OLIVE-OIL', name: 'Extra Virgin Olive Oil 500ml', price: 599.00, stock: 140, brand: 'OlivePure', sub_category: 'Oils', product_type: 'Olive Oil' },
+      { sku: 'COND-SALSA-MILD', name: 'Mild Salsa Dip 300g', price: 189.00, stock: 200, brand: 'MexiDip', sub_category: 'Dips', product_type: 'Salsa' }
     ];
 
     for (const product of condimentsProducts) {
@@ -846,9 +844,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Condiments & Sauces', $7, $8, $9, '{"preservatives":"minimal","gluten_free":false}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Flavorful ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Condiments & Sauces', $7, $8, $9, '{"preservatives":"minimal","gluten_free":false}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Flavorful ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
@@ -856,18 +854,18 @@ async function seedDirect() {
 
     // Baking Supplies - 12 products
     const bakingProducts = [
-      { sku: 'BAKE-FLOUR-ALL', name: 'All-Purpose Flour 1kg', price: 149.00, stock: 300, brand: 'BakeMaster', category: 'Flour' },
-      { sku: 'BAKE-SUGAR-WHITE', name: 'White Sugar 1kg', price: 129.00, stock: 350, brand: 'SweetBake', category: 'Sugar' },
-      { sku: 'BAKE-YEAST-INSTANT', name: 'Instant Yeast 100g', price: 99.00, stock: 200, brand: 'RisePro', category: 'Leavening' },
-      { sku: 'BAKE-POWDER-BAKING', name: 'Baking Powder 200g', price: 89.00, stock: 250, brand: 'LiftAgent', category: 'Leavening' },
-      { sku: 'BAKE-SODA-BAKING', name: 'Baking Soda 250g', price: 79.00, stock: 280, brand: 'SodaBake', category: 'Leavening' },
-      { sku: 'BAKE-VANILLA-EXTRACT', name: 'Vanilla Extract 100ml', price: 349.00, stock: 150, brand: 'VanillaPure', category: 'Extracts' },
-      { sku: 'BAKE-CHOCO-CHIPS', name: 'Chocolate Chips 250g', price: 249.00, stock: 220, brand: 'ChocoDelight', category: 'Mix-ins' },
-      { sku: 'BAKE-COCOA-POWDER', name: 'Cocoa Powder 200g', price: 299.00, stock: 180, brand: 'CocoaBake', category: 'Cocoa' },
-      { sku: 'BAKE-CORN-STARCH', name: 'Corn Starch 400g', price: 119.00, stock: 240, brand: 'ThickenIt', category: 'Starches' },
-      { sku: 'BAKE-BROWN-SUGAR', name: 'Brown Sugar 500g', price: 159.00, stock: 200, brand: 'CaramelSweet', category: 'Sugar' },
-      { sku: 'BAKE-BUTTER-UNSALTED', name: 'Unsalted Butter 250g', price: 299.00, stock: 160, brand: 'CreamyBake', category: 'Dairy' },
-      { sku: 'BAKE-EGGS-POWDER', name: 'Egg Powder 200g', price: 349.00, stock: 120, brand: 'EggBake', category: 'Egg Products' }
+      { sku: 'BAKE-FLOUR-ALL', name: 'All-Purpose Flour 1kg', price: 149.00, stock: 300, brand: 'BakeMaster', sub_category: 'Flour', product_type: 'All-Purpose Flour' },
+      { sku: 'BAKE-SUGAR-WHITE', name: 'White Sugar 1kg', price: 129.00, stock: 350, brand: 'SweetBake', sub_category: 'Sugar', product_type: 'White Sugar' },
+      { sku: 'BAKE-YEAST-INSTANT', name: 'Instant Yeast 100g', price: 99.00, stock: 200, brand: 'RisePro', sub_category: 'Leavening', product_type: 'Yeast' },
+      { sku: 'BAKE-POWDER-BAKING', name: 'Baking Powder 200g', price: 89.00, stock: 250, brand: 'LiftAgent', sub_category: 'Leavening', product_type: 'Baking Powder' },
+      { sku: 'BAKE-SODA-BAKING', name: 'Baking Soda 250g', price: 79.00, stock: 280, brand: 'SodaBake', sub_category: 'Leavening', product_type: 'Baking Soda' },
+      { sku: 'BAKE-VANILLA-EXTRACT', name: 'Vanilla Extract 100ml', price: 349.00, stock: 150, brand: 'VanillaPure', sub_category: 'Extracts', product_type: 'Vanilla Extract' },
+      { sku: 'BAKE-CHOCO-CHIPS', name: 'Chocolate Chips 250g', price: 249.00, stock: 220, brand: 'ChocoDelight', sub_category: 'Mix-ins', product_type: 'Chocolate Chips' },
+      { sku: 'BAKE-COCOA-POWDER', name: 'Cocoa Powder 200g', price: 299.00, stock: 180, brand: 'CocoaBake', sub_category: 'Cocoa', product_type: 'Cocoa Powder' },
+      { sku: 'BAKE-CORN-STARCH', name: 'Corn Starch 400g', price: 119.00, stock: 240, brand: 'ThickenIt', sub_category: 'Starches', product_type: 'Corn Starch' },
+      { sku: 'BAKE-BROWN-SUGAR', name: 'Brown Sugar 500g', price: 159.00, stock: 200, brand: 'CaramelSweet', sub_category: 'Sugar', product_type: 'Brown Sugar' },
+      { sku: 'BAKE-BUTTER-UNSALTED', name: 'Unsalted Butter 250g', price: 299.00, stock: 160, brand: 'CreamyBake', sub_category: 'Dairy', product_type: 'Butter' },
+      { sku: 'BAKE-EGGS-POWDER', name: 'Egg Powder 200g', price: 349.00, stock: 120, brand: 'EggBake', sub_category: 'Egg Products', product_type: 'Egg Powder' }
     ];
 
     for (const product of bakingProducts) {
@@ -884,9 +882,9 @@ async function seedDirect() {
         if (existingProduct.rows.length > 0) continue;
 
         await pool.query(`
-          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images)
-          VALUES ($1, $2, $3, $4, $5, $6, 'Baking Supplies', $7, $8, $9, '{"quality":"premium","baker_approved":true}', $10::jsonb)
-        `, [userId, accountId, product.name, product.sku, `${product.name} - Essential ${product.category.toLowerCase()}`, product.brand, product.category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`]);
+          INSERT INTO products (owner_user_id, account_id, name, sku, description, brand, category, subcategory, price, stock, attributes, images, product_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'Baking Supplies', $7, $8, $9, '{"quality":"premium","baker_approved":true}', $10::jsonb, $11)
+        `, [userId, accountId, product.name, product.sku, `${product.name} - Essential ${product.sub_category.toLowerCase()}`, product.brand, product.sub_category, product.price.toString(), product.stock.toString(), `["https://example.com/${product.sku.toLowerCase()}.jpg"]`, product.product_type]);
       } catch (error) {
         console.error(`Error inserting product ${product.sku}:`, error.message);
       }
