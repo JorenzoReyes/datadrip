@@ -14,7 +14,17 @@ export async function GET() {
       'SELECT category_id, name, description, icon, display_order, is_active FROM categories WHERE is_active = true ORDER BY display_order, name'
     );
 
-    return NextResponse.json({ categories });
+    // Map to return name-based structure for products table
+    const categoriesResponse = categories.map(cat => ({
+      id: cat.category_id,
+      name: cat.name,
+      description: cat.description,
+      icon: cat.icon,
+      display_order: cat.display_order,
+      is_active: cat.is_active
+    }));
+
+    return NextResponse.json({ categories: categoriesResponse });
   } catch (error) {
     console.error('Error fetching categories:', error);
     return NextResponse.json(
