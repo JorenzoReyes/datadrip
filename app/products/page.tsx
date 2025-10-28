@@ -532,7 +532,7 @@ export default function ProductsPage() {
               {platformOpen && (
                 <ul
                   role="listbox"
-                  className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                  className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
                 >
                   {(['All Platforms','shopee','lazada','tiktok'] as const).map((p) => (
                     <li
