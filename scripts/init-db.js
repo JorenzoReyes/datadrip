@@ -173,7 +173,7 @@ async function createTables(pool) {
     );
   `;
 
-  // Products table
+  // Products table (host mode)
   const createProductsTable = `
     CREATE TABLE IF NOT EXISTS products (
       product_id SERIAL PRIMARY KEY,
@@ -187,7 +187,7 @@ async function createTables(pool) {
       brand VARCHAR(100),
       category VARCHAR(100),
       subcategory VARCHAR(100),
-      product_type VARCHAR(100),
+      product_type VARCHAR(200),
       price DECIMAL(12,2) NOT NULL DEFAULT 0,
       special_price DECIMAL(12,2),
       cost DECIMAL(12,2),
@@ -404,7 +404,6 @@ async function createTables(pool) {
     // products
     'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);',
     'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);',
-    'CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory);',
     'CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products(owner_user_id);',
     'CREATE INDEX IF NOT EXISTS idx_products_account_id ON products(account_id);',
     "CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);",
@@ -583,7 +582,7 @@ async function initializeDatabaseWithDocker() {
         brand VARCHAR(100),
         category VARCHAR(100),
         subcategory VARCHAR(100),
-        product_type VARCHAR(100),
+        product_type VARCHAR(200),
         price DECIMAL(12,2) NOT NULL DEFAULT 0,
         special_price DECIMAL(12,2),
         cost DECIMAL(12,2),
@@ -714,7 +713,6 @@ async function initializeDatabaseWithDocker() {
       // products
       'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);',
       'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);',
-      'CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory);',
       'CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products(owner_user_id);',
       'CREATE INDEX IF NOT EXISTS idx_products_account_id ON products(account_id);',
       'CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);',
