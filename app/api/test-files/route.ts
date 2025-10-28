@@ -26,7 +26,7 @@ export async function GET() {
       files.push(...productFiles.map(f => ({ 
         type: 'product', 
         name: f, 
-        path: `/uploads/products/${f}` 
+        path: `/api/uploads/products/${f}` 
       })));
     } catch (error) {
       console.log('Products directory not found');
@@ -38,7 +38,7 @@ export async function GET() {
       files.push(...videoFiles.map(f => ({ 
         type: 'video', 
         name: f, 
-        path: `/uploads/videos/${f}` 
+        path: `/api/uploads/videos/${f}` 
       })));
     } catch (error) {
       console.log('Videos directory not found');

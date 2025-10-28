@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
     console.log('File saved successfully:', `/uploads/videos/${fileName}`);
 
-    // Return the public URL
-    const publicUrl = `/uploads/videos/${fileName}`;
+    // Return the public URL using the API route
+    const publicUrl = `/api/uploads/videos/${fileName}`;
     return NextResponse.json({ url: publicUrl });
 
   } catch (error) {
