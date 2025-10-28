@@ -694,6 +694,7 @@ export default function InsightsPage() {
                   <textarea
                     value={customQuestion}
                     onChange={(e) => setCustomQuestion(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.currentTarget.form as HTMLFormElement)?.requestSubmit(); } }}
                     placeholder="Ask me anything about your shop performance, sales, inventory, customers, etc..."
                     className="flex-1 bg-white text-header text-sm rounded-lg px-3 py-2 border border-gray-300 focus:border-primary-500 focus:outline-none resize-none"
                     rows={3}

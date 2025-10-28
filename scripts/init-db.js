@@ -294,12 +294,16 @@ async function createTables(pool) {
       platform_product_id VARCHAR(100) NOT NULL,
       title VARCHAR(255),
       listing_price DECIMAL(12,2),
+      listing_special_price DECIMAL(12,2),
+      listing_stock INTEGER NOT NULL DEFAULT 0,
       currency CHAR(3) DEFAULT 'PHP',
       listing_status VARCHAR(30) DEFAULT 'active',
       url TEXT,
       category_path TEXT,
       commission_rate DECIMAL(5,2),
       warehouse_sku VARCHAR(100),
+      promo_start TIMESTAMP,
+      promo_end TIMESTAMP,
       extra JSONB,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -386,6 +390,24 @@ async function createTables(pool) {
   await pool.query(`
     ALTER TABLE IF EXISTS product_listings 
     ADD COLUMN IF NOT EXISTS shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE;
+  `);
+
+  // Ensure new listing columns exist
+  await pool.query(`
+    ALTER TABLE IF EXISTS product_listings 
+    ADD COLUMN IF NOT EXISTS listing_special_price DECIMAL(12,2);
+  `);
+  await pool.query(`
+    ALTER TABLE IF EXISTS product_listings 
+    ADD COLUMN IF NOT EXISTS listing_stock INTEGER NOT NULL DEFAULT 0;
+  `);
+  await pool.query(`
+    ALTER TABLE IF EXISTS product_listings 
+    ADD COLUMN IF NOT EXISTS promo_start TIMESTAMP;
+  `);
+  await pool.query(`
+    ALTER TABLE IF EXISTS product_listings 
+    ADD COLUMN IF NOT EXISTS promo_end TIMESTAMP;
   `);
 
   // Create indexes for better performance
@@ -642,12 +664,16 @@ async function initializeDatabaseWithDocker() {
         platform_product_id VARCHAR(100) NOT NULL,
         title VARCHAR(255),
         listing_price DECIMAL(12,2),
+        listing_special_price DECIMAL(12,2),
+        listing_stock INTEGER NOT NULL DEFAULT 0,
         currency CHAR(3) DEFAULT 'PHP',
         listing_status VARCHAR(30) DEFAULT 'active',
         url TEXT,
         category_path TEXT,
         commission_rate DECIMAL(5,2),
         warehouse_sku VARCHAR(100),
+        promo_start TIMESTAMP,
+        promo_end TIMESTAMP,
         extra JSONB,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -658,6 +684,12 @@ async function initializeDatabaseWithDocker() {
 
     // Ensure new columns exist on older schemas
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "ALTER TABLE IF EXISTS product_listings ADD COLUMN IF NOT EXISTS shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE;"`, { stdio: 'inherit' });
+
+    // Ensure new listing columns exist on older schemas
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "ALTER TABLE IF EXISTS product_listings ADD COLUMN IF NOT EXISTS listing_special_price DECIMAL(12,2);"`, { stdio: 'inherit' });
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "ALTER TABLE IF EXISTS product_listings ADD COLUMN IF NOT EXISTS listing_stock INTEGER NOT NULL DEFAULT 0;"`, { stdio: 'inherit' });
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "ALTER TABLE IF EXISTS product_listings ADD COLUMN IF NOT EXISTS promo_start TIMESTAMP;"`, { stdio: 'inherit' });
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "ALTER TABLE IF EXISTS product_listings ADD COLUMN IF NOT EXISTS promo_end TIMESTAMP;"`, { stdio: 'inherit' });
 
     // Ensure columns exist if table was created earlier without them
     const alterUsersAddUpdatedAt = `ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;`;

@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   serverExternalPackages: ['pg'],
   images: {
+    // Disable image optimization for uploaded files to prevent errors
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -29,6 +31,10 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: 'localhost',
         port: '3000',
+      },
+      {
+        protocol: 'https',
+        hostname: 'datadripdev.up.railway.app',
       },
     ],
   },

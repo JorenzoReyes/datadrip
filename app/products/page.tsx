@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import dynamic from 'next/dynamic';
@@ -62,6 +62,8 @@ export default function ProductsPage() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [subcategoryOpen, setSubcategoryOpen] = useState(false);
   const [productTypeOpen, setProductTypeOpen] = useState(false);
+  const [platform, setPlatform] = useState<'All Platforms' | 'shopee' | 'lazada' | 'tiktok'>('All Platforms');
+  const [platformOpen, setPlatformOpen] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
@@ -82,43 +84,44 @@ export default function ProductsPage() {
   }, [user, isLoading, router]);
 
   // Fetch products from the database
-  useEffect(() => {
-    async function loadProducts() {
-      if (!user?.email) return;
-      
-      try {
-        setLoadingProducts(true);
-        const email = encodeURIComponent(user.email);
-        
-        // Build date range parameters
-        let dateParams = '';
-        if (dateRange === 'custom') {
-          dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
-        } else {
-          dateParams = `&days=${dateRange}`;
-        }
-        
-        const res = await fetch(`/api/products?email=${email}${dateParams}`, { cache: 'no-store' });
-        const json = await res.json();
-        
-        if (json.error) {
-          console.error('Error loading products:', json.error);
-          setProducts([]);
-        } else {
-          setProducts(json.products || []);
-        }
-      } catch (e) {
-        console.error('Failed to fetch products:', e);
-        setProducts([]);
-      } finally {
-        setLoadingProducts(false);
-      }
-    }
+  const loadProducts = useCallback(async () => {
+    if (!user?.email) return;
     
+    try {
+      setLoadingProducts(true);
+      const email = encodeURIComponent(user.email);
+      
+      // Build date range parameters
+      let dateParams = '';
+      if (dateRange === 'custom') {
+        dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
+      } else {
+        dateParams = `&days=${dateRange}`;
+      }
+      
+      const platformParam = platform !== 'All Platforms' ? `&platform=${platform}` : '';
+      const res = await fetch(`/api/products?email=${email}${dateParams}${platformParam}`, { cache: 'no-store' });
+      const json = await res.json();
+      
+      if (json.error) {
+        console.error('Error loading products:', json.error);
+        setProducts([]);
+      } else {
+        setProducts(json.products || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch products:', e);
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, [user, dateRange, customDateRange, platform]);
+
+  useEffect(() => {
     if (user) {
       loadProducts();
     }
-  }, [user, dateRange, customDateRange]);
+  }, [user, dateRange, customDateRange, platform, loadProducts]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -142,16 +145,19 @@ export default function ProductsPage() {
       if (filterOpen && !target.closest('[data-filter-dropdown]')) {
         setFilterOpen(false);
       }
+      if (platformOpen && !target.closest('[data-platform-dropdown]')) {
+        setPlatformOpen(false);
+      }
     };
 
-    if (showDateFilter || categoryOpen || subcategoryOpen || productTypeOpen || filterOpen) {
+      if (showDateFilter || categoryOpen || subcategoryOpen || productTypeOpen || filterOpen || platformOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showDateFilter, categoryOpen, subcategoryOpen, productTypeOpen, filterOpen]);
+  }, [showDateFilter, categoryOpen, subcategoryOpen, productTypeOpen, filterOpen, platformOpen]);
   
   // Pagination and sorting state
   const [currentPage, setCurrentPage] = useState(1);
@@ -406,11 +412,18 @@ export default function ProductsPage() {
         throw new Error(json.error || 'Failed to update product');
       }
 
+      console.log('Product update successful:', json.product);
+      
       // Update the product in the local products list
       setProducts(products.map(p => 
         p.product_id === editingProduct.product_id ? { ...p, ...json.product } : p
       ));
       setEditingProduct(null);
+      
+      // Refresh the product list to ensure all data is up to date
+      await loadProducts();
+      
+      console.log('Product list refreshed after update');
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
@@ -500,6 +513,46 @@ export default function ProductsPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Platform dropdown */}
+            <div className="relative" data-platform-dropdown>
+              <button
+                onClick={() => {
+                  setPlatformOpen((o) => !o);
+                  setFilterOpen(false);
+                  setCategoryOpen(false);
+                  setSubcategoryOpen(false);
+                  setProductTypeOpen(false);
+                }}
+                className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm text-header hover:bg-gray-200"
+                aria-haspopup="listbox"
+              >
+                {platform === 'All Platforms' ? 'All Platforms' : (platform === 'shopee' ? 'Shopee' : platform === 'lazada' ? 'Lazada' : 'TikTok')}
+                <svg className="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
+                </svg>
+              </button>
+              {platformOpen && (
+                <ul
+                  role="listbox"
+                  className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                >
+                  {(['All Platforms','shopee','lazada','tiktok'] as const).map((p) => (
+                    <li
+                      key={p}
+                      role="option"
+                      aria-selected={p === platform}
+                      onClick={() => {
+                        setPlatform(p as 'All Platforms' | 'shopee' | 'lazada' | 'tiktok');
+                        setPlatformOpen(false);
+                      }}
+                      className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-50 ${p === platform ? 'bg-gray-50 font-medium' : ''}`}
+                    >
+                      {p === 'All Platforms' ? 'All Platforms' : (p === 'shopee' ? 'Shopee' : p === 'lazada' ? 'Lazada' : 'TikTok')}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             {/* Categories dropdown */}
             <div className="relative" data-category-dropdown>
               <button
