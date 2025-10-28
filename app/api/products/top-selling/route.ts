@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '5');
     const days = parseInt(searchParams.get('days') || '30');
     const platform = searchParams.get('platform');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
     if (!email) {
       return NextResponse.json({ error: 'Email parameter is required' }, { status: 400 });
@@ -29,9 +31,21 @@ export async function GET(request: NextRequest) {
 
     const accountIds = accountRows.map(row => row.account_id);
 
-    // Get top selling products (using a broader date range for demo data)
-    const platformFilter = platform ? 'AND ps.platform = $3' : '';
-    const queryParams = platform ? [accountIds, limit, platform] : [accountIds, limit];
+    // Build date filter
+    let dateFilter = '';
+    let dateParams: string[] = [];
+    if (startDate && endDate) {
+      dateFilter = 'AND ps.sale_date >= $3::date AND ps.sale_date <= $4::date';
+      dateParams = [startDate, endDate];
+    } else {
+      // Fallback to old behavior if dates not provided
+      dateFilter = 'AND ps.sale_date >= \'2025-10-01\'';
+    }
+
+    // Get top selling products
+    const platformFilter = platform ? 'AND ps.platform = $' + (dateParams.length + 3) : '';
+    const baseParams = dateParams.length > 0 ? [accountIds, limit, ...dateParams] : [accountIds, limit];
+    const queryParams = platform ? [...baseParams, platform] : baseParams;
     
     const topProducts = await query<{
       product_id: number;
@@ -60,7 +74,7 @@ export async function GET(request: NextRequest) {
       FROM products p
       JOIN product_sales ps ON p.product_id = ps.product_id
       WHERE ps.account_id = ANY($1)
-        AND ps.sale_date >= '2025-10-01'
+        ${dateFilter}
         ${platformFilter}
       GROUP BY p.product_id, p.name, p.sku, p.brand, p.category${platform ? ', ps.platform' : ''}
       ORDER BY total_revenue DESC

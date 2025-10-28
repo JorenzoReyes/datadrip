@@ -54,8 +54,9 @@ export async function GET(request: NextRequest) {
         AND ps.sale_date >= $2::date
         AND ps.sale_date <= $3::date
         ${platformFilter}
-      GROUP BY p.category
-      ORDER BY revenue DESC`,
+      GROUP BY COALESCE(p.category, 'Uncategorized')
+      ORDER BY revenue DESC
+      LIMIT 5`,
       queryParams
     );
 
