@@ -207,13 +207,57 @@ async function createTables(pool) {
       warranty_type VARCHAR(50),
       warranty_period VARCHAR(20),
       warranty_policy TEXT,
-      barcode VARCHAR(64),
       attributes JSONB,
       images JSONB,
+      videos JSONB,
       promotion_image TEXT,
       status VARCHAR(20) NOT NULL DEFAULT 'active',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  // Categories table
+  const createCategoriesTable = `
+    CREATE TABLE IF NOT EXISTS categories (
+      category_id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      icon VARCHAR(50),
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  // Subcategories table
+  const createSubcategoriesTable = `
+    CREATE TABLE IF NOT EXISTS subcategories (
+      subcategory_id SERIAL PRIMARY KEY,
+      category_id INTEGER REFERENCES categories(category_id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (category_id, name)
+    );
+  `;
+
+  // Product types table
+  const createProductTypesTable = `
+    CREATE TABLE IF NOT EXISTS product_types (
+      product_type_id SERIAL PRIMARY KEY,
+      subcategory_id INTEGER REFERENCES subcategories(subcategory_id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (subcategory_id, name)
     );
   `;
 
@@ -309,19 +353,10 @@ async function createTables(pool) {
   await pool.query(createUsersTable);
   await pool.query(createAccountsTable);
   
-  // Create daily_sales_aggregated table for efficient sales tracking
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS daily_sales_aggregated (
-      account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
-      sale_date DATE NOT NULL,
-      total_sales DECIMAL(12,2) DEFAULT 0,
-      total_orders INTEGER DEFAULT 0,
-      platform_breakdown JSONB DEFAULT '{}',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (account_id, sale_date)
-    );
-  `);
+  // Create reference tables for products
+  await pool.query(createCategoriesTable);
+  await pool.query(createSubcategoriesTable);
+  await pool.query(createProductTypesTable);
 
   await pool.query(createShopsTable);
   await pool.query(createProductsTable);
@@ -382,8 +417,6 @@ async function createTables(pool) {
     'CREATE INDEX IF NOT EXISTS idx_product_listings_platform_pid ON product_listings(platform_product_id);',
     // product_sales
     'CREATE INDEX IF NOT EXISTS idx_product_sales_date_product ON product_sales(sale_date, product_id, account_id);',
-    // daily_sales_aggregated
-    'CREATE INDEX IF NOT EXISTS idx_daily_sales_agg_date ON daily_sales_aggregated(sale_date, account_id);',
     // roles/permissions lookup
     'CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);',
     'CREATE INDEX IF NOT EXISTS idx_permissions_name ON permissions(name);',
@@ -429,6 +462,19 @@ async function updateTables(pool) {
       UPDATE users 
       SET last_login_at = CURRENT_TIMESTAMP 
       WHERE last_login_at IS NULL OR last_login_at = created_at;
+    `);
+
+    // Ensure product_sales.total_sales exists (defensive for older local setups)
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name='product_sales' AND column_name='total_sales'
+        ) THEN
+          ALTER TABLE product_sales ADD COLUMN total_sales DECIMAL(12,2) NOT NULL DEFAULT 0;
+        END IF;
+      END $$;
     `);
 
     console.log('✅ Table updates completed successfully');
@@ -536,11 +582,17 @@ async function initializeDatabaseWithDocker() {
         highlights TEXT,
         in_box TEXT,
         brand VARCHAR(100),
+<<<<<<< HEAD
         category1 VARCHAR(100),
         category2 VARCHAR(100),
         category3 VARCHAR(100),
         category4 VARCHAR(100),
         category5 VARCHAR(100),
+=======
+        category VARCHAR(100),
+        subcategory VARCHAR(100),
+        product_type VARCHAR(100),
+>>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
         price DECIMAL(12,2) NOT NULL DEFAULT 0,
         special_price DECIMAL(12,2),
         cost DECIMAL(12,2),
@@ -558,9 +610,9 @@ async function initializeDatabaseWithDocker() {
         warranty_type VARCHAR(50),
         warranty_period VARCHAR(20),
         warranty_policy TEXT,
-        barcode VARCHAR(64),
         attributes JSONB,
         images JSONB,
+        videos JSONB,
         promotion_image TEXT,
         status VARCHAR(20) NOT NULL DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -568,6 +620,26 @@ async function initializeDatabaseWithDocker() {
       );
     `;
     execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createProductsTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
+
+
+    // Create product_sales table
+    const createProductSalesTable = `
+      CREATE TABLE IF NOT EXISTS product_sales (
+        sale_id SERIAL PRIMARY KEY,
+        account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+        product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+        shop_id INTEGER REFERENCES shops(shop_id) ON DELETE CASCADE,
+        platform VARCHAR(30) NOT NULL,
+        sale_date DATE NOT NULL,
+        quantity_sold INTEGER NOT NULL DEFAULT 1,
+        unit_price DECIMAL(12,2) NOT NULL,
+        total_sales DECIMAL(12,2) NOT NULL,
+        order_id VARCHAR(100),
+        customer_info JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    execSync(`docker exec -i datadrip-postgres-1 psql -U postgres -d datadrip -c "${createProductSalesTable.replace(/\s+/g,' ').trim()}"`, { stdio: 'inherit' });
 
     // Create product_listings table
     const createProductListingsTable = `

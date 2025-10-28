@@ -15,6 +15,13 @@ services:
       - DB_NAME=datadrip
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+    volumes:
+      # Mount source code for hot reloading
+      - .:/app
+      # Exclude node_modules to avoid conflicts
+      - /app/node_modules
+      # Exclude .next build directory
+      - /app/.next
     depends_on:
       postgres:
         condition: service_healthy
@@ -33,7 +40,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -43,25 +50,5 @@ services:
       retries: 5
       start_period: 30s
 
-  jenkins:
-    image: jenkins/jenkins:lts
-    container_name: datadrip-jenkins
-    ports:
-      - "8081:8080"
-      - "50001:50000"
-    environment:
-      - JENKINS_OPTS=--httpPort=8080
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/bin/docker
-      - ./jenkins:/var/jenkins_home/jobs
-    user: root
-    restart: unless-stopped
-    depends_on:
-      - app
-      - postgres
-
 volumes:
   postgres_data:
-  jenkins_home:

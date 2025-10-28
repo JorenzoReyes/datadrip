@@ -39,7 +39,9 @@ export type Product = {
   warranty_policy: string | null;
   status: string;
   images: string[] | null;
+  videos: string[] | null;
   promotion_image: string | null;
+  attributes: {[key: string]: unknown} | null;
   created_at: string;
   updated_at: string;
 };
@@ -47,6 +49,29 @@ export type Product = {
 export default function ProductsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+
+  // State declarations
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('All Categories');
+  const [subcategory, setSubcategory] = useState('All Subcategories');
+  const [productType, setProductType] = useState('All Product Types');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [subcategoryOpen, setSubcategoryOpen] = useState(false);
+  const [productTypeOpen, setProductTypeOpen] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Date filter states
+  const [dateRange, setDateRange] = useState<string>('30');
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState<{start: string, end: string}>({
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0]
+  });
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -63,7 +88,16 @@ export default function ProductsPage() {
       try {
         setLoadingProducts(true);
         const email = encodeURIComponent(user.email);
-        const res = await fetch(`/api/products?email=${email}`, { cache: 'no-store' });
+        
+        // Build date range parameters
+        let dateParams = '';
+        if (dateRange === 'custom') {
+          dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
+        } else {
+          dateParams = `&days=${dateRange}`;
+        }
+        
+        const res = await fetch(`/api/products?email=${email}${dateParams}`, { cache: 'no-store' });
         const json = await res.json();
         
         if (json.error) {
@@ -83,17 +117,40 @@ export default function ProductsPage() {
     if (user) {
       loadProducts();
     }
-  }, [user]);
+  }, [user, dateRange, customDateRange]);
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target) return;
 
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('All Categories');
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+      // Check if the click is outside the dropdown elements
+      if (showDateFilter && !target.closest('[data-date-filter]')) {
+        setShowDateFilter(false);
+      }
+      if (categoryOpen && !target.closest('[data-category-dropdown]')) {
+        setCategoryOpen(false);
+      }
+      if (subcategoryOpen && !target.closest('[data-subcategory-dropdown]')) {
+        setSubcategoryOpen(false);
+      }
+      if (productTypeOpen && !target.closest('[data-producttype-dropdown]')) {
+        setProductTypeOpen(false);
+      }
+      if (filterOpen && !target.closest('[data-filter-dropdown]')) {
+        setFilterOpen(false);
+      }
+    };
+
+    if (showDateFilter || categoryOpen || subcategoryOpen || productTypeOpen || filterOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDateFilter, categoryOpen, subcategoryOpen, productTypeOpen, filterOpen]);
   
   // Pagination and sorting state
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,6 +177,51 @@ export default function ProductsPage() {
     return ['All Categories', ...Array.from(uniqueCategories).sort()];
   }, [products]);
 
+  // Extract unique subcategories based on selected category
+  const subcategories = useMemo(() => {
+    const uniqueSubcategories = new Set<string>();
+    products.forEach(p => {
+      // If category is selected, only include subcategories from that category
+      if (category !== 'All Categories') {
+        if (p.category === category && p.subcategory) {
+          uniqueSubcategories.add(p.subcategory);
+        }
+      } else {
+        // If all categories, include all subcategories
+        if (p.subcategory) {
+          uniqueSubcategories.add(p.subcategory);
+        }
+      }
+    });
+    return ['All Subcategories', ...Array.from(uniqueSubcategories).sort()];
+  }, [products, category]);
+
+  // Extract unique product types based on selected category and subcategory
+  // Shows all available product types for the current category/subcategory selection
+  const productTypes = useMemo(() => {
+    const uniqueProductTypes = new Set<string>();
+    products.forEach(p => {
+      if (!p.product_type) return;
+      
+      let shouldInclude = true;
+      
+      // Filter by category if specified
+      if (category !== 'All Categories') {
+        shouldInclude = shouldInclude && p.category === category;
+      }
+      
+      // Filter by subcategory if specified
+      if (subcategory !== 'All Subcategories') {
+        shouldInclude = shouldInclude && p.subcategory === subcategory;
+      }
+      
+      if (shouldInclude) {
+        uniqueProductTypes.add(p.product_type);
+      }
+    });
+    return ['All Product Types', ...Array.from(uniqueProductTypes).sort()];
+  }, [products, category, subcategory]);
+
   // Filter, sort, and paginate products
   const { paginated, totalPages, totalItems } = useMemo(() => {
     // First filter products
@@ -127,8 +229,15 @@ export default function ProductsPage() {
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
                          p.brand?.toLowerCase().includes(query.toLowerCase()) ||
                          p.sku?.toLowerCase().includes(query.toLowerCase());
+<<<<<<< HEAD
       const matchCategory = category === 'All Categories' ? true : p.category1 === category;
       return matchQuery && matchCategory;
+=======
+      const matchCategory = category === 'All Categories' ? true : (p.category === category);
+      const matchSubcategory = subcategory === 'All Subcategories' ? true : (p.subcategory === subcategory);
+      const matchProductType = productType === 'All Product Types' ? true : (p.product_type === productType);
+      return matchQuery && matchCategory && matchSubcategory && matchProductType;
+>>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
     });
 
     // Then sort products
@@ -175,7 +284,7 @@ export default function ProductsPage() {
       totalPages,
       totalItems
     };
-  }, [products, query, category, sortBy, sortOrder, currentPage, itemsPerPage]);
+  }, [products, query, category, subcategory, productType, sortBy, sortOrder, currentPage, itemsPerPage]);
 
   // Handle sorting
   const handleSort = (newSortBy: 'name' | 'stock' | 'price' | 'created_at') => {
@@ -196,7 +305,18 @@ export default function ProductsPage() {
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [query, category, sortBy, sortOrder]);
+  }, [query, category, subcategory, productType, sortBy, sortOrder]);
+
+  // Reset subcategory and product type filters when category changes
+  useEffect(() => {
+    setSubcategory('All Subcategories');
+    setProductType('All Product Types');
+  }, [category]);
+
+  // Reset product type filter when subcategory changes
+  useEffect(() => {
+    setProductType('All Product Types');
+  }, [subcategory]);
 
   // Handle adding new product
   const handleAddProduct = async (productData: {
@@ -226,6 +346,7 @@ export default function ProductsPage() {
 		warranty_type?: string;
 		warranty_period?: string;
 		warranty_policy?: string;
+		attributes?: {[key: string]: unknown};
   }) => {
     try {
       const email = encodeURIComponent(user?.email || '');
@@ -251,7 +372,34 @@ export default function ProductsPage() {
   };
 
   // Handle updating product
-  const handleUpdateProduct = async (updatedData: Partial<Product>) => {
+  const handleUpdateProduct = async (updatedData: {
+    name: string;
+    sku?: string;
+    description?: string;
+    highlights?: string;
+    in_box?: string;
+    brand?: string;
+    category?: string;
+    subcategory?: string;
+    product_type?: string;
+    price: number;
+    special_price?: number;
+    stock: number;
+    images?: string[];
+    videos?: string[];
+    promotion_image?: string | null;
+    status?: string;
+    weight_value?: number;
+    weight_unit?: string;
+    length_cm?: number;
+    width_cm?: number;
+    height_cm?: number;
+    has_dangerous?: boolean;
+    warranty_type?: string;
+    warranty_period?: string;
+    warranty_policy?: string;
+    attributes?: {[key: string]: unknown};
+  }) => {
     if (!editingProduct) return;
 
     try {
@@ -331,7 +479,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-green-50/30">
       <Header active="products" />
 
       {/* Main Content */}
@@ -360,11 +508,13 @@ export default function ProductsPage() {
 
           <div className="flex items-center gap-3">
             {/* Categories dropdown */}
-            <div className="relative">
+            <div className="relative" data-category-dropdown>
               <button
                 onClick={() => {
                   setCategoryOpen((o) => !o);
                   setFilterOpen(false);
+                  setSubcategoryOpen(false);
+                  setProductTypeOpen(false);
                 }}
                 className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm text-header hover:bg-gray-200"
                 aria-haspopup="listbox"
@@ -378,7 +528,7 @@ export default function ProductsPage() {
               {categoryOpen && (
                 <ul
                   role="listbox"
-                  className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                  className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto"
                 >
                   {categories.map((c) => (
                     <li
@@ -400,13 +550,103 @@ export default function ProductsPage() {
               )}
             </div>
 
+            {/* Subcategories dropdown */}
+            {subcategories.length > 1 && (
+              <div className="relative" data-subcategory-dropdown>
+                <button
+                  onClick={() => {
+                    setSubcategoryOpen((o) => !o);
+                    setFilterOpen(false);
+                    setCategoryOpen(false);
+                    setProductTypeOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm text-header hover:bg-gray-200"
+                  aria-haspopup="listbox"
+                  aria-expanded={subcategoryOpen}
+                >
+                  {subcategory}
+                  <svg className="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
+                  </svg>
+                </button>
+                {subcategoryOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {subcategories.map((sc) => (
+                      <li
+                        key={sc}
+                        role="option"
+                        aria-selected={sc === subcategory}
+                        onClick={() => {
+                          setSubcategory(sc);
+                          setSubcategoryOpen(false);
+                        }}
+                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-50 ${
+                          sc === subcategory ? 'bg-gray-50 font-medium' : ''
+                        }`}
+                      >
+                        {sc}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Product Types dropdown */}
+            {productTypes.length > 1 && (
+              <div className="relative" data-producttype-dropdown>
+                <button
+                  onClick={() => {
+                    setProductTypeOpen((o) => !o);
+                    setFilterOpen(false);
+                    setCategoryOpen(false);
+                    setSubcategoryOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm text-header hover:bg-gray-200"
+                  aria-haspopup="listbox"
+                  aria-expanded={productTypeOpen}
+                >
+                  {productType}
+                  <svg className="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" />
+                  </svg>
+                </button>
+                {productTypeOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {productTypes.map((pt) => (
+                      <li
+                        key={pt}
+                        role="option"
+                        aria-selected={pt === productType}
+                        onClick={() => {
+                          setProductType(pt);
+                          setProductTypeOpen(false);
+                        }}
+                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-50 ${
+                          pt === productType ? 'bg-gray-50 font-medium' : ''
+                        }`}
+                      >
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
             {/* Add product button */}
             <button onClick={() => setShowAddModal(true)} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800">
               Add Products
             </button>
 
             {/* Filters dropdown (icon) */}
-            <div className="relative">
+            <div className="relative" data-filter-dropdown>
               <button
                 onClick={() => {
                   setFilterOpen((o) => !o);
@@ -466,9 +706,6 @@ export default function ProductsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-100">
               <tr>
-                <th className="w-10 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label="Select all" />
-                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">
                   Products
                 </th>
@@ -495,13 +732,13 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-gray-200 bg-gray-50">
               {loadingProducts ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
                     Loading products...
                   </td>
                 </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
                     {products.length === 0 ? 'No products found. Click "Add Products" to get started.' : 'No products match your search criteria.'}
                   </td>
                 </tr>
@@ -509,17 +746,20 @@ export default function ProductsPage() {
                 paginated.map((p) => (
                   <tr key={p.product_id} className="hover:bg-gray-100/70">
                     <td className="px-4 py-3">
-                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300" aria-label={`Select ${p.name}`} />
-                    </td>
-                    <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-md bg-gray-300 flex items-center justify-center text-xs text-gray-600">
-                          {p.name.substring(0, 2).toUpperCase()}
+                        <div className="h-9 w-9 rounded-md bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                          <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-header">{p.name}</span>
                           <span className="text-xs text-subheader">
+<<<<<<< HEAD
                             {p.brand ? `${p.brand} • ` : ''}{p.category1 || 'Uncategorized'}
+=======
+                            {p.brand ? `${p.brand} ` : ''}
+>>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
                           </span>
                         </div>
                       </div>
@@ -655,7 +895,67 @@ export default function ProductsPage() {
           product={editingProduct}
           onClose={() => setEditingProduct(null)}
           onSave={handleUpdateProduct}
+          userEmail={user?.email}
         />
+      )}
+
+      {/* Custom Date Range Modal */}
+      {showCustomDateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Custom Date Range</h2>
+              <button
+                onClick={() => setShowCustomDateModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <input
+                  type="date"
+                  value={customDateRange.start}
+                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, start: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <input
+                  type="date"
+                  value={customDateRange.end}
+                  onChange={(e) => setCustomDateRange(prev => ({ ...prev, end: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowCustomDateModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setDateRange('custom');
+                  setShowCustomDateModal(false);
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                Apply Filter
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

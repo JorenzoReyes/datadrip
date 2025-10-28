@@ -39,60 +39,61 @@ export async function GET(req: Request) {
       [accountIds]
     );
 
-    // Daily sales for the past 7 days from daily_sales_aggregated table
-    // Get the last 7 days of aggregated data with platform breakdown
+    // Get date range from query parameters, or use current week as default
+    let startDateStr = searchParams.get('startDate');
+    let endDateStr = searchParams.get('endDate');
+    
+    // If dates not provided, calculate current week in Philippine time
+    if (!startDateStr || !endDateStr) {
+      const now = new Date();
+      const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+      const currentDayOfWeek = phTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      
+      const startOfWeek = new Date(phTime);
+      startOfWeek.setDate(phTime.getDate() - currentDayOfWeek);
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      startDateStr = startOfWeek.toISOString().split('T')[0];
+      endDateStr = endOfWeek.toISOString().split('T')[0];
+    }
+    
+    // Get daily sales data from product_sales table for consistency
     const dailySales = await query<{
       sale_date: string;
       total_sales: number;
       platform_breakdown: { tiktok?: number; shopee?: number; lazada?: number };
     }>(
-      `SELECT sale_date::text, 
-              total_sales,
-              platform_breakdown
-       FROM daily_sales_aggregated
-       WHERE account_id = ANY($1) 
-       ORDER BY sale_date DESC
-       LIMIT 7`,
-      [accountIds]
+      `SELECT 
+        sale_date::text,
+        SUM(platform_total) as total_sales,
+        jsonb_object_agg(platform, platform_total) as platform_breakdown
+      FROM (
+        SELECT 
+          sale_date,
+          platform,
+          SUM(total_sales) as platform_total
+        FROM product_sales
+        WHERE account_id = ANY($1)
+          AND sale_date >= $2::date
+          AND sale_date <= $3::date
+        GROUP BY sale_date, platform
+      ) platform_sales
+      GROUP BY sale_date
+      ORDER BY sale_date ASC`,
+      [accountIds, startDateStr, endDateStr]
     );
-
-    // Get actual sales totals directly from product_sales table for the seeded data range
-    const totalsRows = await query<{
-      platform: string | null;
-      total: string | null;
-    }>(
-      `SELECT platform, SUM(total_sales) AS total
-       FROM product_sales
-       WHERE account_id = ANY($1) 
-         AND sale_date >= '2025-10-05'
-         AND sale_date <= '2025-11-05'
-       GROUP BY ROLLUP(platform)`,
-      [accountIds]
-    );
-
-    const totals = {
-      all: Number(totalsRows.find(r => r.platform === null)?.total || 0),
-      tiktok: Number(totalsRows.find(r => r.platform === 'tiktok')?.total || 0),
-      lazada: Number(totalsRows.find(r => r.platform === 'lazada')?.total || 0),
-      shopee: Number(totalsRows.find(r => r.platform === 'shopee')?.total || 0)
-    };
 
     // Log data access for audit
     EnhancedDataSanitizationService.logDataAccess(owner.user_id, 'dashboard_metrics', false);
 
-    // Mask financial data for dashboard display (round to nearest 1000)
-    const maskedTotals = {
-      all: Math.round(totals.all / 1000) * 1000,
-      tiktok: Math.round(totals.tiktok / 1000) * 1000,
-      lazada: Math.round(totals.lazada / 1000) * 1000,
-      shopee: Math.round(totals.shopee / 1000) * 1000
-    };
-
-    return NextResponse.json({ shops, dailySales, totals: maskedTotals });
+    // Return only the daily sales data - frontend will calculate its own weekly totals
+    return NextResponse.json({ shops, dailySales });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to load metrics';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-

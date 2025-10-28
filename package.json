@@ -1,6 +1,6 @@
 {
   "name": "datadrip",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -24,18 +24,21 @@
     "jenkins:setup:complete": "bash scripts/setup-jenkins-complete.sh",
     "jenkins:plugins": "bash scripts/install-jenkins-plugins.sh",
     "jenkins:logs": "docker logs datadrip-jenkins -f",
-    "db:seed:roles": "node scripts/seed-roles.js"
+    "db:seed:roles": "node scripts/seed-roles.js",
+    "db:seed:categories": "node scripts/seed-categories.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@types/pg": "^8.10.9",
     "bcryptjs": "^2.4.3",
     "next": "15.5.0",
+    "pdfkit": "^0.17.2",
     "pg": "^8.11.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
