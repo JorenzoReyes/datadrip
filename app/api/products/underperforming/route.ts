@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
     const email = searchParams.get('email');
     const limit = parseInt(searchParams.get('limit') || '10');
     const days = parseInt(searchParams.get('days') || '30');
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
     const minStockThreshold = parseInt(searchParams.get('minStock') || '10'); // Products with at least this much stock
     const maxSalesThreshold = parseInt(searchParams.get('maxSales') || '5'); // Products with max this many sales
 
@@ -31,9 +33,14 @@ export async function GET(request: NextRequest) {
     const accountIds = accountRows.map(row => row.account_id);
 
     // Calculate the start date for the period
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-    const startDateStr = startDate.toISOString().split('T')[0];
+    let startDateStr: string;
+    if (startDateParam && endDateParam) {
+      startDateStr = startDateParam;
+    } else {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      startDateStr = startDate.toISOString().split('T')[0];
+    }
 
     // Get underperforming products: high stock but low sales
     // This query considers:
@@ -81,6 +88,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN product_sales ps ON p.product_id = ps.product_id 
         AND ps.account_id = ANY($1)
         AND ps.sale_date >= $5::date
+        ${endDateParam ? 'AND ps.sale_date <= $6::date' : ''}
       LEFT JOIN product_listings pl ON p.product_id = pl.product_id 
         AND pl.account_id = ANY($1)
         AND pl.listing_status = 'active'
@@ -91,7 +99,7 @@ export async function GET(request: NextRequest) {
       HAVING COUNT(ps.sale_id) <= $3
       ORDER BY stock_to_sales_ratio DESC, p.stock DESC, total_revenue ASC
       LIMIT $4`,
-      [accountIds, minStockThreshold, maxSalesThreshold, limit, startDateStr]
+      endDateParam ? [accountIds, minStockThreshold, maxSalesThreshold, limit, startDateStr, endDateParam] : [accountIds, minStockThreshold, maxSalesThreshold, limit, startDateStr]
     );
 
     // Get user ID for audit logging
