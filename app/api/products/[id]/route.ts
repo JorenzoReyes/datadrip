@@ -71,6 +71,20 @@ export async function PATCH(
       attributes
     } = body;
 
+    // Sanitize hierarchical category fields to prevent stale deeper levels
+    // If subcategory changes or is empty, drop product_type
+    if (subcategory === null || subcategory === undefined || (typeof subcategory === 'string' && subcategory.trim() === '')) {
+      body.product_type = null;
+    } else if (typeof product_type === 'string' && product_type.trim()) {
+      // Enforce max three segments for product_type (levels 3,4,5)
+      const segments = product_type.split('>').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      if (segments.length > 3) {
+        body.product_type = segments.slice(0, 3).join(' > ');
+      } else {
+        body.product_type = segments.join(' > ');
+      }
+    }
+
     // Validate required fields
     if (!name || !price) {
       return NextResponse.json({ error: 'Name and price are required' }, { status: 400 });
@@ -113,9 +127,9 @@ export async function PATCH(
       updateFields.push(`subcategory = $${paramCount++}`);
       values.push(subcategory && subcategory.trim() ? subcategory.trim() : null);
     }
-    if (product_type !== undefined) {
+    if (body.product_type !== undefined) {
       updateFields.push(`product_type = $${paramCount++}`);
-      values.push(product_type && product_type.trim() ? product_type.trim() : null);
+      values.push(body.product_type && body.product_type.trim ? body.product_type.trim() : null);
     }
     if (price !== undefined) {
       updateFields.push(`price = $${paramCount++}`);

@@ -510,7 +510,20 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
     }
     
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (Object.keys(errors).length > 0) {
+      // Find the top-most invalid field and scroll it into view
+      const order = ['productName','category1','category2','category3','category4','category5','category6','productImages','brand','price','packageWeight','packageLength','packageWidth','packageHeight'];
+      const firstKey = order.find(k => errors[k]);
+      if (firstKey) {
+        const el = scrollRef.current?.querySelector(`[data-field="${firstKey}"]`);
+        (el as HTMLElement | null)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // Fallback to top
+        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -717,7 +730,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
             <h4 className="mb-4 text-[18px] font-semibold text-header">Basic Information</h4>
             <div className="space-y-4">
               {/* Product Name */}
-              <div className="space-y-1">
+              <div className="space-y-1" data-field="productName">
                 <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                   <span className="text-red-500">*</span> Product Name
                 </label>
@@ -746,7 +759,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
               </div>
 
               {/* Category 1 */}
-              <div className="space-y-1">
+              <div className="space-y-1" data-field="category1">
                 <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                   <span className="text-red-500">*</span> Category 1
                 </label>
@@ -784,7 +797,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
               {/* Category 2 - Only show if Category 1 has children */}
               {category1 && cat2Options.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="category2">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     Category 2
                   </label>
@@ -820,7 +833,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
               {/* Category 3 - Only show if Category 2 has children */}
               {category2 && cat3Options.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="category3">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     Category 3
                   </label>
@@ -855,7 +868,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
               {/* Category 4 - Only show if Category 3 has children */}
               {category3 && cat4Options.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="category4">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     Category 4
                   </label>
@@ -889,7 +902,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
               {/* Category 5 - Only show if Category 4 has children */}
               {category4 && cat5Options.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="category5">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     Category 5
                   </label>
@@ -922,7 +935,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
               {/* Category 6 - Only show if Category 5 has children */}
               {category5 && cat6Options.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="category6">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     Category 6
                   </label>
@@ -953,7 +966,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
               )}
 
               {/* Product Images */}
-              <div className="space-y-1">
+              <div className="space-y-1" data-field="productImages">
                 <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                   <span className="text-red-500">*</span> Product Images
                   <span className="relative inline-flex group">
@@ -1086,7 +1099,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
           <section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
             <h4 className="mb-4 text-[18px] font-semibold text-header">Product Specification</h4>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="space-y-1">
+              <div className="space-y-1" data-field="brand">
                 <label className="mb-1 block text-xs text-subheader"><span className="text-red-500">*</span> Brand</label>
                 <input
                   type="text"
@@ -1455,7 +1468,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
 
             <div className="space-y-4">
               {/* Package Weight */}
-              <div className="grid grid-cols-[1fr_auto] items-center gap-2 md:max-w-md space-y-1">
+                <div className="grid grid-cols-[1fr_auto] items-center gap-2 md:max-w-md space-y-1" data-field="packageWeight">
                 <label className="col-span-2 mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Weight</label>
                 <input
                   type="number"
@@ -1497,7 +1510,7 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
               </div>
 
               {/* Dimensions */}
-              <div className="md:max-w-3xl space-y-1">
+              <div className="md:max-w-3xl space-y-1" data-field="dimensions">
                 <label className="mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Length(cm) × Width(cm) × Height(cm)</label>
                 <div className="flex items-center gap-2">
                   <input
@@ -1698,26 +1711,36 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t border-gray-200 bg-white px-6 py-4 rounded-b-xl">
-          {submitError && (
-            <div className="flex-1 rounded-md bg-red-50 border border-red-200 p-3">
-              <p className="text-sm text-red-600">{submitError}</p>
-            </div>
-          )}
-          <button 
-            onClick={onClose} 
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-subheader hover:bg-gray-50"
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleSubmit}
-            className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading}
-          >
-            {loading ? 'Adding...' : 'Add Product'}
-          </button>
+        <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-6 py-4 rounded-b-xl">
+          {/* Global error summary (left) */}
+          <div className="min-h-[1.25rem]">
+            {Object.keys(validationErrors).length > 0 && (
+              <div className="text-sm text-red-600">
+                Please fix the highlighted fields before saving.
+              </div>
+            )}
+            {submitError && (
+              <div className="text-sm text-red-600">{submitError}</div>
+            )}
+          </div>
+
+          {/* Actions (right) */}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onClose} 
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-subheader hover:bg-gray-50"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleSubmit}
+              className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              {loading ? 'Adding...' : 'Add Product'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
