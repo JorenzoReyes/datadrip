@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
+import { testConnection } from '@/app/utils/database';
 
 export async function GET() {
   try {
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Database connection failed');
+    }
+
     return NextResponse.json(
       { 
         status: 'healthy', 
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        service: 'datadrip'
+        database: isConnected ? 'connected' : 'disconnected'
       },
       { status: 200 }
     );
@@ -17,7 +23,7 @@ export async function GET() {
         status: 'unhealthy', 
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        service: 'datadrip',
+        database: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
