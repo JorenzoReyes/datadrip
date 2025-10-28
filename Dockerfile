@@ -49,7 +49,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Create uploads directory and set permissions before switching to nextjs user
 RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
 
-USER nextjs
+# Run as root to allow access to filesystem entries created by the mounted volume (e.g., lost+found)
+USER root
 
 EXPOSE 3000
 
