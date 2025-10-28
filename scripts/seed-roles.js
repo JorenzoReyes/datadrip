@@ -1047,8 +1047,14 @@ async function seedDirect() {
     // Create product_listings linking products to their shop (idempotent)
     // Electronics on all platforms
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'shopee', p.sku, p.name, p.price * 0.97, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'shopee', p.sku, p.name,
+             p.price * 0.97,
+             CASE WHEN RANDOM() < 0.4 THEN (p.price * 0.90) ELSE NULL END,
+             FLOOR(RANDOM() * 150 + 20)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.3 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.3 THEN NOW() + INTERVAL '7 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1059,8 +1065,14 @@ async function seedDirect() {
         );
     `);
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'lazada', p.sku, p.name, p.price * 1.02, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'lazada', p.sku, p.name,
+             p.price * 1.02,
+             CASE WHEN RANDOM() < 0.35 THEN (p.price * 0.92) ELSE NULL END,
+             FLOOR(RANDOM() * 180 + 30)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.25 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.25 THEN NOW() + INTERVAL '10 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1071,8 +1083,14 @@ async function seedDirect() {
         );
     `);
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'tiktok', p.sku, p.name, p.price * 0.93, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'tiktok', p.sku, p.name,
+             p.price * 0.93,
+             CASE WHEN RANDOM() < 0.5 THEN (p.price * 0.88) ELSE NULL END,
+             FLOOR(RANDOM() * 120 + 10)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.4 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.4 THEN NOW() + INTERVAL '5 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1084,8 +1102,14 @@ async function seedDirect() {
     `);
     // Cosmetics on all platforms
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'lazada', p.sku, p.name, p.price * 1.02, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'lazada', p.sku, p.name,
+             p.price * 1.02,
+             CASE WHEN RANDOM() < 0.35 THEN (p.price * 0.92) ELSE NULL END,
+             FLOOR(RANDOM() * 180 + 30)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.25 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.25 THEN NOW() + INTERVAL '10 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1096,8 +1120,14 @@ async function seedDirect() {
         );
     `);
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'shopee', p.sku, p.name, p.price * 0.97, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'shopee', p.sku, p.name,
+             p.price * 0.97,
+             CASE WHEN RANDOM() < 0.4 THEN (p.price * 0.90) ELSE NULL END,
+             FLOOR(RANDOM() * 150 + 20)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.3 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.3 THEN NOW() + INTERVAL '7 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1108,8 +1138,14 @@ async function seedDirect() {
         );
     `);
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'tiktok', p.sku, p.name, p.price * 0.93, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'tiktok', p.sku, p.name,
+             p.price * 0.93,
+             CASE WHEN RANDOM() < 0.5 THEN (p.price * 0.88) ELSE NULL END,
+             FLOOR(RANDOM() * 120 + 10)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.4 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.4 THEN NOW() + INTERVAL '5 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1121,8 +1157,14 @@ async function seedDirect() {
     `);
     // Food on all platforms
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'tiktok', p.sku, p.name, p.price * 0.93, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'tiktok', p.sku, p.name,
+             p.price * 0.93,
+             CASE WHEN RANDOM() < 0.5 THEN (p.price * 0.88) ELSE NULL END,
+             FLOOR(RANDOM() * 120 + 10)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.4 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.4 THEN NOW() + INTERVAL '5 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1133,8 +1175,14 @@ async function seedDirect() {
         );
     `);
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'shopee', p.sku, p.name, p.price * 0.97, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'shopee', p.sku, p.name,
+             p.price * 0.97,
+             CASE WHEN RANDOM() < 0.4 THEN (p.price * 0.90) ELSE NULL END,
+             FLOOR(RANDOM() * 150 + 20)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.3 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.3 THEN NOW() + INTERVAL '7 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1145,8 +1193,14 @@ async function seedDirect() {
         );
     `);
     await pool.query(`
-      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, currency, listing_status)
-      SELECT p.product_id, a.account_id, s.shop_id, 'lazada', p.sku, p.name, p.price * 1.02, 'PHP', 'active'
+      INSERT INTO product_listings (product_id, account_id, shop_id, platform, platform_product_id, title, listing_price, listing_special_price, listing_stock, currency, listing_status, promo_start, promo_end)
+      SELECT p.product_id, a.account_id, s.shop_id, 'lazada', p.sku, p.name,
+             p.price * 1.02,
+             CASE WHEN RANDOM() < 0.35 THEN (p.price * 0.92) ELSE NULL END,
+             FLOOR(RANDOM() * 180 + 30)::int,
+             'PHP', 'active',
+             CASE WHEN RANDOM() < 0.25 THEN NOW() ELSE NULL END,
+             CASE WHEN RANDOM() < 0.25 THEN NOW() + INTERVAL '10 days' ELSE NULL END
       FROM products p
       JOIN users u ON p.owner_user_id=u.user_id
       JOIN accounts a ON a.owner_user_id=u.user_id
@@ -1552,10 +1606,10 @@ function seedDocker() {
     execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Gusto Main','shopee','SHP-GUSTO','https://shopee.ph/gustobites','active',7000,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='shopee');"`, { stdio: 'inherit' });
     execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO shops (account_id,name,platform,platform_shop_id,url,status,followers_count,metadata) SELECT a.account_id,'Gusto Main','lazada','LZD-GUSTO','https://www.lazada.com.ph/shop/gusto-bites','active',6200,'{}'::jsonb FROM accounts a JOIN users u ON a.owner_user_id=u.user_id WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM shops s WHERE s.account_id=a.account_id AND s.platform='lazada');"`, { stdio: 'inherit' });
 
-    // Product listings linking
-    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'shopee',p.sku,p.name,p.price*0.97,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='shopee' WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='shopee');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'lazada',p.sku,p.name,p.price*1.02,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='lazada' WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='lazada');"`, { stdio: 'inherit' });
-    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,currency,listing_status) SELECT p.product_id,a.account_id,s.shop_id,'tiktok',p.sku,p.name,p.price*0.93,'PHP','active' FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='tiktok' WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='tiktok');"`, { stdio: 'inherit' });
+    // Product listings linking (Docker path) with listing stock and promo fields
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,listing_special_price,listing_stock,currency,listing_status,promo_start,promo_end) SELECT p.product_id,a.account_id,s.shop_id,'shopee',p.sku,p.name, p.price*0.97, CASE WHEN RANDOM() < 0.4 THEN (p.price*0.90) ELSE NULL END, FLOOR(RANDOM()*150+20)::int, 'PHP','active', CASE WHEN RANDOM() < 0.3 THEN NOW() ELSE NULL END, CASE WHEN RANDOM() < 0.3 THEN NOW()+INTERVAL '7 days' ELSE NULL END FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='shopee' WHERE u.email='electronics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='shopee');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,listing_special_price,listing_stock,currency,listing_status,promo_start,promo_end) SELECT p.product_id,a.account_id,s.shop_id,'lazada',p.sku,p.name, p.price*1.02, CASE WHEN RANDOM() < 0.35 THEN (p.price*0.92) ELSE NULL END, FLOOR(RANDOM()*180+30)::int, 'PHP','active', CASE WHEN RANDOM() < 0.25 THEN NOW() ELSE NULL END, CASE WHEN RANDOM() < 0.25 THEN NOW()+INTERVAL '10 days' ELSE NULL END FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='lazada' WHERE u.email='cosmetics.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='lazada');"`, { stdio: 'inherit' });
+    execSync(`docker exec -i ${containerName} psql -U postgres -d datadrip -c "INSERT INTO product_listings (product_id,account_id,shop_id,platform,platform_product_id,title,listing_price,listing_special_price,listing_stock,currency,listing_status,promo_start,promo_end) SELECT p.product_id,a.account_id,s.shop_id,'tiktok',p.sku,p.name, p.price*0.93, CASE WHEN RANDOM() < 0.5 THEN (p.price*0.88) ELSE NULL END, FLOOR(RANDOM()*120+10)::int, 'PHP','active', CASE WHEN RANDOM() < 0.4 THEN NOW() ELSE NULL END, CASE WHEN RANDOM() < 0.4 THEN NOW()+INTERVAL '5 days' ELSE NULL END FROM products p JOIN users u ON p.owner_user_id=u.user_id JOIN accounts a ON a.owner_user_id=u.user_id JOIN shops s ON s.account_id=a.account_id AND s.platform='tiktok' WHERE u.email='food.owner@example.com' AND NOT EXISTS (SELECT 1 FROM product_listings pl WHERE pl.product_id=p.product_id AND pl.platform='tiktok');"`, { stdio: 'inherit' });
 
     // Generate sales data for Docker
     console.log('🔄 Generating sales data...');
@@ -1580,7 +1634,7 @@ function seedDocker() {
       const saleDate = d.toISOString().split('T')[0];
       
       // Generate 5-15 sales per day
-      const numSales = Math.floor(Math.random() * 11) + 5;
+      const numSales = Math.floor(Math.random() * 20) + 5;
       
       for (let i = 0; i < numSales; i++) {
         const randomProduct = products[Math.floor(Math.random() * products.length)];

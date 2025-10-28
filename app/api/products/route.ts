@@ -42,6 +42,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email');
+    const platform = searchParams.get('platform'); // optional: 'shopee' | 'lazada' | 'tiktok'
     
     if (!email) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
@@ -54,48 +55,111 @@ export async function GET(req: Request) {
       return NextResponse.json({ products: [] });
     }
 
-    // Get all products owned by this user
-    const products = await query<Product>(
-      `SELECT 
-        product_id,
-        sku,
-        name,
-        description,
-        highlights,
-        in_box,
-        brand,
-        category,
-        subcategory,
-        product_type,
-        price,
-        special_price,
-        cost,
-        currency,
-        stock,
-        reorder_level,
-        sales_count,
-        sales_revenue,
-        weight_value,
-        weight_unit,
-        length_cm,
-        width_cm,
-        height_cm,
-        has_dangerous,
-        warranty_type,
-        warranty_period,
-        warranty_policy,
-        status,
-        images,
-        videos,
-        promotion_image,
-        attributes,
-        created_at,
-        updated_at
-       FROM products
-       WHERE owner_user_id = $1
-       ORDER BY created_at DESC`,
-      [owner.user_id]
-    );
+    // Get products owned by this user; when platform provided, prefer per-listing price/stock
+    let products: Product[] = [];
+    try {
+      const selectPrice = platform ? 'COALESCE(pl.listing_special_price, pl.listing_price, p.price)' : 'p.price';
+      const selectStock = platform
+        ? 'COALESCE(pl.listing_stock, 0)'
+        : '(SELECT COALESCE(SUM(pl2.listing_stock), 0) FROM product_listings pl2 WHERE pl2.product_id = p.product_id)';
+      // Attempt query with new columns (listing_special_price, listing_stock)
+      products = await query<Product>(
+        `SELECT DISTINCT ON (p.product_id)
+          p.product_id,
+          p.sku,
+          p.name,
+          p.description,
+          p.highlights,
+          p.in_box,
+          p.brand,
+          p.category,
+          p.subcategory,
+          p.product_type,
+          ${selectPrice} AS price,
+          p.special_price,
+          p.cost,
+          COALESCE(pl.currency, p.currency) AS currency,
+          ${selectStock} AS stock,
+          p.reorder_level,
+          p.sales_count,
+          p.sales_revenue,
+          p.weight_value,
+          p.weight_unit,
+          p.length_cm,
+          p.width_cm,
+          p.height_cm,
+          p.has_dangerous,
+          p.warranty_type,
+          p.warranty_period,
+          p.warranty_policy,
+          p.status,
+          p.images,
+          p.videos,
+          p.promotion_image,
+          p.attributes,
+          p.created_at,
+          p.updated_at
+         FROM products p
+         LEFT JOIN product_listings pl
+           ON pl.product_id = p.product_id
+           ${' AND '}
+           ${platform ? `pl.platform = $2` : '1=1'}
+         WHERE p.owner_user_id = $1
+          ORDER BY p.product_id, (pl.listing_special_price IS NULL) ASC, COALESCE(pl.updated_at, p.updated_at) DESC`,
+        platform ? [owner.user_id, platform] : [owner.user_id]
+      );
+    } catch (err) {
+      // Fallback for databases without the new columns yet
+      const selectPriceFallback = platform ? 'COALESCE(pl.listing_price, p.price)' : 'p.price';
+      const selectStockFallback = platform
+        ? '0' /* listing_stock not available in this schema */
+        : '(SELECT 0)';
+      products = await query<Product>(
+        `SELECT DISTINCT ON (p.product_id)
+          p.product_id,
+          p.sku,
+          p.name,
+          p.description,
+          p.highlights,
+          p.in_box,
+          p.brand,
+          p.category,
+          p.subcategory,
+          p.product_type,
+          ${selectPriceFallback} AS price,
+          p.special_price,
+          p.cost,
+          COALESCE(pl.currency, p.currency) AS currency,
+          ${platform ? 'p.stock' : '(SELECT COALESCE(SUM(pl2.listing_stock), 0) FROM product_listings pl2 WHERE pl2.product_id = p.product_id)'} AS stock,
+          p.reorder_level,
+          p.sales_count,
+          p.sales_revenue,
+          p.weight_value,
+          p.weight_unit,
+          p.length_cm,
+          p.width_cm,
+          p.height_cm,
+          p.has_dangerous,
+          p.warranty_type,
+          p.warranty_period,
+          p.warranty_policy,
+          p.status,
+          p.images,
+          p.videos,
+          p.promotion_image,
+          p.attributes,
+          p.created_at,
+          p.updated_at
+         FROM products p
+         LEFT JOIN product_listings pl
+           ON pl.product_id = p.product_id
+           ${' AND '}
+           ${platform ? `pl.platform = $2` : '1=1'}
+         WHERE p.owner_user_id = $1
+         ORDER BY p.product_id, COALESCE(pl.updated_at, p.updated_at) DESC`,
+        platform ? [owner.user_id, platform] : [owner.user_id]
+      );
+    }
 
     return NextResponse.json({ products });
   } catch (e) {

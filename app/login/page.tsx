@@ -1,11 +1,16 @@
 export default function LoginPage() {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    form.requestSubmit();
+  };
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-purple-900 via-black to-purple-900">
       <div className="w-full max-w-md rounded-2xl bg-black/40 p-8 shadow-xl backdrop-blur-md">
         <h1 className="text-center text-4xl font-extrabold text-white">DataDrip</h1>
         <p className="mt-2 text-center text-gray-400">Log in to your account</p>
 
-        <form className="mt-8 space-y-5">
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-200">
@@ -16,6 +21,7 @@ export default function LoginPage() {
               id="email"
               placeholder="Enter your email"
               className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget.form as HTMLFormElement)?.requestSubmit(); }}
             />
           </div>
 
@@ -29,6 +35,7 @@ export default function LoginPage() {
               id="password"
               placeholder="Enter your password"
               className="mt-2 w-full rounded-lg border border-gray-700 bg-black/40 px-4 py-2 text-gray-200 placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget.form as HTMLFormElement)?.requestSubmit(); }}
             />
             <a
               href="#"
