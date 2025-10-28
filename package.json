@@ -26,7 +26,9 @@
     "jenkins:logs": "docker logs datadrip-jenkins -f",
     "db:seed:roles": "node scripts/seed-roles.js",
     "db:seed:categories": "node scripts/seed-categories.js",
-    "db:seed:lazada:categories": "node scripts/seed-lazada-categories.js"
+    "db:seed:lazada:categories": "node scripts/seed-lazada-categories.js",
+    "db:migrate:video-urls": "node scripts/migrate-video-urls.js",
+    "db:migrate:image-urls": "node scripts/migrate-image-urls.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
