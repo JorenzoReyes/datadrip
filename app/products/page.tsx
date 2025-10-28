@@ -84,40 +84,40 @@ export default function ProductsPage() {
   }, [user, isLoading, router]);
 
   // Fetch products from the database
-  useEffect(() => {
-    async function loadProducts() {
-      if (!user?.email) return;
-      
-      try {
-        setLoadingProducts(true);
-        const email = encodeURIComponent(user.email);
-        
-        // Build date range parameters
-        let dateParams = '';
-        if (dateRange === 'custom') {
-          dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
-        } else {
-          dateParams = `&days=${dateRange}`;
-        }
-        
-        const platformParam = platform !== 'All Platforms' ? `&platform=${platform}` : '';
-        const res = await fetch(`/api/products?email=${email}${dateParams}${platformParam}`, { cache: 'no-store' });
-        const json = await res.json();
-        
-        if (json.error) {
-          console.error('Error loading products:', json.error);
-          setProducts([]);
-        } else {
-          setProducts(json.products || []);
-        }
-      } catch (e) {
-        console.error('Failed to fetch products:', e);
-        setProducts([]);
-      } finally {
-        setLoadingProducts(false);
-      }
-    }
+  const loadProducts = async () => {
+    if (!user?.email) return;
     
+    try {
+      setLoadingProducts(true);
+      const email = encodeURIComponent(user.email);
+      
+      // Build date range parameters
+      let dateParams = '';
+      if (dateRange === 'custom') {
+        dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
+      } else {
+        dateParams = `&days=${dateRange}`;
+      }
+      
+      const platformParam = platform !== 'All Platforms' ? `&platform=${platform}` : '';
+      const res = await fetch(`/api/products?email=${email}${dateParams}${platformParam}`, { cache: 'no-store' });
+      const json = await res.json();
+      
+      if (json.error) {
+        console.error('Error loading products:', json.error);
+        setProducts([]);
+      } else {
+        setProducts(json.products || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch products:', e);
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
     if (user) {
       loadProducts();
     }
@@ -417,6 +417,9 @@ export default function ProductsPage() {
         p.product_id === editingProduct.product_id ? { ...p, ...json.product } : p
       ));
       setEditingProduct(null);
+      
+      // Refresh the product list to ensure all data is up to date
+      await loadProducts();
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
