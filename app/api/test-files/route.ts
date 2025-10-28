@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { readdir, stat } from 'fs/promises';
 import { join } from 'path';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const uploadsDir = join(process.cwd(), 'public', 'uploads');
     
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // List all files in uploads directory
-    const files: any[] = [];
+    const files: Array<{ type: string; name: string; path: string }> = [];
     
     try {
       const productsDir = join(uploadsDir, 'products');
