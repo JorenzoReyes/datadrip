@@ -2,31 +2,26 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import AutocompleteSelect from './AutocompleteSelect';
+import { getCategoryOptions, hasMoreChildren } from './data/categories';
 
 interface EditProductModalProps {
   product: {
-  product_id: number;
+    product_id: number;
     sku: string | null;
-  name: string;
+    name: string;
     description: string | null;
     highlights: string | null;
     in_box: string | null;
-  brand: string | null;
-<<<<<<< HEAD
-  category1: string | null;
-  category2: string | null;
-  category3: string | null;
-  category4: string | null;
-  category5: string | null;
-=======
-  category: string | null;
-    subcategory: string | null;
-    product_type: string | null;
->>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
-  price: number;
+    brand: string | null;
+    category1: string | null;
+    category2: string | null;
+    category3: string | null;
+    category4: string | null;
+    category5: string | null;
+    category6: string | null;
+    price: number;
     special_price: number | null;
-  stock: number;
+    stock: number;
     weight_value: number | null;
     weight_unit: string | null;
     length_cm: number | null;
@@ -74,22 +69,6 @@ interface EditProductModalProps {
   userEmail?: string;
 }
 
-<<<<<<< HEAD
-export default function EditProductModal({ product, onClose, onSave }: EditProductModalProps) {
-  const [formData, setFormData] = useState({
-    name: product.name,
-    brand: product.brand || '',
-    category1: product.category1 || '',
-    category2: product.category2 || '',
-    category3: product.category3 || '',
-    category4: product.category4 || '',
-    category5: product.category5 || '',
-    price: product.price.toString(),
-    stock: product.stock.toString(),
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
-=======
 export default function EditProductModal({ product, onClose, onSave, userEmail }: EditProductModalProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [showExample, setShowExample] = useState(false);
@@ -98,9 +77,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
   const [productImages, setProductImages] = useState<string[]>(product.images || []);
   const [productVideos, setProductVideos] = useState<string[]>(product.videos || []);
   const [promoImage, setPromoImage] = useState<string | null>(product.promotion_image);
-  const [videoFileName, setVideoFileName] = useState<string | null>(null);
-  const [hasHadImages, setHasHadImages] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [_videoFileName, setVideoFileName] = useState<string | null>(null);
+  const [_hasHadImages, setHasHadImages] = useState(false);
+  const [_errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showSpecialPrice, setShowSpecialPrice] = useState(!!product.special_price);
   const [specialPrice, setSpecialPrice] = useState(product.special_price?.toString() || '');
   const [price, setPrice] = useState(product.price.toString());
@@ -114,9 +93,21 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
   const [highlights, setHighlights] = useState(product.highlights || '');
   const [in_box, setIn_box] = useState(product.in_box || '');
   const [brand, setBrand] = useState(product.brand || '');
-  const [category, setCategory] = useState(product.category || '');
-  const [subcategory, setSubcategory] = useState(product.subcategory || '');
-  const [product_type, setProduct_type] = useState(product.product_type || '');
+  
+  // Initialize 5-level UI fields from existing product data
+  const [category1, setCategory1] = useState(product.category1 || '');
+  const [category2, setCategory2] = useState(product.category2 || '');
+  const [category3, setCategory3] = useState(product.category3 || '');
+  const [category4, setCategory4] = useState(product.category4 || '');
+  const [category5, setCategory5] = useState(product.category5 || '');
+  const [category6, setCategory6] = useState(product.category6 || '');
+  const [cat1Options, setCat1Options] = useState<string[]>([]);
+  const [cat2Options, setCat2Options] = useState<string[]>([]);
+  const [cat3Options, setCat3Options] = useState<string[]>([]);
+  const [cat4Options, setCat4Options] = useState<string[]>([]);
+  const [cat5Options, setCat5Options] = useState<string[]>([]);
+  const [cat6Options, setCat6Options] = useState<string[]>([]);
+  
   const [packageWeight, setPackageWeight] = useState(product.weight_value?.toString() || '');
   const [packageWeightUnit, setPackageWeightUnit] = useState(product.weight_unit || 'kg');
   const [packageLength, setPackageLength] = useState(product.length_cm?.toString() || '');
@@ -128,68 +119,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
   const [warrantyPolicy, setWarrantyPolicy] = useState(product.warranty_policy || '');
   const [attributes, setAttributes] = useState<{[key: string]: unknown}>(product.attributes || {});
   
-  // API data states
-  const [categories, setCategories] = useState<Array<{id: number, name: string, icon: string | null}>>([]);
-  const [subcategories, setSubcategories] = useState<Array<{id: number, name: string}>>([]);
-  const [productTypes, setProductTypes] = useState<Array<{id: number, name: string}>>([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
-
-  // Fetch categories on mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setLoadingCategories(true);
-      try {
-        const response = await fetch('/api/categories');
-        const data = await response.json();
-        setCategories(data.categories || []);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  // Fetch subcategories when category changes
-  useEffect(() => {
-    if (category) {
-      const fetchSubcategories = async () => {
-        try {
-          const response = await fetch(`/api/subcategories?categoryName=${encodeURIComponent(category)}`);
-          const data = await response.json();
-          setSubcategories(data.subcategories || []);
-        } catch (error) {
-          console.error('Error fetching subcategories:', error);
-        }
-      };
-      fetchSubcategories();
-    } else {
-      setSubcategories([]);
-    }
-  }, [category]);
-
-  // Fetch product types when subcategory changes
-  useEffect(() => {
-    if (category && subcategory) {
-      const fetchProductTypes = async () => {
-        try {
-          const response = await fetch(`/api/product-types?subcategoryName=${encodeURIComponent(subcategory)}&categoryName=${encodeURIComponent(category)}`);
-          const data = await response.json();
-          setProductTypes(data.productTypes || []);
-        } catch (error) {
-          console.error('Error fetching product types:', error);
-        }
-      };
-      fetchProductTypes();
-    } else {
-      setProductTypes([]);
-    }
-  }, [category, subcategory]);
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-
 
   const setErrorWithTimeout = (key: string, message: string) => {
     // Clear existing timeout for this key
@@ -214,7 +146,6 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
   const updateAttribute = (key: string, value: unknown) => {
     setAttributes(prev => ({ ...prev, [key]: value }));
   };
->>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -223,6 +154,95 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // Load Category 1 options
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const opts = await getCategoryOptions(1);
+        if (alive) setCat1Options(opts);
+  } catch {
+        if (alive) setCat1Options([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  // Load Category 2 when category1 changes
+  useEffect(() => {
+    if (!category1) { setCat2Options([]); setCat3Options([]); setCat4Options([]); setCat5Options([]); return; }
+    let alive = true;
+    (async () => {
+      try {
+        const opts = await getCategoryOptions(2, [category1]);
+        if (alive) setCat2Options(opts);
+  } catch {
+        if (alive) setCat2Options([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [category1]);
+
+  // Load Category 3 when category2 changes
+  useEffect(() => {
+    if (!category1 || !category2) { setCat3Options([]); setCat4Options([]); setCat5Options([]); return; }
+    let alive = true;
+    (async () => {
+      try {
+        const opts = await getCategoryOptions(3, [category1, category2]);
+        if (alive) setCat3Options(opts);
+  } catch {
+        if (alive) setCat3Options([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [category1, category2]);
+
+  // Load Category 4 when category3 changes
+  useEffect(() => {
+    if (!category1 || !category2 || !category3) { setCat4Options([]); setCat5Options([]); return; }
+    let alive = true;
+    (async () => {
+      try {
+        const opts = await getCategoryOptions(4, [category1, category2, category3]);
+        if (alive) setCat4Options(opts);
+  } catch {
+        if (alive) setCat4Options([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [category1, category2, category3]);
+
+  // Load Category 5 when category4 changes
+  useEffect(() => {
+    if (!category1 || !category2 || !category3 || !category4) { setCat5Options([]); setCat6Options([]); return; }
+    let alive = true;
+    (async () => {
+      try {
+        const opts = await getCategoryOptions(5, [category1, category2, category3, category4]);
+        if (alive) setCat5Options(opts);
+      } catch (_) {
+        if (alive) setCat5Options([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [category1, category2, category3, category4]);
+
+  // Load Category 6 when category5 changes
+  useEffect(() => {
+    if (!category1 || !category2 || !category3 || !category4 || !category5) { setCat6Options([]); return; }
+    let alive = true;
+    (async () => {
+      try {
+        const opts = await getCategoryOptions(6, [category1, category2, category3, category4, category5]);
+        if (alive) setCat6Options(opts);
+      } catch (_) {
+        if (alive) setCat6Options([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [category1, category2, category3, category4, category5]);
 
   // Initialize hasHadImages based on existing images
   useEffect(() => {
@@ -266,16 +286,21 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
       errors.packageHeight = 'Package height is required and must be greater than 0';
     }
     
-    if (!category) {
-      errors.category = 'Category is required';
-    }
-    
-    if (!subcategory) {
-      errors.subcategory = 'Subcategory is required';
-    }
-    
-    if (!product_type) {
-      errors.product_type = 'Product type is required';
+    if (!category1) {
+      errors.category1 = 'Category is required';
+    } else {
+      // Require the next level if its options exist but no selection was made
+      if (cat2Options.length > 0 && !category2) {
+        errors.category2 = 'Please select a subcategory';
+      } else if (cat3Options.length > 0 && !category3) {
+        errors.category3 = 'Please select a subcategory';
+      } else if (cat4Options.length > 0 && !category4) {
+        errors.category4 = 'Please select a subcategory';
+      } else if (cat5Options.length > 0 && !category5) {
+        errors.category5 = 'Please select a subcategory';
+      } else if (cat6Options.length > 0 && !category6) {
+        errors.category6 = 'Please select a subcategory';
+      }
     }
     
     setValidationErrors(errors);
@@ -292,42 +317,49 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
     setLoading(true);
     
+    // Build 3-level fields from up to 5 UI levels
+    const builtCategory = category1.trim() || undefined;
+    const builtSubcategory = category2.trim() || undefined;
+    const deeper = [category3, category4, category5, category6]
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const builtProductType = deeper.length > 0 ? deeper.join(' > ') : undefined;
+    
     const productData = {
-        name: productName.trim(),
-        sku: sellerSKU.trim() || undefined,
-        description: description.trim() || undefined,
-        highlights: highlights.trim() || undefined,
-        in_box: in_box.trim() || undefined,
-        brand: brand.trim() || undefined,
-        category: category || undefined,
-        subcategory: subcategory || undefined,
-        product_type: product_type || undefined,
-        price: parseFloat(price),
-        special_price: showSpecialPrice && specialPrice ? parseFloat(specialPrice) : undefined,
-        stock: parseInt(stock) || 0,
-        images: productImages,
-        videos: productVideos,
-        promotion_image: promoImage,
-        status: isAvailable ? 'active' : 'inactive',
-        weight_value: packageWeight ? parseFloat(packageWeight) : undefined,
-        weight_unit: packageWeightUnit,
-        length_cm: packageLength ? parseFloat(packageLength) : undefined,
-        width_cm: packageWidth ? parseFloat(packageWidth) : undefined,
-        height_cm: packageHeight ? parseFloat(packageHeight) : undefined,
-        has_dangerous: hasDangerous,
-        warranty_type: warrantyType || undefined,
-        warranty_period: warrantyPeriod || undefined,
-        warranty_policy: warrantyPolicy.trim() || undefined,
-        attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
-      };
+      name: productName.trim(),
+      sku: sellerSKU.trim() || undefined,
+      description: description.trim() || undefined,
+      highlights: highlights.trim() || undefined,
+      in_box: in_box.trim() || undefined,
+      brand: brand.trim() || undefined,
+      category: builtCategory,
+      subcategory: builtSubcategory,
+      product_type: builtProductType,
+      price: parseFloat(price),
+      special_price: showSpecialPrice && specialPrice ? parseFloat(specialPrice) : undefined,
+      stock: parseInt(stock) || 0,
+      images: productImages,
+      videos: productVideos,
+      promotion_image: promoImage,
+      status: isAvailable ? 'active' : 'inactive',
+      weight_value: packageWeight ? parseFloat(packageWeight) : undefined,
+      weight_unit: packageWeightUnit,
+      length_cm: packageLength ? parseFloat(packageLength) : undefined,
+      width_cm: packageWidth ? parseFloat(packageWidth) : undefined,
+      height_cm: packageHeight ? parseFloat(packageHeight) : undefined,
+      has_dangerous: hasDangerous,
+      warranty_type: warrantyType || undefined,
+      warranty_period: warrantyPeriod || undefined,
+      warranty_policy: warrantyPolicy.trim() || undefined,
+      attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+    };
       
-      console.log('Saving product data:', productData);
+    console.log('Saving product data:', productData);
       
-      try {
-        await onSave(productData);
-        
-        onClose();
-      } catch (error) {
+    try {
+      await onSave(productData);
+      onClose();
+    } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to update product');
     } finally {
       setLoading(false);
@@ -414,14 +446,14 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
     // Validate file type
     if (file.type !== 'video/mp4') {
       setErrorWithTimeout('videoType', 'Only MP4 files are allowed');
-        return;
-      }
+      return;
+    }
 
     // Validate file size (100MB max)
     if (file.size > 100 * 1024 * 1024) {
       setErrorWithTimeout('videoSize', 'Video size must be less than 100MB');
-        return;
-      }
+      return;
+    }
 
     // Validate video dimensions and duration
     const video = document.createElement('video');
@@ -493,44 +525,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
     formData.append('image', file);
 
     try {
-<<<<<<< HEAD
-      // Validate inputs
-      const price = parseFloat(formData.price);
-      const stock = parseInt(formData.stock);
-
-      if (isNaN(price) || price < 0) {
-        setError('Please enter a valid price');
-        setIsSaving(false);
-        return;
-      }
-
-      if (isNaN(stock) || stock < 0) {
-        setError('Please enter a valid stock quantity');
-        setIsSaving(false);
-        return;
-      }
-
-      if (!formData.name.trim()) {
-        setError('Product name is required');
-        setIsSaving(false);
-        return;
-      }
-
-      await onSave({
-        name: formData.name.trim(),
-        brand: formData.brand.trim() || null,
-        category1: formData.category1.trim() || null,
-        category2: formData.category2.trim() || null,
-        category3: formData.category3.trim() || null,
-        category4: formData.category4.trim() || null,
-        category5: formData.category5.trim() || null,
-        price,
-        stock,
-=======
       const response = await fetch(`/api/upload-image?email=${encodeURIComponent(userEmail || '')}`, {
         method: 'POST',
         body: formData,
->>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
       });
 
       if (response.ok) {
@@ -588,25 +585,25 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
         {/* Scrollable Content */}
         <div ref={scrollRef} className="overflow-y-auto max-h-[calc(90vh-140px)]">
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-6">
+          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-6">
             {submitError && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
                 {submitError}
-            </div>
-          )}
+              </div>
+            )}
 
             {/* Basic Information */}
             <section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
               <h4 className="mb-4 text-[18px] font-semibold text-header">Basic Information</h4>
-          <div className="space-y-4">
-            {/* Product Name */}
+              <div className="space-y-4">
+                {/* Product Name */}
                 <div className="space-y-1">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     <span className="text-red-500">*</span> Product Name
-              </label>
+                  </label>
                   <div className="relative">
-              <input
-                type="text"
+                    <input
+                      type="text"
                       value={productName}
                       onChange={(e) => {
                         setProductName(e.target.value.slice(0, 255));
@@ -629,129 +626,214 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                   {validationErrors.productName && (
                     <p className="text-xs text-red-500">{validationErrors.productName}</p>
                   )}
-            </div>
+                </div>
 
-<<<<<<< HEAD
-            {/* Brand */}
-            <div>
-              <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
-                Brand
-              </label>
-              <input
-                type="text"
-                id="brand"
-                value={formData.brand}
-                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                placeholder="Enter brand name"
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label htmlFor="category1" className="block text-sm font-medium text-gray-700 mb-1">
-                Category 1
-              </label>
-              <input
-                type="text"
-                id="category1"
-                value={formData.category1}
-                onChange={(e) => setFormData({ ...formData, category1: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                placeholder="Enter category 1"
-              />
-            </div>
-
-            {/* Price and Stock - Side by side */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Price */}
-              <div>
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                  Price (₱) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  placeholder="0.00"
-                  required
-=======
-                {/* Category */}
-                <AutocompleteSelect
-                  options={loadingCategories ? [] : categories.map(c => `${c.icon ? c.icon + ' ' : ''}${c.name}`)}
-                  value={category}
-                  onChange={(value) => {
-                    // Extract category name (remove emoji prefix if present)
-                    const categoryName = value.replace(/^[^\s]*\s/, '');
-                    setCategory(categoryName);
-                    setSubcategory(''); // Reset subcategory when category changes
-                    setProduct_type(''); // Reset product type when category changes
-                    setAttributes({}); // Reset attributes when category changes
-                    if (validationErrors.category) {
-                      setValidationErrors(prev => ({ ...prev, category: '' }));
-                    }
-                  }}
-                  placeholder="Select category"
-                  label="Category"
-                  required={true}
-                  error={validationErrors.category}
->>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
-                />
-
-                {/* Subcategory */}
-                <AutocompleteSelect
-                  options={subcategories.map(s => s.name)}
-                  value={subcategory}
-                  onChange={(value) => {
-                    setSubcategory(value);
-                    setProduct_type(''); // Reset product type when subcategory changes
-                    if (validationErrors.subcategory) {
-                      setValidationErrors(prev => ({ ...prev, subcategory: '' }));
-                    }
-                  }}
-                  placeholder="Select subcategory"
-                  label="Subcategory"
-                  required={true}
-                  disabled={!category}
-                  error={validationErrors.subcategory}
-                />
-
-                {/* Product Type */}
-                <div>
+                {/* Category 1 */}
+                <div className="space-y-1">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-                    <span className="text-red-500">*</span> Product Type
+                    <span className="text-red-500">*</span> Category 1
                   </label>
                   <div className="relative">
                     <select
-                      value={product_type}
+                      value={category1}
                       onChange={(e) => {
-                        setProduct_type(e.target.value);
-                        if (validationErrors.product_type) {
-                          setValidationErrors(prev => ({ ...prev, product_type: '' }));
+                        setCategory1(e.target.value);
+                        setCategory2(''); // Reset dependent categories
+                        setCategory3('');
+                        setCategory4('');
+                        setCategory5('');
+                        // Clear error when user starts typing
+                        if (validationErrors.category1 && e.target.value.trim()) {
+                          setValidationErrors(prev => ({ ...prev, category1: '' }));
                         }
                       }}
-                      disabled={!subcategory}
-                      className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none cursor-pointer ${
-                        validationErrors.product_type ? 'border-red-500' : 'border-gray-300'
-                      } bg-white`}
+                      className={`w-full rounded-md border px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer ${
+                        validationErrors.category1 ? 'border-red-500' : 'border-gray-300 bg-white'
+                      }`}
                     >
-                      <option value="">Select option</option>
-                      {productTypes.map((pt) => (
-                        <option key={pt.id} value={pt.name}>{pt.name}</option>
+                      <option value="">Select main category</option>
+                      {cat1Options.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
                     <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
                     </svg>
                   </div>
-                  {validationErrors.product_type && (
-                    <p className="text-xs text-red-500 mt-1">{validationErrors.product_type}</p>
+                  {validationErrors.category1 && (
+                    <p className="text-xs text-red-500">{validationErrors.category1}</p>
                   )}
                 </div>
+
+                {/* Category 2 - Only show if Category 1 has children */}
+                {category1 && cat2Options.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+                      Category 2
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={category2}
+                        onChange={(e) => {
+                          setCategory2(e.target.value);
+                          setCategory3(''); // Reset dependent categories
+                          setCategory4('');
+                          setCategory5('');
+                          // Clear validation errors
+                          if (validationErrors.category2) {
+                            setValidationErrors(prev => ({ ...prev, category2: '' }));
+                          }
+                        }}
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+                      >
+                        <option value="">Select subcategory</option>
+                        {cat2Options.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+                      </svg>
+                    </div>
+                    {validationErrors.category2 && (
+                      <p className="text-xs text-red-500">{validationErrors.category2}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Category 3 - Only show if Category 2 has children */}
+                {category2 && cat3Options.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+                      Category 3
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={category3}
+                        onChange={(e) => {
+                          setCategory3(e.target.value);
+                          setCategory4(''); // Reset dependent categories
+                          setCategory5('');
+                          // Clear validation errors
+                          if (validationErrors.category3) {
+                            setValidationErrors(prev => ({ ...prev, category3: '' }));
+                          }
+                        }}
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+                      >
+                        <option value="">Select subcategory</option>
+                        {cat3Options.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+                      </svg>
+                    </div>
+                    {validationErrors.category3 && (
+                      <p className="text-xs text-red-500">{validationErrors.category3}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Category 4 - Only show if Category 3 has children */}
+                {category3 && cat4Options.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+                      Category 4
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={category4}
+                        onChange={(e) => {
+                          setCategory4(e.target.value);
+                          setCategory5(''); // Reset dependent categories
+                          // Clear validation errors
+                          if (validationErrors.category4) {
+                            setValidationErrors(prev => ({ ...prev, category4: '' }));
+                          }
+                        }}
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+                      >
+                        <option value="">Select subcategory</option>
+                        {cat4Options.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+                      </svg>
+                    </div>
+                    {validationErrors.category4 && (
+                      <p className="text-xs text-red-500">{validationErrors.category4}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Category 5 - Only show if Category 4 has children */}
+                {category4 && cat5Options.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+                      Category 5
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={category5}
+                        onChange={(e) => {
+                          setCategory5(e.target.value);
+                          // Clear validation errors
+                          if (validationErrors.category5) {
+                            setValidationErrors(prev => ({ ...prev, category5: '' }));
+                          }
+                        }}
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+                      >
+                        <option value="">Select subcategory</option>
+                        {cat5Options.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+                      </svg>
+                    </div>
+                    {validationErrors.category5 && (
+                      <p className="text-xs text-red-500">{validationErrors.category5}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Category 6 - Only show if Category 5 has children */}
+                {category5 && cat6Options.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
+                      Category 6
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={category6}
+                        onChange={(e) => {
+                          setCategory6(e.target.value);
+                          if (validationErrors.category6) {
+                            setValidationErrors(prev => ({ ...prev, category6: '' }));
+                          }
+                        }}
+                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-[12px] text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none cursor-pointer"
+                      >
+                        <option value="">Select subcategory</option>
+                        {cat6Options.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/>
+                      </svg>
+                    </div>
+                    {validationErrors.category6 && (
+                      <p className="text-xs text-red-500">{validationErrors.category6}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Product Images */}
                 <div className="space-y-1">
@@ -1008,8 +1090,8 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="space-y-1">
                   <label className="mb-1 block text-xs text-subheader"><span className="text-red-500">*</span> Brand</label>
-              <input
-                type="text"
+                  <input
+                    type="text"
                     value={brand}
                     onChange={(e) => {
                       setBrand(e.target.value);
@@ -1021,18 +1103,18 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                         });
                       }
                     }}
-                placeholder="Enter brand name"
+                    placeholder="Enter brand name"
                     className={`w-full rounded-lg border px-3 py-2 text-sm text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                       validationErrors.brand ? 'border-red-500' : 'border-gray-300'
                     }`}
-              />
+                  />
                   {validationErrors.brand && (
                     <p className="text-xs text-red-500">{validationErrors.brand}</p>
                   )}
-            </div>
+                </div>
 
                 {/* Dynamic Attributes based on Category */}
-                {category === 'Cosmetics' && (
+                {category1 === 'Cosmetics' && (
                   <>
                     <div className="space-y-1">
                       <label className="mb-1 block text-xs text-subheader">Skin Type</label>
@@ -1063,7 +1145,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                   </>
                 )}
 
-                {category === 'Food' && (
+                {category1 === 'Food' && (
                   <>
                     <div className="space-y-1">
                       <label className="mb-1 block text-xs text-subheader">Organic</label>
@@ -1092,11 +1174,11 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                   </>
                 )}
 
-                {category === 'Electronics' && (
+                {category1 === 'Electronics' && (
                   <div className="space-y-1">
                     <label className="mb-1 block text-xs text-subheader">Color</label>
-              <input
-                type="text"
+                    <input
+                      type="text"
                       value={String(attributes.color || '')}
                       onChange={(e) => {
                         const value = e.target.value;
@@ -1105,13 +1187,11 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                       }}
                       placeholder="Enter color"
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-header placeholder-subheader focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
+                    />
+                  </div>
                 )}
               </div>
             </section>
-
-            
 
             {/* Price & Stock */}
             <section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
@@ -1145,8 +1225,8 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                             validationErrors.price ? 'border-red-500' : 'border-gray-300 bg-white'
                           }`}>
                             <span className="text-sm text-subheader">₱</span>
-              <input
-                type="text"
+                            <input
+                              type="text"
                               value={price}
                               onChange={(e) => {
                                 setPrice(e.target.value);
@@ -1190,20 +1270,20 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                               {validationErrors.price}
                             </div>
                           )}
-            </div>
+                        </div>
 
                         {/* Special Price */}
                         <div className="border-r border-gray-200 p-3 flex justify-center items-center">
                           {showSpecialPrice ? (
                             <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
                               <span className="text-sm text-subheader">₱</span>
-                <input
+                              <input
                                 type="text"
                                 value={specialPrice}
                                 onChange={(e) => setSpecialPrice(e.target.value)}
                                 className="flex-1 border-none bg-transparent text-center text-sm text-header focus:outline-none min-w-0"
                                 style={{ width: 'calc(100% - 20px)' }}
-                  placeholder="0.00"
+                                placeholder="0.00"
                               />
                               <div className="flex flex-col">
                                 <button
@@ -1240,9 +1320,9 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                               Add
                             </button>
                           )}
-              </div>
+                        </div>
 
-              {/* Stock */}
+                        {/* Stock */}
                         <div className="border-r border-gray-200 p-3 flex justify-center">
                           <div className="flex items-center rounded-md border border-gray-300 bg-white px-2 py-1 w-full max-w-[120px]">
                             <input
@@ -1569,28 +1649,25 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
               </div>
             </section>
 
-
-           
-
-          {/* Footer */}
-          <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
+            {/* Footer */}
+            <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
                 disabled={loading}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
                 disabled={loading}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-            >
+                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+              >
                 {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

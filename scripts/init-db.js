@@ -173,7 +173,7 @@ async function createTables(pool) {
     );
   `;
 
-  // Products table
+  // Products table (host mode)
   const createProductsTable = `
     CREATE TABLE IF NOT EXISTS products (
       product_id SERIAL PRIMARY KEY,
@@ -185,11 +185,9 @@ async function createTables(pool) {
       highlights TEXT,
       in_box TEXT,
       brand VARCHAR(100),
-      category1 VARCHAR(100),
-      category2 VARCHAR(100),
-      category3 VARCHAR(100),
-      category4 VARCHAR(100),
-      category5 VARCHAR(100),
+      category VARCHAR(100),
+      subcategory VARCHAR(100),
+      product_type VARCHAR(200),
       price DECIMAL(12,2) NOT NULL DEFAULT 0,
       special_price DECIMAL(12,2),
       cost DECIMAL(12,2),
@@ -405,7 +403,7 @@ async function createTables(pool) {
     'CREATE INDEX IF NOT EXISTS idx_shops_name ON shops(name);',
     // products
     'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);',
-    'CREATE INDEX IF NOT EXISTS idx_products_category1 ON products(category1);',
+    'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);',
     'CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products(owner_user_id);',
     'CREATE INDEX IF NOT EXISTS idx_products_account_id ON products(account_id);',
     "CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);",
@@ -582,17 +580,9 @@ async function initializeDatabaseWithDocker() {
         highlights TEXT,
         in_box TEXT,
         brand VARCHAR(100),
-<<<<<<< HEAD
-        category1 VARCHAR(100),
-        category2 VARCHAR(100),
-        category3 VARCHAR(100),
-        category4 VARCHAR(100),
-        category5 VARCHAR(100),
-=======
         category VARCHAR(100),
         subcategory VARCHAR(100),
-        product_type VARCHAR(100),
->>>>>>> 28d5da26ca917a8ed7fe4e7e500601911467b8c9
+        product_type VARCHAR(200),
         price DECIMAL(12,2) NOT NULL DEFAULT 0,
         special_price DECIMAL(12,2),
         cost DECIMAL(12,2),
@@ -722,7 +712,7 @@ async function initializeDatabaseWithDocker() {
       'CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);',
       // products
       'CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);',
-      'CREATE INDEX IF NOT EXISTS idx_products_category1 ON products(category1);',
+      'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);',
       'CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products(owner_user_id);',
       'CREATE INDEX IF NOT EXISTS idx_products_account_id ON products(account_id);',
       'CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);',

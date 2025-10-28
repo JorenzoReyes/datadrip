@@ -73,7 +73,7 @@ export default function AutocompleteSelect({
   };
 
   // Handle input blur
-  const handleBlur = (e: React.FocusEvent) => {
+  const handleBlur = (_e: React.FocusEvent) => {
     // Delay to allow option click to register
     setTimeout(() => {
       if (!dropdownRef.current?.contains(document.activeElement)) {
