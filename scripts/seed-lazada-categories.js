@@ -118,12 +118,19 @@ async function seed() {
 
     // 1) Upsert categories
     const catNames = Array.from(new Set(tuples.map(t => t.category)));
+    let truncatedCount = 0;
     for (let i = 0; i < catNames.length; i++) {
+      const originalName = catNames[i];
+      const truncatedName = originalName.length > 100 ? originalName.substring(0, 97) + '...' : originalName;
+      if (originalName.length > 100) {
+        console.log(`⚠️  Truncating category: "${originalName}" → "${truncatedName}"`);
+        truncatedCount++;
+      }
       await client.query(
         `INSERT INTO categories (name, display_order, is_active)
          VALUES ($1::varchar, $2::int, true)
          ON CONFLICT (name) DO NOTHING`,
-        [catNames[i], i + 1]
+        [truncatedName, i + 1]
       );
     }
 
@@ -135,16 +142,18 @@ async function seed() {
     // 2) Upsert subcategories
     const subKeys = new Set();
     for (const t of tuples) {
-      const cid = catIdByName.get(t.category);
+      const truncatedCategory = t.category.length > 100 ? t.category.substring(0, 97) + '...' : t.category;
+      const cid = catIdByName.get(truncatedCategory);
       if (!cid) continue;
-      const skey = `${cid}||${t.subcategory}`;
+      const truncatedSubcategory = t.subcategory.length > 100 ? t.subcategory.substring(0, 97) + '...' : t.subcategory;
+      const skey = `${cid}||${truncatedSubcategory}`;
       if (subKeys.has(skey)) continue;
       subKeys.add(skey);
       await client.query(
         `INSERT INTO subcategories (category_id, name, is_active)
          VALUES ($1::int, $2::varchar, true)
          ON CONFLICT (category_id, name) DO NOTHING`,
-        [cid, t.subcategory]
+        [cid, truncatedSubcategory]
       );
     }
 
@@ -159,22 +168,25 @@ async function seed() {
     const ptKeys = new Set();
     let ptCount = 0;
     for (const t of tuples) {
-      const sid = subIdByCatSub.get(`${t.category}||${t.subcategory}`);
+      const truncatedCategory = t.category.length > 100 ? t.category.substring(0, 97) + '...' : t.category;
+      const truncatedSubcategory = t.subcategory.length > 100 ? t.subcategory.substring(0, 97) + '...' : t.subcategory;
+      const sid = subIdByCatSub.get(`${truncatedCategory}||${truncatedSubcategory}`);
       if (!sid) continue;
-      const pkey = `${sid}||${t.product_type}`;
+      const truncatedProductType = t.product_type.length > 200 ? t.product_type.substring(0, 197) + '...' : t.product_type;
+      const pkey = `${sid}||${truncatedProductType}`;
       if (ptKeys.has(pkey)) continue;
       ptKeys.add(pkey);
       await client.query(
         `INSERT INTO product_types (subcategory_id, name, is_active)
          VALUES ($1::int, $2::varchar, true)
          ON CONFLICT (subcategory_id, name) DO NOTHING`,
-        [sid, t.product_type]
+        [sid, truncatedProductType]
       );
       ptCount++;
     }
 
     await client.query('COMMIT');
-    console.log(`✅ Seeded:\n- categories: ${catNames.length}\n- subcategories: ${subKeys.size}\n- product_types: ${ptKeys.size}`);
+    console.log(`✅ Seeded:\n- categories: ${catNames.length}${truncatedCount > 0 ? ` (${truncatedCount} truncated)` : ''}\n- subcategories: ${subKeys.size}\n- product_types: ${ptKeys.size}`);
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ Seeding failed:', err);
