@@ -296,6 +296,7 @@ jmeter.log
 *.pfx
 
 # User uploaded files (exclude from git)
+public
 public/uploads/
 uploads/
 # Don't ignore static assets in public root

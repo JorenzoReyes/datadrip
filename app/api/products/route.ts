@@ -9,6 +9,9 @@ type Product = {
   highlights: string | null;
   in_box: string | null;
   brand: string | null;
+  category: string | null;
+  subcategory: string | null;
+  product_type: string | null;
   category1: string | null;
   category2: string | null;
   category3: string | null;
@@ -83,6 +86,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email');
+    const platform = searchParams.get('platform'); // optional: 'shopee' | 'lazada' | 'tiktok'
     
     if (!email) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
@@ -95,48 +99,111 @@ export async function GET(req: Request) {
       return NextResponse.json({ products: [] });
     }
 
-    // Get all products owned by this user (3-levels)
-    const rows = await query<ProductRow>(
-      `SELECT 
-        product_id,
-        sku,
-        name,
-        description,
-        highlights,
-        in_box,
-        brand,
-        category,
-        subcategory,
-        product_type,
-        price,
-        special_price,
-        cost,
-        currency,
-        stock,
-        reorder_level,
-        sales_count,
-        sales_revenue,
-        weight_value,
-        weight_unit,
-        length_cm,
-        width_cm,
-        height_cm,
-        has_dangerous,
-        warranty_type,
-        warranty_period,
-        warranty_policy,
-        status,
-        images,
-        videos,
-        promotion_image,
-        attributes,
-        created_at,
-        updated_at
-       FROM products
-       WHERE owner_user_id = $1
-       ORDER BY created_at DESC`,
-      [owner.user_id]
-    );
+    // Get products owned by this user; when platform provided, prefer per-listing price/stock
+    let products: Product[] = [];
+    try {
+      const selectPrice = platform ? 'COALESCE(pl.listing_special_price, pl.listing_price, p.price)' : 'p.price';
+      const selectStock = platform
+        ? 'COALESCE(pl.listing_stock, 0)'
+        : '(SELECT COALESCE(SUM(pl2.listing_stock), 0) FROM product_listings pl2 WHERE pl2.product_id = p.product_id)';
+      // Attempt query with new columns (listing_special_price, listing_stock)
+      products = await query<Product>(
+        `SELECT DISTINCT ON (p.product_id)
+          p.product_id,
+          p.sku,
+          p.name,
+          p.description,
+          p.highlights,
+          p.in_box,
+          p.brand,
+          p.category,
+          p.subcategory,
+          p.product_type,
+          ${selectPrice} AS price,
+          p.special_price,
+          p.cost,
+          COALESCE(pl.currency, p.currency) AS currency,
+          ${selectStock} AS stock,
+          p.reorder_level,
+          p.sales_count,
+          p.sales_revenue,
+          p.weight_value,
+          p.weight_unit,
+          p.length_cm,
+          p.width_cm,
+          p.height_cm,
+          p.has_dangerous,
+          p.warranty_type,
+          p.warranty_period,
+          p.warranty_policy,
+          p.status,
+          p.images,
+          p.videos,
+          p.promotion_image,
+          p.attributes,
+          p.created_at,
+          p.updated_at
+         FROM products p
+         LEFT JOIN product_listings pl
+           ON pl.product_id = p.product_id
+           ${' AND '}
+           ${platform ? `pl.platform = $2` : '1=1'}
+         WHERE p.owner_user_id = $1
+          ORDER BY p.product_id, (pl.listing_special_price IS NULL) ASC, COALESCE(pl.updated_at, p.updated_at) DESC`,
+        platform ? [owner.user_id, platform] : [owner.user_id]
+      );
+    } catch (err) {
+      // Fallback for databases without the new columns yet
+      const selectPriceFallback = platform ? 'COALESCE(pl.listing_price, p.price)' : 'p.price';
+      const selectStockFallback = platform
+        ? '0' /* listing_stock not available in this schema */
+        : '(SELECT 0)';
+      products = await query<Product>(
+        `SELECT DISTINCT ON (p.product_id)
+          p.product_id,
+          p.sku,
+          p.name,
+          p.description,
+          p.highlights,
+          p.in_box,
+          p.brand,
+          p.category,
+          p.subcategory,
+          p.product_type,
+          ${selectPriceFallback} AS price,
+          p.special_price,
+          p.cost,
+          COALESCE(pl.currency, p.currency) AS currency,
+          ${platform ? 'p.stock' : '(SELECT COALESCE(SUM(pl2.listing_stock), 0) FROM product_listings pl2 WHERE pl2.product_id = p.product_id)'} AS stock,
+          p.reorder_level,
+          p.sales_count,
+          p.sales_revenue,
+          p.weight_value,
+          p.weight_unit,
+          p.length_cm,
+          p.width_cm,
+          p.height_cm,
+          p.has_dangerous,
+          p.warranty_type,
+          p.warranty_period,
+          p.warranty_policy,
+          p.status,
+          p.images,
+          p.videos,
+          p.promotion_image,
+          p.attributes,
+          p.created_at,
+          p.updated_at
+         FROM products p
+         LEFT JOIN product_listings pl
+           ON pl.product_id = p.product_id
+           ${' AND '}
+           ${platform ? `pl.platform = $2` : '1=1'}
+         WHERE p.owner_user_id = $1
+         ORDER BY p.product_id, COALESCE(pl.updated_at, p.updated_at) DESC`,
+        platform ? [owner.user_id, platform] : [owner.user_id]
+      );
+    }
 
     // Helper to coerce jsonb -> string[] | null
     function toStringArray(v: unknown): string[] | null {
@@ -154,7 +221,7 @@ export async function GET(req: Request) {
     }
 
     // Map to UI shape with 5-levels
-    const products: Product[] = rows.map((r) => {
+    const mappedProducts: Product[] = products.map((r) => {
       const pt = (r.product_type || '').trim();
       const parts = pt.length
         ? pt.split('>').map((s) => s.trim()).filter((s) => s.length > 0)
@@ -167,6 +234,9 @@ export async function GET(req: Request) {
         highlights: r.highlights,
         in_box: r.in_box,
         brand: r.brand,
+        category: r.category || null,
+        subcategory: r.subcategory || null,
+        product_type: r.product_type || null,
         category1: r.category || null,
         category2: r.subcategory || null,
         category3: parts[0] || null,
@@ -191,16 +261,16 @@ export async function GET(req: Request) {
         warranty_period: r.warranty_period,
         warranty_policy: r.warranty_policy,
         status: r.status,
-    images: toStringArray(r.images),
-    videos: toStringArray(r.videos),
-    promotion_image: typeof r.promotion_image === 'string' ? r.promotion_image : null,
-    attributes: (r.attributes ?? null) as { [key: string]: unknown } | null,
+        images: toStringArray(r.images),
+        videos: toStringArray(r.videos),
+        promotion_image: typeof r.promotion_image === 'string' ? r.promotion_image : null,
+        attributes: (r.attributes ?? null) as { [key: string]: unknown } | null,
         created_at: r.created_at,
         updated_at: r.updated_at,
       };
     });
 
-    return NextResponse.json({ products });
+    return NextResponse.json({ products: mappedProducts });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to load products';
     console.error('Error fetching products:', message);
@@ -339,6 +409,9 @@ export async function POST(req: Request) {
       highlights: inserted.highlights,
       in_box: inserted.in_box,
       brand: inserted.brand,
+      category: inserted.category || null,
+      subcategory: inserted.subcategory || null,
+      product_type: inserted.product_type || null,
       category1: inserted.category || null,
       category2: inserted.subcategory || null,
       category3: parts[0] || null,

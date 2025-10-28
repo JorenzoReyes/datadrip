@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import FileUpload from './FileUpload';
 import { getCategoryOptions, hasMoreChildren } from './data/categories';
 
 interface AddProductModalProps {
@@ -1091,50 +1092,6 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                 </div>
               </div>
 
-              {/* Video */}
-              <div>
-                <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
-                  Video
-                  <span className="relative inline-flex group">
-                    <svg className="h-3.5 w-3.5 text-gray-400 cursor-help" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/><text x="12" y="16" textAnchor="middle" fontSize="12" fill="currentColor" fontWeight="bold">i</text></svg>
-                    <div className="invisible absolute left-0 top-full z-20 mt-2 w-[360px] rounded-lg border border-gray-200 bg-white p-3 text-[12px] text-header shadow-lg group-hover:visible">
-                      <div className="mb-1 font-medium">Boost Conversion Rate by Uploading Video.</div>
-                      <ol className="list-decimal pl-4 space-y-1">
-                        <li>Video represents your product in various places, such as product recommendation page and product detail page, etc.</li>
-                        <li>Having a Video will inspire buyers to click on your product (compared with only image).</li>
-                      </ol>
-                    </div>
-                  </span>
-                </label>
-                <div className="rounded-md border border-gray-300 bg-white p-3">
-                  <div className="flex items-center gap-3">
-                    {videoFileName ? (
-                      <div className="group relative flex h-[60px] w-[60px] items-center justify-center rounded-md bg-gray-700 text-white hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer">
-                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        <button
-                          title="Remove"
-                          onClick={(e)=>{e.stopPropagation(); setVideoFileName(null); setProductVideos([]);}}
-                          className="invisible absolute inset-0 flex items-center justify-center bg-black/60 text-white group-hover:visible"
-                        >
-                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <button type="button" onClick={handleSetVideo} className="flex h-[60px] w-[60px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer group">
-                        <svg className="h-5 w-5 text-gray-500 group-hover:text-blue-400 group-hover:drop-shadow-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-                      </button>
-                    )}
-                    <div className="space-y-0.5 text-[11px] text-subheader">
-                      <div>Minimum size: 480x480 px, max video length: 60 seconds, max file size: 100MB.</div>
-                      <div>Supported format: mp4</div>
-                      <div>New Video might take up to 36 hours to be approved by Lazada</div>
-                    </div>
-                  </div>
-                  {errors.video && (
-                    <div className="mt-2 text-xs text-red-600">{errors.video}</div>
-                  )}
-                </div>
-              </div>
             </div>
           </section>
 
