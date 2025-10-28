@@ -885,7 +885,36 @@ export default function ProductsPage() {
       )}
       {viewingProduct && (
         <ViewProductModal
-          product={viewingProduct}
+          product={{
+            product_id: viewingProduct.product_id,
+            sku: viewingProduct.sku,
+            name: viewingProduct.name,
+            description: viewingProduct.description,
+            highlights: viewingProduct.highlights,
+            in_box: viewingProduct.in_box,
+            brand: viewingProduct.brand,
+            category: viewingProduct.category1 || null,
+            subcategory: viewingProduct.category2 || null,
+            product_type: [
+              viewingProduct.category3,
+              viewingProduct.category4,
+              viewingProduct.category5,
+              viewingProduct.category6,
+            ]
+              .filter(Boolean)
+              .join(' > ') || null,
+            price: viewingProduct.price,
+            special_price: viewingProduct.special_price,
+            cost: viewingProduct.cost,
+            currency: viewingProduct.currency,
+            stock: viewingProduct.stock,
+            reorder_level: viewingProduct.reorder_level,
+            status: viewingProduct.status,
+            images: viewingProduct.images,
+            videos: viewingProduct.videos,
+            promotion_image: viewingProduct.promotion_image,
+            attributes: viewingProduct.attributes,
+          }}
           onClose={() => setViewingProduct(null)}
         />
       )}
