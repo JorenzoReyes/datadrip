@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import { useAuth } from '../contexts/auth';
 import ExportReportsModal from '../components/ExportReportsModal';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, PieChart, Pie } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, PieChart, Pie, ComposedChart } from 'recharts';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
@@ -27,6 +27,21 @@ export default function DashboardPage() {
   const [weeklyTotals, setWeeklyTotals] = useState<{ all: number; tiktok: number; lazada: number; shopee: number }>({ all: 0, tiktok: 0, lazada: 0, shopee: 0 });
   const [revenueByCategory, setRevenueByCategory] = useState<{ category: string; revenue: number; percentage: number }[]>([]);
   const [aovTrend, setAovTrend] = useState<{ date: string; tiktok?: number; shopee?: number; lazada?: number }[]>([]);
+  const [underperformingProducts, setUnderperformingProducts] = useState<{ 
+    product_id: number; 
+    product_name: string; 
+    sku: string; 
+    brand: string; 
+    category: string; 
+    stock: number; 
+    price: number; 
+    total_quantity_sold: number; 
+    total_revenue: number; 
+    stock_to_sales_ratio: number;
+    last_sale_date: string | null;
+    platforms?: string;
+    listed_platforms?: string;
+  }[]>([]);
   
   // Week selection state
   type WeekOption = { label: string; startDate: Date; endDate: Date; month: string; year: number };
@@ -248,6 +263,11 @@ export default function DashboardPage() {
         const aovJson = await aovRes.json();
         setAovTrend(aovJson.aovTrend || []);
 
+        // Fetch underperforming products (high stock, low sales)
+        const underperformingRes = await fetch(`/api/products/underperforming?email=${email}&limit=10&days=30&minStock=10&maxSales=5`, { cache: 'no-store' });
+        const underperformingJson = await underperformingRes.json();
+        setUnderperformingProducts(underperformingJson.underperformingProducts || []);
+
         // Process daily sales data for the line chart from product_sales
         // Note: We calculate our own weekly totals from the daily sales data
         if (json.dailySales && json.dailySales.length > 0) {
@@ -340,6 +360,23 @@ export default function DashboardPage() {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     return `${month}-${day}`;
+  };
+
+  // Helper to format currency with 2 decimal places
+  const formatCurrency = (value: number | null | undefined | string): string => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (typeof numValue !== 'number' || isNaN(numValue)) {
+      return '₱0.00';
+    }
+    return `₱${numValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+  };
+
+  // Helper to safely convert to number for toFixed
+  const toNumber = (value: number | string | null | undefined): number => {
+    if (value == null) return 0;
+    if (typeof value === 'number') return isNaN(value) ? 0 : value;
+    const parsed = parseFloat(String(value));
+    return isNaN(parsed) ? 0 : parsed;
   };
 
   // Custom XAxis Tick component
@@ -466,19 +503,19 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <h4 className="text-gray-600 text-xs font-medium mb-2">Total Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.all).toLocaleString()}</p>
+            <p className="text-xl font-bold text-header">{formatCurrency(weeklyTotals.all)}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <h4 className="text-gray-600 text-xs font-medium mb-2">TikTok Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.tiktok).toLocaleString()}</p>
+            <p className="text-xl font-bold text-header">{formatCurrency(weeklyTotals.tiktok)}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <h4 className="text-gray-600 text-xs font-medium mb-2">Lazada Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.lazada).toLocaleString()}</p>
+            <p className="text-xl font-bold text-header">{formatCurrency(weeklyTotals.lazada)}</p>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <h4 className="text-gray-600 text-xs font-medium mb-2">Shopee Sales</h4>
-            <p className="text-xl font-bold text-header">₱ {Math.round(weeklyTotals.shopee).toLocaleString()}</p>
+            <p className="text-xl font-bold text-header">{formatCurrency(weeklyTotals.shopee)}</p>
           </div>
         </div>
 
@@ -498,14 +535,14 @@ export default function DashboardPage() {
                     />
                     <YAxis 
                       tick={{ fontSize: 12 }}
-                      tickFormatter={(value: number) => `₱${value.toFixed(0)}`}
+                      tickFormatter={(value: number) => formatCurrency(value)}
                     />
                     <Tooltip 
                       formatter={(value: number, name: string, props: { payload: Record<string, unknown> }) => {
                         if (value === 0) return null;
                         const productNameKey = `${name}Name`;
                         const productName = props.payload[productNameKey] || 'Product';
-                        return [`₱${Math.round(value).toLocaleString()}`, productName];
+                        return [formatCurrency(value), productName];
                       }}
                       contentStyle={{ 
                         fontSize: '12px',
@@ -584,10 +621,10 @@ export default function DashboardPage() {
                   />
                   <YAxis 
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(value: number) => `₱${value.toFixed(0)}`}
+                    tickFormatter={(value: number) => formatCurrency(value)}
                   />
                   <Tooltip 
-                    formatter={(value: number, name: string) => [`₱${Math.round(value).toLocaleString()}`, name]}
+                    formatter={(value: number, name: string) => [formatCurrency(value), name]}
                     labelFormatter={(label: string) => {
                       const date = new Date(label);
                       return `Date: ${date.toLocaleDateString('en-US', { 
@@ -679,8 +716,8 @@ export default function DashboardPage() {
                               fontSize: '12px'
                             }}>
                               <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{data.category}</p>
-                              <p style={{ margin: '0 0 2px 0' }}>₱{Math.round(data.revenue).toLocaleString()}</p>
-                              <p style={{ margin: '0' }}>{data.percentage.toFixed(1)}%</p>
+                              <p style={{ margin: '0 0 2px 0' }}>{formatCurrency(data.revenue)}</p>
+                              <p style={{ margin: '0' }}>{data.percentage.toFixed(2)}%</p>
                             </div>
                           );
                         }
@@ -716,10 +753,10 @@ export default function DashboardPage() {
                     />
                     <YAxis 
                       tick={{ fontSize: 12 }}
-                      tickFormatter={(value: number) => `₱${value.toFixed(0)}`}
+                      tickFormatter={(value: number) => formatCurrency(value)}
                     />
                     <Tooltip 
-                      formatter={(value: number, name: string) => [`₱${value.toFixed(2)}`, name]}
+                      formatter={(value: number, name: string) => [formatCurrency(value), name]}
                       labelFormatter={(label: string) => {
                         const date = new Date(label);
                         return `Date: ${date.toLocaleDateString('en-US', { 
@@ -774,6 +811,128 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Underperforming Products - Negative Dashboard */}
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h4 className="text-base font-semibold font-title text-header">Underperforming Products</h4>
+              <p className="text-xs text-gray-500 mt-1">
+                Products with ≥10 stock units but ≤5 sales in the last 30 days
+              </p>
+            </div>
+          </div>
+          {underperformingProducts.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Chart */}
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={underperformingProducts.slice(0, 8)}>
+                    <XAxis 
+                      dataKey="product_name" 
+                      tick={{ fontSize: 10 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      interval={0}
+                    />
+                    <YAxis 
+                      yAxisId="left"
+                      tick={{ fontSize: 12 }}
+                      label={{ value: 'Stock Level', angle: -90, position: 'insideLeft' }}
+                    />
+                    <YAxis 
+                      yAxisId="right"
+                      orientation="right"
+                      tick={{ fontSize: 12 }}
+                      label={{ value: 'Sales Revenue', angle: 90, position: 'insideRight' }}
+                      tickFormatter={(value: number) => formatCurrency(value)}
+                    />
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
+                              <p className="font-bold mb-2">{data.product_name}</p>
+                              <p>Stock: <span className="font-semibold text-orange-600">{data.stock.toLocaleString()}</span></p>
+                              <p>Sales: <span className="font-semibold text-red-600">{toNumber(data.total_quantity_sold).toFixed(0)}</span></p>
+                              <p>Revenue: <span className="font-semibold">{formatCurrency(data.total_revenue)}</span></p>
+                              <p>Stock/Sales Ratio: <span className="font-semibold">{toNumber(data.stock_to_sales_ratio).toFixed(2)}</span></p>
+                              <p>Listed on: <span className="font-semibold">{data.listed_platforms || 'No platforms'}</span></p>
+                              {data.last_sale_date && (
+                                <p className="text-gray-500 mt-1">Last Sale: {new Date(data.last_sale_date).toLocaleDateString()}</p>
+                              )}
+                              {!data.last_sale_date && (
+                                <p className="text-red-500 mt-1 font-semibold">No sales in selected period</p>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar 
+                      yAxisId="left" 
+                      dataKey="stock" 
+                      fill="#F97316" 
+                      name="Stock"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      yAxisId="right" 
+                      dataKey="total_revenue" 
+                      fill="#DC2626" 
+                      name="Revenue"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* List */}
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {underperformingProducts.slice(0, 10).map((product, index) => (
+                  <div key={product.product_id} className="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 transition">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{product.product_name}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-600 mt-1">
+                          <span className="font-medium">{product.brand}</span>
+                          <span>•</span>
+                          <span>{product.category}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-orange-600 font-semibold">{product.stock} stock</span>
+                        <span className="text-gray-400">vs</span>
+                        <span className="text-xs text-red-600 font-semibold">{toNumber(product.total_quantity_sold).toFixed(0)} sold</span>
+                      </div>
+                      <p className="text-xs text-gray-500">{formatCurrency(product.total_revenue)}</p>
+                      <p className="text-xs text-gray-400">Ratio: {toNumber(product.stock_to_sales_ratio).toFixed(2)}</p>
+                      {product.listed_platforms && (
+                        <p className="text-xs text-blue-600 mt-1">Platforms: {product.listed_platforms}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p>No underperforming products found</p>
+              <p className="text-xs mt-1">All products are selling well!</p>
+            </div>
+          )}
+        </div>
+
         {/* Top 5 Selling Products */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
@@ -793,8 +952,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-gray-900">₱{Math.round(product.total_revenue).toLocaleString()}</p>
-                    <p className="text-sm text-gray-500">{product.total_quantity_sold} sold</p>
+                    <p className="font-semibold text-gray-900">{formatCurrency(product.total_revenue)}</p>
+                    <p className="text-sm text-gray-500">{toNumber(product.total_quantity_sold).toFixed(0)} sold</p>
                     <p className="text-xs text-gray-400">
                       {product.platforms || 'Multiple platforms'}
                     </p>
