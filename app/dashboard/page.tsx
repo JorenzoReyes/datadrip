@@ -398,8 +398,7 @@ export default function DashboardPage() {
 
     if (dayOfWeek === undefined) return null;
 
-    const isSunday = dayOfWeek === 0;
-    const color = isSunday ? '#EE4D2D' : '#666';
+    const color = '#666';
     const label = formatDateAsMMDD(dateString);
 
     return (
@@ -545,6 +544,7 @@ export default function DashboardPage() {
                     <YAxis 
                       tick={{ fontSize: 12 }}
                       tickFormatter={(value: number) => formatCurrency(value)}
+                      width={80}
                     />
                     <Tooltip 
                       content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: any }) => {
@@ -556,7 +556,10 @@ export default function DashboardPage() {
                             'Lazada': '#0F146D'
                           };
                           const platformColor = platformColors[platform] || '#666';
-                          const items = payload.filter((item: any) => item.value > 0);
+                          // Sort items by value (highest to lowest) to match visual order (top to bottom)
+                          const items = payload
+                            .filter((item: any) => item.value > 0)
+                            .sort((a: any, b: any) => (b.value as number) - (a.value as number));
                           
                           return (
                             <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
@@ -564,10 +567,24 @@ export default function DashboardPage() {
                               {items.map((item: any, idx: number) => {
                                 const productNameKey = `${item.dataKey}Name`;
                                 const productName = (item.payload[productNameKey] || 'Product') as string;
+                                // Determine color based on which product it is
+                                const isProduct1 = item.dataKey === 'product1';
+                                const isProduct2 = item.dataKey === 'product2';
+                                let segmentColor = '#666';
+                                if (platform === 'TikTok') {
+                                  segmentColor = isProduct1 ? '#000000' : isProduct2 ? '#4A4A4A' : '#8B8B8B';
+                                } else if (platform === 'Shopee') {
+                                  segmentColor = isProduct1 ? '#EE4D2D' : isProduct2 ? '#F37258' : '#F89D87';
+                                } else if (platform === 'Lazada') {
+                                  segmentColor = isProduct1 ? '#0F146D' : isProduct2 ? '#3B4BA0' : '#6D7BC7';
+                                }
                                 return (
-                                  <div key={idx} className="mb-1">
-                                    <p style={{ color: '#047857', fontWeight: '600', marginBottom: '2px' }}>{productName}</p>
-                                    <p style={{ color: '#059669', fontWeight: '600' }}>{formatCurrency(item.value as number)}</p>
+                                  <div key={idx} className="mb-1 flex items-center gap-2">
+                                    <div style={{ width: '12px', height: '12px', backgroundColor: segmentColor, borderRadius: '2px' }} />
+                                    <div>
+                                      <p style={{ color: '#000000', fontWeight: '600', marginBottom: '2px' }}>{productName}</p>
+                                      <p style={{ color: '#059669', fontWeight: '600' }}>{formatCurrency(item.value as number)}</p>
+                                    </div>
                                   </div>
                                 );
                               })}
@@ -577,18 +594,19 @@ export default function DashboardPage() {
                         return null;
                       }}
                     />
-                    {/* Product 1 - Base color (darkest/most saturated) */}
-                    <Bar dataKey="product1" stackId="stack">
+                    {/* Reverse order: Product3 at bottom, Product1 at top (highest) */}
+                    {/* Product 3 - Lightest shade (renders first = bottom) */}
+                    <Bar dataKey="product3" stackId="stack">
                       {topWeeklyProducts.map((entry, index) => {
                         const colors: { [key: string]: string } = {
-                          'tiktok': '#000000',
-                          'shopee': '#EE4D2D',
-                          'lazada': '#0F146D'
+                          'tiktok': '#8B8B8B',
+                          'shopee': '#F89D87',
+                          'lazada': '#6D7BC7'
                         };
                         return <Cell key={`cell-${index}`} fill={colors[entry.platform]} />;
                       })}
                     </Bar>
-                    {/* Product 2 - Medium shade */}
+                    {/* Product 2 - Medium shade (renders second = middle) */}
                     <Bar dataKey="product2" stackId="stack">
                       {topWeeklyProducts.map((entry, index) => {
                         const colors: { [key: string]: string } = {
@@ -599,13 +617,13 @@ export default function DashboardPage() {
                         return <Cell key={`cell-${index}`} fill={colors[entry.platform]} />;
                       })}
                     </Bar>
-                    {/* Product 3 - Lightest shade */}
-                    <Bar dataKey="product3" stackId="stack">
+                    {/* Product 1 - Base color (darkest, renders last = top) */}
+                    <Bar dataKey="product1" stackId="stack">
                       {topWeeklyProducts.map((entry, index) => {
                         const colors: { [key: string]: string } = {
-                          'tiktok': '#8B8B8B',
-                          'shopee': '#F89D87',
-                          'lazada': '#6D7BC7'
+                          'tiktok': '#000000',
+                          'shopee': '#EE4D2D',
+                          'lazada': '#0F146D'
                         };
                         return <Cell key={`cell-${index}`} fill={colors[entry.platform]} />;
                       })}
@@ -645,9 +663,9 @@ export default function DashboardPage() {
                       if (active && payload && payload.length) {
                         const date = new Date(label as string);
                         const formattedDate = date.toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric',
-                          timeZone: 'Asia/Manila'
+                        month: 'short', 
+                        day: 'numeric',
+                        timeZone: 'Asia/Manila'
                         });
                         const platformColors: { [key: string]: string } = {
                           'TikTok': '#000000',
@@ -795,15 +813,16 @@ export default function DashboardPage() {
                     <YAxis 
                       tick={{ fontSize: 12 }}
                       tickFormatter={(value: number) => formatCurrency(value)}
+                      width={80}
                     />
                     <Tooltip 
                       content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: any }) => {
                         if (active && payload && payload.length) {
                           const date = new Date(label as string);
                           const formattedDate = date.toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric',
-                            timeZone: 'Asia/Manila'
+                          month: 'short', 
+                          day: 'numeric',
+                          timeZone: 'Asia/Manila'
                           });
                           const platformColors: { [key: string]: string } = {
                             'TikTok': '#000000',
@@ -885,20 +904,20 @@ export default function DashboardPage() {
               {/* Chart */}
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topProducts} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
+                  <BarChart data={topProducts} margin={{ top: 5, right: 10, left: 5, bottom: 60 }}>
                     <XAxis 
                       dataKey="product_name" 
                       tick={{ fontSize: 10 }}
                       angle={-45}
                       textAnchor="end"
-                      height={100}
+                      height={60}
                       interval={0}
                     />
                     <YAxis 
                       tick={{ fontSize: 11 }}
-                      label={{ value: 'Revenue', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+                      label={{ value: 'Revenue', angle: -90, position: 'insideLeft', offset: 10, style: { textAnchor: 'middle' } }}
                       tickFormatter={(value: number) => formatCurrency(value)}
-                      width={80}
+                      width={75}
                     />
                     <Tooltip 
                       content={({ active, payload }: { active?: boolean; payload?: any[] }) => {
@@ -947,20 +966,24 @@ export default function DashboardPage() {
               
               {/* List */}
               <div className="space-y-2 max-h-80 overflow-y-auto">
-                {topProducts.map((product, index) => (
+              {topProducts.map((product, index) => {
+                  const qtySold = toNumber(product.total_quantity_sold);
+                  const soldColor = qtySold === 0 ? 'text-red-600' : qtySold < 3 ? 'text-orange-600' : 'text-gray-500';
+                  return (
                   <div key={index} className="flex items-center justify-between p-3 bg-green-50 border border-green-100 rounded-lg hover:bg-green-100 transition">
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
                       <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                        {index + 1}
-                      </div>
+                      {index + 1}
+                    </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 truncate">{product.product_name}</p>
                         <div className="flex items-center gap-2 text-xs text-gray-600 mt-1 flex-wrap">
                           <span className="font-medium">{product.brand}</span>
                           {product.platforms && (
                             <>
-                              <span>•</span>
-                              {(product.platforms as string).split(', ').map((platform: string, idx: number) => {
+                              <span className="flex items-center">•</span>
+                              <div className="flex items-center gap-1">
+                                {(product.platforms as string).split(', ').map((platform: string, idx: number) => {
                                 const platformKey = platform.toLowerCase();
                                 const platformColors: { [key: string]: string } = {
                                   'tiktok': '#000000',
@@ -975,17 +998,19 @@ export default function DashboardPage() {
                                   </span>
                                 );
                               })}
+                    </div>
                             </>
                           )}
-                        </div>
-                      </div>
+                  </div>
+                  </div>
                     </div>
-                    <div className="text-right flex-shrink-0 ml-4">
+                    <div className="text-right flex-shrink-0 ml-3">
                       <p className="text-sm font-semibold text-green-600">{formatCurrency(product.total_revenue)}</p>
-                      <p className="text-xs text-gray-500">{toNumber(product.total_quantity_sold).toFixed(0)} sold</p>
+                      <p className={`text-xs font-semibold ${soldColor}`}>{qtySold.toFixed(0)} sold</p>
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           ) : (
@@ -998,11 +1023,11 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Products Needing Attention */}
+        {/* Underperforming Products */}
         <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h4 className="text-base font-semibold font-title text-header">Products Needing Attention</h4>
+              <h4 className="text-base font-semibold font-title text-header">Underperforming Products</h4>
               <p className="text-xs text-gray-500 mt-1">
                 Products with ≥10 stock units but ≤5 sales for the selected week
               </p>
@@ -1013,26 +1038,28 @@ export default function DashboardPage() {
               {/* Chart */}
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={underperformingProducts.slice(0, 8)}>
+                  <ComposedChart data={underperformingProducts.slice(0, 8)} margin={{ top: 5, right: 10, left: 5, bottom: 60 }}>
                     <XAxis 
                       dataKey="product_name" 
                       tick={{ fontSize: 10 }}
                       angle={-45}
                       textAnchor="end"
-                      height={100}
+                      height={60}
                       interval={0}
                     />
                     <YAxis 
                       yAxisId="left"
-                      tick={{ fontSize: 12 }}
-                      label={{ value: 'Stock Level', angle: -90, position: 'insideLeft' }}
+                      tick={{ fontSize: 11 }}
+                      label={{ value: 'Stock Level', angle: -90, position: 'insideLeft', offset: 10, style: { textAnchor: 'middle' } }}
+                      width={60}
                     />
                     <YAxis 
                       yAxisId="right"
                       orientation="right"
-                      tick={{ fontSize: 12 }}
-                      label={{ value: 'Sales Revenue', angle: 90, position: 'insideRight' }}
+                      tick={{ fontSize: 11 }}
+                      label={{ value: 'Sales Revenue', angle: 90, position: 'insideRight', offset: 5 }}
                       tickFormatter={(value: number) => formatCurrency(value)}
+                      width={75}
                     />
                     <Tooltip 
                       content={({ active, payload }: { active?: boolean; payload?: any[] }) => {
@@ -1042,15 +1069,37 @@ export default function DashboardPage() {
                             <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
                               <p className="font-bold mb-2" style={{ color: '#047857' }}>{data.product_name}</p>
                               <p>Stock: <span className="font-semibold text-gray-900">{data.stock.toLocaleString()} units</span></p>
-                              <p>Sales: <span className="font-semibold" style={{ color: '#059669' }}>{toNumber(data.total_quantity_sold).toFixed(0)} units</span></p>
+                              <p>Sales: <span className="font-semibold" style={{ color: toNumber(data.total_quantity_sold) === 0 ? '#DC2626' : '#F97316' }}>{toNumber(data.total_quantity_sold).toFixed(0)} units</span></p>
                               <p>Revenue: <span className="font-semibold" style={{ color: '#059669' }}>{formatCurrency(data.total_revenue)}</span></p>
                               {data.listed_platforms ? (
-                                <p className="mt-2">Platforms: <span className="font-semibold text-gray-700">{data.listed_platforms}</span></p>
+                                <div className="mt-2">
+                                  <span className="mr-2">Platforms:</span>
+                                  <span className="flex items-center gap-1 flex-wrap">
+                                    {(data.listed_platforms as string).split(', ').map((platform: string, idx: number) => {
+                                      const platformKey = platform.toLowerCase();
+                                      const platformColors: { [key: string]: string } = {
+                                        'tiktok': '#000000',
+                                        'shopee': '#EE4D2D',
+                                        'lazada': '#0F146D'
+                                      };
+                                      const toCamelCase = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+                                      const color = platformColors[platformKey] || '#666';
+                                      return (
+                                        <span key={idx} className="font-semibold" style={{ color }}>
+                                          {toCamelCase(platform)}{idx < (data.listed_platforms as string).split(', ').length - 1 ? ', ' : ''}
+                                        </span>
+                                      );
+                                    })}
+                                  </span>
+                                </div>
                               ) : (
                                 <p className="mt-2 text-amber-600 font-semibold">Not listed on any platform</p>
                               )}
                               {!data.last_sale_date && (
                                 <p className="text-gray-600 mt-2 italic">No sales this week</p>
+                              )}
+                              {toNumber(data.total_quantity_sold) === 0 && (
+                                <p className="text-xs text-amber-600 mt-2">💡 Consider running a promotion</p>
                               )}
                             </div>
                           );
@@ -1086,28 +1135,48 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 truncate">{product.product_name}</p>
-                        <div className="flex items-center gap-3 text-xs text-gray-600 mt-1">
+                        <div className="flex items-center gap-2 text-xs text-gray-600 mt-1 flex-wrap">
                           <span className="font-medium">{product.brand}</span>
-                          <span>•</span>
-                          <span>{product.category}</span>
+                          {product.listed_platforms && (
+                            <>
+                              <span className="flex items-center">•</span>
+                              <div className="flex items-center gap-1">
+                                {(product.listed_platforms as string).split(', ').map((platform: string, idx: number) => {
+                                  const platformKey = platform.toLowerCase();
+                                  const platformColors: { [key: string]: string } = {
+                                    'tiktok': '#000000',
+                                    'shopee': '#EE4D2D',
+                                    'lazada': '#0F146D'
+                                  };
+                                  const toCamelCase = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+                                  const color = platformColors[platformKey] || '#666';
+                                  return (
+                                    <span key={idx} style={{ color, fontWeight: '600' }}>
+                                      {toCamelCase(platform)}{idx < (product.listed_platforms as string).split(', ').length - 1 ? ', ' : ''}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0 ml-4">
+                    <div className="text-right flex-shrink-0 ml-3">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs text-gray-700 font-semibold">{product.stock} stock</span>
                         <span className="text-gray-400">vs</span>
-                        <span className="text-xs text-gray-700 font-semibold">{toNumber(product.total_quantity_sold).toFixed(0)} sold</span>
+                        <span className={`text-xs font-semibold ${toNumber(product.total_quantity_sold) === 0 ? 'text-red-600' : 'text-orange-600'}`}>
+                          {toNumber(product.total_quantity_sold).toFixed(0)} sold
+                        </span>
                       </div>
                       <p className="text-xs font-semibold text-gray-900">{formatCurrency(product.total_revenue)}</p>
-                      {product.listed_platforms ? (
-                        <p className="text-xs text-gray-600 mt-1">On: {product.listed_platforms}</p>
-                      ) : (
+                      {!product.listed_platforms && (
                         <p className="text-xs text-amber-600 mt-1">Not listed</p>
                       )}
-                    </div>
                   </div>
-                ))}
+                </div>
+              ))}
               </div>
             </div>
           ) : (
