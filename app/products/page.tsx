@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import dynamic from 'next/dynamic';
@@ -84,7 +84,7 @@ export default function ProductsPage() {
   }, [user, isLoading, router]);
 
   // Fetch products from the database
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     if (!user?.email) return;
     
     try {
@@ -115,13 +115,13 @@ export default function ProductsPage() {
     } finally {
       setLoadingProducts(false);
     }
-  };
+  }, [user, dateRange, customDateRange, platform]);
 
   useEffect(() => {
     if (user) {
       loadProducts();
     }
-  }, [user, dateRange, customDateRange, platform]);
+  }, [user, dateRange, customDateRange, platform, loadProducts]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -412,6 +412,8 @@ export default function ProductsPage() {
         throw new Error(json.error || 'Failed to update product');
       }
 
+      console.log('Product update successful:', json.product);
+      
       // Update the product in the local products list
       setProducts(products.map(p => 
         p.product_id === editingProduct.product_id ? { ...p, ...json.product } : p
@@ -420,6 +422,8 @@ export default function ProductsPage() {
       
       // Refresh the product list to ensure all data is up to date
       await loadProducts();
+      
+      console.log('Product list refreshed after update');
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
