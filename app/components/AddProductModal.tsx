@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import FileUpload from './FileUpload';
 
 interface AddProductModalProps {
 	onClose: () => void;
@@ -820,39 +821,56 @@ export default function AddProductModal({ onClose, onSave, userEmail }: AddProdu
                                     </span>
                                 </label>
                                 <div className={`rounded-md border p-3 ${validationErrors.productImages ? 'border-red-500 border-dashed bg-red-50' : 'border-gray-200 bg-white'}`}>
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        {productImages.map((src, idx) => (
-                                            <div key={idx} className="group relative h-[60px] w-[60px] overflow-hidden rounded-md bg-gray-200 hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer">
-                                                <Image src={src} alt={`Product ${idx+1}`} width={60} height={60} className="h-full w-full object-cover" />
-                                                <button
-                                                    title="Remove"
-                                                    onClick={(e) => { 
-                                                        e.stopPropagation(); 
-                                                        const newImages = productImages.filter((_, i) => i !== idx);
-                                                        setProductImages(newImages);
-                                                        // Clear validation error when images are removed (if there are still images)
-                                                        if (newImages.length > 0 && validationErrors.productImages) {
-                                                            setValidationErrors(prev => ({ ...prev, productImages: '' }));
-                                                        }
-                                                        if (newImages.length === 0 && hasHadImages) {
-                                                            setErrorWithTimeout('productImages', 'Image is missing. Please upload at least 1 image.');
-                                                        }
-                                                    }}
-                                                    className="invisible absolute inset-0 flex items-center justify-center bg-black/60 text-white group-hover:visible"
-                                                >
-                                                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                                                </button>
+                                    {/* Display uploaded images */}
+                                    {productImages.length > 0 && (
+                                        <div className="mb-4">
+                                            <div className="text-xs text-gray-600 mb-2">Uploaded Images ({productImages.length}/8)</div>
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                {productImages.map((src, idx) => (
+                                                    <div key={idx} className="group relative h-[60px] w-[60px] overflow-hidden rounded-md bg-gray-200 hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer">
+                                                        <Image src={src} alt={`Product ${idx+1}`} width={60} height={60} className="h-full w-full object-cover" />
+                                                        <button
+                                                            title="Remove"
+                                                            onClick={(e) => { 
+                                                                e.stopPropagation(); 
+                                                                const newImages = productImages.filter((_, i) => i !== idx);
+                                                                setProductImages(newImages);
+                                                                // Clear validation error when images are removed (if there are still images)
+                                                                if (newImages.length > 0 && validationErrors.productImages) {
+                                                                    setValidationErrors(prev => ({ ...prev, productImages: '' }));
+                                                                }
+                                                                if (newImages.length === 0 && hasHadImages) {
+                                                                    setErrorWithTimeout('productImages', 'Image is missing. Please upload at least 1 image.');
+                                                                }
+                                                            }}
+                                                            className="invisible absolute inset-0 flex items-center justify-center bg-black/60 text-white group-hover:visible"
+                                                        >
+                                                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                                                        </button>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                        {productImages.length < 8 && (
-                                            <button type="button" onClick={() => {
-                                              console.log('Upload button clicked!');
-                                              handleAddProductImage();
-                                            }} className="flex h-[60px] w-[60px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white hover:ring-2 hover:ring-blue-300 hover:ring-opacity-60 cursor-pointer group">
-                                                <svg className="h-5 w-5 text-gray-500 group-hover:text-blue-400 group-hover:drop-shadow-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-                                            </button>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* File upload component */}
+                                    {productImages.length < 8 && (
+                                        <FileUpload
+                                            onUpload={(urls) => {
+                                                const newImages = [...productImages, ...urls].slice(0, 8);
+                                                setProductImages(newImages);
+                                                setHasHadImages(true);
+                                                if (validationErrors.productImages) {
+                                                    setValidationErrors(prev => ({ ...prev, productImages: '' }));
+                                                }
+                                            }}
+                                            multiple={true}
+                                            accept="image/*"
+                                            maxFiles={8 - productImages.length}
+                                            maxSize={6}
+                                        />
+                                    )}
+                                    
                                     {validationErrors.productImages && (
                                         <div className="mt-2 text-xs text-red-600">{validationErrors.productImages}</div>
                                     )}
