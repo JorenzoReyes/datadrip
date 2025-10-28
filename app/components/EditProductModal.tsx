@@ -312,6 +312,15 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
     setSubmitError(null);
     
     if (!validateForm()) {
+      // Scroll to first invalid field in the form
+      const order = ['productName','category1','category2','category3','category4','category5','category6','productImages','brand','price','packageWeight','dimensions'];
+      const firstKey = order.find(k => validationErrors[k]);
+      if (firstKey) {
+        const el = scrollRef.current?.querySelector(`[data-field="${firstKey}"]`);
+        (el as HTMLElement | null)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       return;
     }
 
@@ -598,7 +607,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
               <h4 className="mb-4 text-[18px] font-semibold text-header">Basic Information</h4>
               <div className="space-y-4">
                 {/* Product Name */}
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="productName">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     <span className="text-red-500">*</span> Product Name
                   </label>
@@ -630,7 +639,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                 </div>
 
                 {/* Category 1 */}
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="category1">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     <span className="text-red-500">*</span> Category 1
                   </label>
@@ -669,7 +678,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
                 {/* Category 2 - Only show if Category 1 has children */}
                 {category1 && cat2Options.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1" data-field="category2">
                     <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                       Category 2
                     </label>
@@ -706,7 +715,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
                 {/* Category 3 - Only show if Category 2 has children */}
                 {category2 && cat3Options.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1" data-field="category3">
                     <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                       Category 3
                     </label>
@@ -742,7 +751,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
                 {/* Category 4 - Only show if Category 3 has children */}
                 {category3 && cat4Options.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1" data-field="category4">
                     <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                       Category 4
                     </label>
@@ -777,7 +786,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
                 {/* Category 5 - Only show if Category 4 has children */}
                 {category4 && cat5Options.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1" data-field="category5">
                     <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                       Category 5
                     </label>
@@ -811,7 +820,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
                 {/* Category 6 - Only show if Category 5 has children */}
                 {category5 && cat6Options.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1" data-field="category6">
                     <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                       Category 6
                     </label>
@@ -842,7 +851,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                 )}
 
                 {/* Product Images */}
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="productImages">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     <span className="text-red-500">*</span> Product Images
                     <button
@@ -905,7 +914,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                 </div>
 
                 {/* Buyer Promotion Image */}
-                <div className="space-y-1">
+                <div className="space-y-1" data-field="brand">
                   <label className="mb-1 flex items-center gap-1 text-[12px] text-subheader">
                     Buyer Promotion Image
                     <button
@@ -1093,7 +1102,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
             {/* Product Specification */}
             <section className="rounded-xl border border-gray-200 bg-gray-50 p-5">
               <h4 className="mb-4 text-[18px] font-semibold text-header">Product Specification</h4>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="space-y-1">
                   <label className="mb-1 block text-xs text-subheader"><span className="text-red-500">*</span> Brand</label>
                   <input
@@ -1227,7 +1236,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                       <div className="grid grid-cols-[1fr_1fr_1.1fr_1.8fr_0.6fr] border-t border-gray-200">
                         {/* Price */}
                         <div className="border-r border-gray-200 p-3 flex justify-center relative">
-                          <div className={`flex items-center rounded-md border px-2 py-1 w-full max-w-[120px] ${
+                        <div className={`flex items-center rounded-md border px-2 py-1 w-full max-w-[120px] ${
                             validationErrors.price ? 'border-red-500' : 'border-gray-300 bg-white'
                           }`}>
                             <span className="text-sm text-subheader">₱</span>
@@ -1414,7 +1423,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
               <div className="space-y-4">
                 
                 {/* Package Weight */}
-                <div className="grid grid-cols-[1fr_auto] items-center gap-2 md:max-w-md space-y-1">
+                <div className="grid grid-cols-[1fr_auto] items-center gap-2 md:max-w-md space-y-1" data-field="packageWeight">
                   <label className="col-span-2 mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Weight</label>
                   <input
                     type="number"
@@ -1456,7 +1465,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                 </div>
 
                 {/* Dimensions */}
-                <div className="md:max-w-3xl space-y-1">
+                <div className="md-max-w-3xl space-y-1" data-field="dimensions">
                   <label className="mb-1 block text-[12px] text-subheader"><span className="text-red-500">*</span> Package Length(cm) × Width(cm) × Height(cm)</label>
                   <div className="flex items-center gap-2">
                     <input
@@ -1655,23 +1664,38 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
               </div>
             </section>
 
-            {/* Footer */}
-            <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-              >
-                {loading ? 'Saving...' : 'Save Changes'}
-              </button>
+            {/* Footer (sticky inside scroll area) */}
+            <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-6 py-4 -mx-6 mt-6">
+              {/* Global error summary (left) */}
+              <div className="min-h-[1.25rem]">
+                {Object.keys(validationErrors).length > 0 && (
+                  <div className="text-sm text-red-600">
+                    Please fix the highlighted fields before saving.
+                  </div>
+                )}
+                {submitError && (
+                  <div className="text-sm text-red-600">{submitError}</div>
+                )}
+              </div>
+
+              {/* Actions (right) */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={loading}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
