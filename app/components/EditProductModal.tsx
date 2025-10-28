@@ -171,7 +171,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
   // Load Category 2 when category1 changes
   useEffect(() => {
-    if (!category1) { setCat2Options([]); setCat3Options([]); setCat4Options([]); setCat5Options([]); return; }
+    if (!category1) { setCat2Options([]); setCat3Options([]); setCat4Options([]); setCat5Options([]); setCat6Options([]); return; }
     let alive = true;
     (async () => {
       try {
@@ -186,7 +186,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
   // Load Category 3 when category2 changes
   useEffect(() => {
-    if (!category1 || !category2) { setCat3Options([]); setCat4Options([]); setCat5Options([]); return; }
+    if (!category1 || !category2) { setCat3Options([]); setCat4Options([]); setCat5Options([]); setCat6Options([]); return; }
     let alive = true;
     (async () => {
       try {
@@ -201,7 +201,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
   // Load Category 4 when category3 changes
   useEffect(() => {
-    if (!category1 || !category2 || !category3) { setCat4Options([]); setCat5Options([]); return; }
+    if (!category1 || !category2 || !category3) { setCat4Options([]); setCat5Options([]); setCat6Options([]); return; }
     let alive = true;
     (async () => {
       try {
@@ -317,13 +317,14 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
 
     setLoading(true);
     
-    // Build 3-level fields from up to 5 UI levels
+    // Build 3-level fields from up to 6 UI levels, enforce max depth for product_type
+    const MAX_PRODUCT_TYPE_SEGMENTS = 3; // allow up to three segments beyond subcategory (levels 3, 4, and 5)
     const builtCategory = category1.trim() || undefined;
     const builtSubcategory = category2.trim() || undefined;
     const deeper = [category3, category4, category5, category6]
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
-    const builtProductType = deeper.length > 0 ? deeper.join(' > ') : undefined;
+    const builtProductType = deeper.length > 0 ? deeper.slice(0, MAX_PRODUCT_TYPE_SEGMENTS).join(' > ') : undefined;
     
     const productData = {
       name: productName.trim(),
@@ -642,6 +643,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                         setCategory3('');
                         setCategory4('');
                         setCategory5('');
+                        setCategory6('');
                         // Clear error when user starts typing
                         if (validationErrors.category1 && e.target.value.trim()) {
                           setValidationErrors(prev => ({ ...prev, category1: '' }));
@@ -679,6 +681,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                           setCategory3(''); // Reset dependent categories
                           setCategory4('');
                           setCategory5('');
+                          setCategory6('');
                           // Clear validation errors
                           if (validationErrors.category2) {
                             setValidationErrors(prev => ({ ...prev, category2: '' }));
@@ -714,6 +717,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                           setCategory3(e.target.value);
                           setCategory4(''); // Reset dependent categories
                           setCategory5('');
+                          setCategory6('');
                           // Clear validation errors
                           if (validationErrors.category3) {
                             setValidationErrors(prev => ({ ...prev, category3: '' }));
@@ -748,6 +752,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                         onChange={(e) => {
                           setCategory4(e.target.value);
                           setCategory5(''); // Reset dependent categories
+                          setCategory6('');
                           // Clear validation errors
                           if (validationErrors.category4) {
                             setValidationErrors(prev => ({ ...prev, category4: '' }));
@@ -781,6 +786,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
                         value={category5}
                         onChange={(e) => {
                           setCategory5(e.target.value);
+                          setCategory6('');
                           // Clear validation errors
                           if (validationErrors.category5) {
                             setValidationErrors(prev => ({ ...prev, category5: '' }));
