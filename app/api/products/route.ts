@@ -9,6 +9,9 @@ type Product = {
   highlights: string | null;
   in_box: string | null;
   brand: string | null;
+  category: string | null;
+  subcategory: string | null;
+  product_type: string | null;
   category1: string | null;
   category2: string | null;
   category3: string | null;
@@ -231,6 +234,9 @@ export async function GET(req: Request) {
         highlights: r.highlights,
         in_box: r.in_box,
         brand: r.brand,
+        category: r.category || null,
+        subcategory: r.subcategory || null,
+        product_type: r.product_type || null,
         category1: r.category || null,
         category2: r.subcategory || null,
         category3: parts[0] || null,
@@ -403,6 +409,9 @@ export async function POST(req: Request) {
       highlights: inserted.highlights,
       in_box: inserted.in_box,
       brand: inserted.brand,
+      category: inserted.category || null,
+      subcategory: inserted.subcategory || null,
+      product_type: inserted.product_type || null,
       category1: inserted.category || null,
       category2: inserted.subcategory || null,
       category3: parts[0] || null,
