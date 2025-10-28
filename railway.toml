@@ -13,3 +13,6 @@ name = "datadrip"
 
 [[services]]
 name = "postgres"
+
+[volumes]
+"/app/public/uploads" = "uploads"
