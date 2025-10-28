@@ -221,11 +221,31 @@ export async function PATCH(
 
     const updatedProduct = await queryOne(updateQuery, values);
 
+    if (!updatedProduct) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
     console.log('Product updated successfully:', productId);
+
+    // Map the raw database response to UI format (same logic as GET /api/products)
+    const pt = ((updatedProduct as any).product_type || '').trim();
+    const parts = pt.length
+      ? pt.split('>').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+      : [];
+    
+    const mappedProduct = {
+      ...updatedProduct,
+      category1: (updatedProduct as any).category || null,
+      category2: (updatedProduct as any).subcategory || null,
+      category3: parts[0] || null,
+      category4: parts[1] || null,
+      category5: parts[2] || null,
+      category6: parts[3] || null,
+    };
 
     return NextResponse.json({ 
       success: true, 
-      product: updatedProduct,
+      product: mappedProduct,
       message: 'Product updated successfully' 
     });
   } catch (e) {

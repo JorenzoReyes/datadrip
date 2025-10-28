@@ -407,10 +407,13 @@ export default function ProductsPage() {
       }
 
       // Update the product in the local products list
+      const updatedProduct = { ...editingProduct, ...json.product };
       setProducts(products.map(p => 
-        p.product_id === editingProduct.product_id ? { ...p, ...json.product } : p
+        p.product_id === editingProduct.product_id ? updatedProduct : p
       ));
-      setEditingProduct(null);
+      
+      // Update the editingProduct state with the new data
+      setEditingProduct(updatedProduct);
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
