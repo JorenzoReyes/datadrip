@@ -15,9 +15,12 @@ export type Product = {
   highlights: string | null;
   in_box: string | null;
   brand: string | null;
-  category: string | null;
-  subcategory: string | null;
-  product_type: string | null;
+  category1: string | null;
+  category2: string | null;
+  category3: string | null;
+  category4: string | null;
+  category5: string | null;
+  category6: string | null;
   price: number;
   special_price: number | null;
   cost: number | null;
@@ -180,7 +183,7 @@ export default function ProductsPage() {
   const categories = useMemo(() => {
     const uniqueCategories = new Set<string>();
     products.forEach(p => {
-      if (p.category) uniqueCategories.add(p.category);
+      if (p.category1) uniqueCategories.add(p.category1);
     });
     return ['All Categories', ...Array.from(uniqueCategories).sort()];
   }, [products]);
@@ -191,13 +194,13 @@ export default function ProductsPage() {
     products.forEach(p => {
       // If category is selected, only include subcategories from that category
       if (category !== 'All Categories') {
-        if (p.category === category && p.subcategory) {
-          uniqueSubcategories.add(p.subcategory);
+        if (p.category1 === category && p.category2) {
+          uniqueSubcategories.add(p.category2);
         }
       } else {
         // If all categories, include all subcategories
-        if (p.subcategory) {
-          uniqueSubcategories.add(p.subcategory);
+        if (p.category2) {
+          uniqueSubcategories.add(p.category2);
         }
       }
     });
@@ -207,27 +210,16 @@ export default function ProductsPage() {
   // Extract unique product types based on selected category and subcategory
   // Shows all available product types for the current category/subcategory selection
   const productTypes = useMemo(() => {
-    const uniqueProductTypes = new Set<string>();
+    const unique = new Set<string>();
     products.forEach(p => {
-      if (!p.product_type) return;
-      
-      let shouldInclude = true;
-      
-      // Filter by category if specified
-      if (category !== 'All Categories') {
-        shouldInclude = shouldInclude && p.category === category;
-      }
-      
-      // Filter by subcategory if specified
-      if (subcategory !== 'All Subcategories') {
-        shouldInclude = shouldInclude && p.subcategory === subcategory;
-      }
-      
-      if (shouldInclude) {
-        uniqueProductTypes.add(p.product_type);
-      }
+      const pt = [p.category3, p.category4, p.category5].filter(Boolean).join(' > ');
+      if (!pt) return;
+      let ok = true;
+      if (category !== 'All Categories') ok = ok && p.category1 === category;
+      if (subcategory !== 'All Subcategories') ok = ok && p.category2 === subcategory;
+      if (ok) unique.add(pt);
     });
-    return ['All Product Types', ...Array.from(uniqueProductTypes).sort()];
+    return ['All Product Types', ...Array.from(unique).sort()];
   }, [products, category, subcategory]);
 
   // Filter, sort, and paginate products
@@ -237,9 +229,10 @@ export default function ProductsPage() {
       const matchQuery = p.name.toLowerCase().includes(query.toLowerCase()) ||
                          p.brand?.toLowerCase().includes(query.toLowerCase()) ||
                          p.sku?.toLowerCase().includes(query.toLowerCase());
-      const matchCategory = category === 'All Categories' ? true : (p.category === category);
-      const matchSubcategory = subcategory === 'All Subcategories' ? true : (p.subcategory === subcategory);
-      const matchProductType = productType === 'All Product Types' ? true : (p.product_type === productType);
+      const matchCategory = category === 'All Categories' ? true : p.category1 === category;
+      const matchSubcategory = subcategory === 'All Subcategories' ? true : p.category2 === subcategory;
+      const pt = [p.category3, p.category4, p.category5].filter(Boolean).join(' > ');
+      const matchProductType = productType === 'All Product Types' ? true : pt === productType;
       return matchQuery && matchCategory && matchSubcategory && matchProductType;
     });
 
@@ -329,9 +322,11 @@ export default function ProductsPage() {
     highlights?: string;
     in_box?: string;
     brand?: string;
-    category?: string;
-    subcategory?: string;
-    product_type?: string;
+    category1?: string;
+    category2?: string;
+    category3?: string;
+    category4?: string;
+    category5?: string;
     price: number;
     special_price?: number;
     stock: number;
@@ -803,7 +798,7 @@ export default function ProductsPage() {
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-header">{p.name}</span>
                           <span className="text-xs text-subheader">
-                            {p.brand ? `${p.brand} ` : ''}
+                            {p.brand ? `${p.brand} • ` : ''}{p.category1 || 'Uncategorized'}
                           </span>
                         </div>
                       </div>
@@ -811,12 +806,12 @@ export default function ProductsPage() {
                     <td className="px-4 py-3 text-sm text-header">{p.currency} {parseFloat(p.price.toString()).toFixed(2)}</td>
                     <td className="px-4 py-3 text-sm text-header">
                       <div className="flex flex-col">
-                        <span className="font-medium">{p.category || 'Uncategorized'}</span>
-                        {p.subcategory && <span className="text-xs text-gray-500">{p.subcategory}</span>}
+                        <span className="font-medium">{p.category1 || 'Uncategorized'}</span>
+                        {p.category2 && <span className="text-xs text-gray-500">{p.category2}</span>}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-header">
-                      {p.product_type || '-'}
+                      {p.category3 || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-header">
                       <span className={p.stock <= (p.reorder_level || 0) ? 'text-red-600 font-medium' : ''}>
@@ -936,7 +931,36 @@ export default function ProductsPage() {
       )}
       {viewingProduct && (
         <ViewProductModal
-          product={viewingProduct}
+          product={{
+            product_id: viewingProduct.product_id,
+            sku: viewingProduct.sku,
+            name: viewingProduct.name,
+            description: viewingProduct.description,
+            highlights: viewingProduct.highlights,
+            in_box: viewingProduct.in_box,
+            brand: viewingProduct.brand,
+            category: viewingProduct.category1 || null,
+            subcategory: viewingProduct.category2 || null,
+            product_type: [
+              viewingProduct.category3,
+              viewingProduct.category4,
+              viewingProduct.category5,
+              viewingProduct.category6,
+            ]
+              .filter(Boolean)
+              .join(' > ') || null,
+            price: viewingProduct.price,
+            special_price: viewingProduct.special_price,
+            cost: viewingProduct.cost,
+            currency: viewingProduct.currency,
+            stock: viewingProduct.stock,
+            reorder_level: viewingProduct.reorder_level,
+            status: viewingProduct.status,
+            images: viewingProduct.images,
+            videos: viewingProduct.videos,
+            promotion_image: viewingProduct.promotion_image,
+            attributes: viewingProduct.attributes,
+          }}
           onClose={() => setViewingProduct(null)}
         />
       )}

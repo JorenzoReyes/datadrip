@@ -3,15 +3,17 @@ import { testConnection } from '@/app/utils/database';
 
 export async function GET() {
   try {
-    // Test database connection
-    const dbConnected = await testConnection();
-    
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Database connection failed');
+    }
+
     return NextResponse.json(
       { 
         status: 'healthy', 
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        database: dbConnected ? 'connected' : 'disconnected'
+        database: isConnected ? 'connected' : 'disconnected'
       },
       { status: 200 }
     );

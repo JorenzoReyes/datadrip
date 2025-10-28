@@ -4,7 +4,7 @@ builder = "dockerfile"
 [deploy]
 startCommand = "node server.js"
 healthcheckPath = "/api/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 30
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
@@ -13,3 +13,6 @@ name = "datadrip"
 
 [[services]]
 name = "postgres"
+
+[volumes]
+"/app/public/uploads" = "uploads"

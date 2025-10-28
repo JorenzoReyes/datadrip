@@ -46,12 +46,15 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-USER nextjs
+# Create uploads directory and set permissions before switching to nextjs user
+RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
+
+# Run as root to allow access to filesystem entries created by the mounted volume (e.g., lost+found)
+USER root
 
 EXPOSE 3000
 
-ENV PORT 3000
-# set hostname to localhost
+# Do not override PORT; Railway provides PORT env. Ensure server binds to all interfaces.
 ENV HOSTNAME "0.0.0.0"
 
 # server.js is created by next build from the standalone output
