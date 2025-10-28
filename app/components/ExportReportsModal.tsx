@@ -61,13 +61,21 @@ export default function ExportReportsModal({ isOpen, onClose, onExport }: Export
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <button
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/50"
+      />
+
+      {/* Modal */}
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b bg-gray-50">
           <h2 className="text-xl font-semibold text-gray-900">Export Reports</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100 p-1"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -85,9 +93,9 @@ export default function ExportReportsModal({ isOpen, onClose, onExport }: Export
               {reportTypes.map((type) => (
                 <label
                   key={type.value}
-                  className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
                     selectedReportType === type.value
-                      ? 'border-blue-500 bg-blue-50'
+                      ? 'border-emerald-500 bg-emerald-50 shadow-sm'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -97,7 +105,7 @@ export default function ExportReportsModal({ isOpen, onClose, onExport }: Export
                     value={type.value}
                     checked={selectedReportType === type.value}
                     onChange={(e) => setSelectedReportType(e.target.value)}
-                    className="mt-1 mr-3 text-blue-600"
+                    className="mt-1 mr-3 w-5 h-5 text-emerald-600 focus:ring-2 focus:ring-emerald-500"
                   />
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">{type.label}</div>
@@ -117,9 +125,9 @@ export default function ExportReportsModal({ isOpen, onClose, onExport }: Export
               {formats.map((format) => (
                 <label
                   key={format.value}
-                  className={`flex flex-col items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                  className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
                     selectedFormat === format.value
-                      ? 'border-blue-500 bg-blue-50'
+                      ? 'border-emerald-500 bg-emerald-50 shadow-sm'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -146,7 +154,7 @@ export default function ExportReportsModal({ isOpen, onClose, onExport }: Export
             <select
               value={selectedDateRange}
               onChange={(e) => setSelectedDateRange(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
             >
               {dateRanges.map((range) => (
                 <option key={range.value} value={range.value}>
@@ -161,7 +169,7 @@ export default function ExportReportsModal({ isOpen, onClose, onExport }: Export
         <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-lg">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             disabled={isExporting}
           >
             Cancel
@@ -169,7 +177,7 @@ export default function ExportReportsModal({ isOpen, onClose, onExport }: Export
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="px-6 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 shadow-sm"
           >
             {isExporting ? (
               <>

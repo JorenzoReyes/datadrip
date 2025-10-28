@@ -168,6 +168,10 @@ export default function ProductsPage() {
     () => dynamic(() => import('../components/EditProductModal'), { ssr: false }),
     []
   );
+  const ViewProductModal = useMemo(
+    () => dynamic(() => import('../components/ViewProductModal'), { ssr: false }),
+    []
+  );
 
   // Extract unique categories from products
   const categories = useMemo(() => {
@@ -412,6 +416,9 @@ export default function ProductsPage() {
       throw error;
     }
   };
+
+  // View modal state
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
 
   // Handle archiving product
   const handleDeleteProduct = async (productId: number) => {
@@ -730,7 +737,11 @@ export default function ProductsPage() {
                 </tr>
               ) : (
                 paginated.map((p) => (
-                  <tr key={p.product_id} className="hover:bg-gray-100/70">
+                  <tr
+                    key={p.product_id}
+                    className="hover:bg-gray-100/70 cursor-pointer"
+                    onClick={() => setViewingProduct(p)}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-md bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
@@ -770,7 +781,7 @@ export default function ProductsPage() {
                         {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-4">
                         <button 
                           onClick={() => setEditingProduct(p)}
@@ -870,6 +881,12 @@ export default function ProductsPage() {
           onClose={() => setShowAddModal(false)}
           onSave={handleAddProduct}
           userEmail={user?.email}
+        />
+      )}
+      {viewingProduct && (
+        <ViewProductModal
+          product={viewingProduct}
+          onClose={() => setViewingProduct(null)}
         />
       )}
       {editingProduct && (
