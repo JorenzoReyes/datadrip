@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     await writeFile(filepath, buffer);
 
-    // Return public URL using the API route
-    const publicUrl = `/api/uploads/products/${filename}`;
+    // Return public URL (temporarily using old format until we fix the file serving)
+    const publicUrl = `/uploads/products/${filename}`;
     
     console.log('File saved successfully:', publicUrl);
     
