@@ -915,9 +915,19 @@ export default function DashboardPage() {
                     />
                     <YAxis 
                       tick={{ fontSize: 11 }}
-                      label={{ value: 'Revenue', angle: -90, position: 'insideLeft', offset: 10, style: { textAnchor: 'middle' } }}
                       tickFormatter={(value: number) => formatCurrency(value)}
                       width={75}
+                      label={{ 
+                        value: 'Revenue', 
+                        angle: -90, 
+                        position: 'insideLeft', 
+                        offset: -5,
+                        style: { 
+                          textAnchor: 'middle',
+                          fill: '#666',
+                          fontSize: 12
+                        } 
+                      }}
                     />
                     <Tooltip 
                       content={({ active, payload }: { active?: boolean; payload?: { payload: { product_name: string; brand: string; total_revenue: number; total_quantity_sold: number; platforms?: string } }[] }) => {
@@ -1057,7 +1067,17 @@ export default function DashboardPage() {
                       yAxisId="right"
                       orientation="right"
                       tick={{ fontSize: 11 }}
-                      label={{ value: 'Sales Revenue', angle: 90, position: 'insideRight', offset: 5 }}
+                      label={{ 
+                        value: 'Sales Revenue', 
+                        angle: 90, 
+                        position: 'insideRight', 
+                        offset: -5,
+                        style: { 
+                          textAnchor: 'middle',
+                          fill: '#666',
+                          fontSize: 12
+                        } 
+                      }}
                       tickFormatter={(value: number) => formatCurrency(value)}
                       width={75}
                     />
@@ -1110,14 +1130,14 @@ export default function DashboardPage() {
                     <Bar 
                       yAxisId="left" 
                       dataKey="stock" 
-                      fill="#F97316" 
+                      fill="#EE4D2D" 
                       name="Stock"
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar 
                       yAxisId="right" 
                       dataKey="total_revenue" 
-                      fill="#DC2626" 
+                      fill="#EE4D2D" 
                       name="Revenue"
                       radius={[4, 4, 0, 0]}
                     />
