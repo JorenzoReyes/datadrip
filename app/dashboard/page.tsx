@@ -547,24 +547,24 @@ export default function DashboardPage() {
                       width={80}
                     />
                     <Tooltip 
-                      content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: any }) => {
+                      content={({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; value: number; payload: Record<string, string | number> }[]; label?: string }) => {
                         if (active && payload && payload.length) {
-                          const platform = label as string;
+                          const platform = label;
                           const platformColors: { [key: string]: string } = {
                             'TikTok': '#000000',
                             'Shopee': '#EE4D2D',
                             'Lazada': '#0F146D'
                           };
-                          const platformColor = platformColors[platform] || '#666';
+                          const platformColor = platform ? platformColors[platform] || '#666' : '#666';
                           // Sort items by value (highest to lowest) to match visual order (top to bottom)
                           const items = payload
-                            .filter((item: any) => item.value > 0)
-                            .sort((a: any, b: any) => (b.value as number) - (a.value as number));
+                            .filter(item => item.value > 0)
+                            .sort((a, b) => b.value - a.value);
                           
                           return (
                             <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
                               <p className="font-bold mb-2" style={{ color: platformColor }}>{platform}</p>
-                              {items.map((item: any, idx: number) => {
+                              {items.map((item: { dataKey: string; value: number; payload: Record<string, string | number> }, idx: number) => {
                                 const productNameKey = `${item.dataKey}Name`;
                                 const productName = (item.payload[productNameKey] || 'Product') as string;
                                 // Determine color based on which product it is
@@ -659,9 +659,9 @@ export default function DashboardPage() {
                     tickFormatter={(value: number) => formatCurrency(value)}
                   />
                   <Tooltip 
-                    content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: any }) => {
-                      if (active && payload && payload.length) {
-                        const date = new Date(label as string);
+                    content={({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number }[]; label?: string }) => {
+                      if (active && payload && payload.length && label) {
+                        const date = new Date(label);
                         const formattedDate = date.toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric',
@@ -676,7 +676,7 @@ export default function DashboardPage() {
                         return (
                           <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
                             <p className="font-bold mb-2 text-gray-900" style={{ fontSize: '13px' }}>Date: {formattedDate}</p>
-                            {payload.map((item: any, idx: number) => {
+                            {payload.map((item, idx) => {
                               const platformName = item.name as string;
                               const platformColor = platformColors[platformName] || '#666';
                               return (
@@ -778,7 +778,7 @@ export default function DashboardPage() {
                     />
                     <Legend 
                       wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                      formatter={(value: string, entry: any) => (
+                      formatter={(value: string, entry: { name: string; value: number; color: string }) => (
                         <span style={{ color: entry.color, marginLeft: '8px' }}>{value}</span>
                       )}
                     />
@@ -816,7 +816,7 @@ export default function DashboardPage() {
                       width={80}
                     />
                     <Tooltip 
-                      content={({ active, payload, label }: { active?: boolean; payload?: any[]; label?: any }) => {
+                      content={({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number }[]; label?: string }) => {
                         if (active && payload && payload.length) {
                           const date = new Date(label as string);
                           const formattedDate = date.toLocaleDateString('en-US', { 
@@ -833,12 +833,12 @@ export default function DashboardPage() {
                           return (
                             <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
                               <p className="font-bold mb-2 text-gray-900" style={{ fontSize: '13px' }}>Date: {formattedDate}</p>
-                              {payload.map((item: any, idx: number) => {
-                                const platformName = item.name as string;
+                              {payload.map((item, idx) => {
+                                const platformName = item.name;
                                 const platformColor = platformColors[platformName] || '#666';
                                 return (
                                   <p key={idx} style={{ color: platformColor, fontWeight: '600', marginBottom: '4px' }}>
-                                    {platformName}: {formatCurrency(item.value as number)}
+                                    {platformName}: {formatCurrency(item.value)}
                                   </p>
                                 );
                               })}
@@ -920,7 +920,7 @@ export default function DashboardPage() {
                       width={75}
                     />
                     <Tooltip 
-                      content={({ active, payload }: { active?: boolean; payload?: any[] }) => {
+                      content={({ active, payload }: { active?: boolean; payload?: { payload: { product_name: string; brand: string; total_revenue: number; total_quantity_sold: number; platforms?: string } }[] }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           const platforms = (data.platforms || '').split(', ').filter((p: string) => p);
@@ -1062,7 +1062,7 @@ export default function DashboardPage() {
                       width={75}
                     />
                     <Tooltip 
-                      content={({ active, payload }: { active?: boolean; payload?: any[] }) => {
+                      content={({ active, payload }: { active?: boolean; payload?: { payload: { product_name: string; stock: number; total_quantity_sold: number; total_revenue: number; last_sale_date: string | null; listed_platforms?: string } }[] }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
@@ -1075,7 +1075,7 @@ export default function DashboardPage() {
                                 <div className="mt-2">
                                   <span className="mr-2">Platforms:</span>
                                   <span className="flex items-center gap-1 flex-wrap">
-                                    {(data.listed_platforms as string).split(', ').map((platform: string, idx: number) => {
+                                    {data.listed_platforms.split(', ').map((platform: string, idx: number) => {
                                       const platformKey = platform.toLowerCase();
                                       const platformColors: { [key: string]: string } = {
                                         'tiktok': '#000000',
