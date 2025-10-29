@@ -916,16 +916,17 @@ export default function DashboardPage() {
                     <YAxis 
                       tick={{ fontSize: 11 }}
                       tickFormatter={(value: number) => formatCurrency(value)}
-                      width={75}
+                      width={85}
                       label={{ 
                         value: 'Revenue', 
                         angle: -90, 
                         position: 'insideLeft', 
-                        offset: -5,
+                        offset: 15,
                         style: { 
                           textAnchor: 'middle',
                           fill: '#666',
-                          fontSize: 12
+                          fontSize: 12,
+                          fontWeight: 500
                         } 
                       }}
                     />
@@ -1082,15 +1083,23 @@ export default function DashboardPage() {
                       width={75}
                     />
                     <Tooltip 
-                      content={({ active, payload }: { active?: boolean; payload?: { payload: { product_name: string; stock: number; total_quantity_sold: number; total_revenue: number; last_sale_date: string | null; listed_platforms?: string } }[] }) => {
+                      content={({ active, payload }: { active?: boolean; payload?: { name: string; value: number; dataKey: string }[] }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
+                          const stockBar = payload.find(p => p.dataKey === 'stock');
+                          const revenueBar = payload.find(p => p.dataKey === 'total_revenue');
                           return (
                             <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
                               <p className="font-bold mb-2" style={{ color: '#047857' }}>{data.product_name}</p>
-                              <p>Stock: <span className="font-semibold text-gray-900">{data.stock.toLocaleString()} units</span></p>
-                              <p>Sales: <span className="font-semibold" style={{ color: toNumber(data.total_quantity_sold) === 0 ? '#DC2626' : '#F97316' }}>{toNumber(data.total_quantity_sold).toFixed(0)} units</span></p>
-                              <p>Revenue: <span className="font-semibold" style={{ color: '#059669' }}>{formatCurrency(data.total_revenue)}</span></p>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div style={{ width: '8px', height: '8px', backgroundColor: '#EE4D2D', borderRadius: '2px' }} />
+                                <p>Stock Level: <span className="font-semibold text-gray-900">{stockBar?.value.toLocaleString() || 0} units</span></p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div style={{ width: '8px', height: '8px', backgroundColor: '#0F146D', borderRadius: '2px' }} />
+                                <p>Sales Revenue: <span className="font-semibold" style={{ color: '#0F146D' }}>{formatCurrency(revenueBar?.value || 0)}</span></p>
+                              </div>
+                              <p className="mt-2">Sales: <span className="font-semibold" style={{ color: toNumber(data.total_quantity_sold) === 0 ? '#DC2626' : '#F97316' }}>{toNumber(data.total_quantity_sold).toFixed(0)} units</span></p>
                               {data.listed_platforms ? (
                                 <div className="mt-2">
                                   <span className="mr-2">Platforms:</span>
@@ -1131,15 +1140,21 @@ export default function DashboardPage() {
                       yAxisId="left" 
                       dataKey="stock" 
                       fill="#EE4D2D" 
-                      name="Stock"
+                      name="Stock Level"
                       radius={[4, 4, 0, 0]}
+                      barSize={20}
                     />
                     <Bar 
                       yAxisId="right" 
                       dataKey="total_revenue" 
-                      fill="#EE4D2D" 
-                      name="Revenue"
+                      fill="#0F146D" 
+                      name="Sales Revenue"
                       radius={[4, 4, 0, 0]}
+                      barSize={20}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                      align="center"
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
