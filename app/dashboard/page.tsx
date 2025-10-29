@@ -1153,10 +1153,6 @@ export default function DashboardPage() {
                       radius={[4, 4, 0, 0]}
                       barSize={20}
                     />
-                    <Legend
-                      wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                      align="center"
-                    />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
