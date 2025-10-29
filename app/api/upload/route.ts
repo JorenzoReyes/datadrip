@@ -48,16 +48,16 @@ export async function POST(request: NextRequest) {
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, buffer);
 
-    // Return the public URL
-    const fileUrl = `/uploads/${fileName}`;
-    
-    return NextResponse.json({ 
-      success: true, 
-      url: fileUrl,
-      fileName: fileName,
-      size: file.size,
-      type: file.type
-    });
+          // Return the public URL using the API route
+          const fileUrl = `/api/uploads/${fileName}`;
+          
+          return NextResponse.json({ 
+            success: true, 
+            url: fileUrl,
+            fileName: fileName,
+            size: file.size,
+            type: file.type
+          });
 
   } catch (error) {
     console.error('Upload error:', error);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import dynamic from 'next/dynamic';
@@ -84,44 +84,44 @@ export default function ProductsPage() {
   }, [user, isLoading, router]);
 
   // Fetch products from the database
-  useEffect(() => {
-    async function loadProducts() {
-      if (!user?.email) return;
-      
-      try {
-        setLoadingProducts(true);
-        const email = encodeURIComponent(user.email);
-        
-        // Build date range parameters
-        let dateParams = '';
-        if (dateRange === 'custom') {
-          dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
-        } else {
-          dateParams = `&days=${dateRange}`;
-        }
-        
-        const platformParam = platform !== 'All Platforms' ? `&platform=${platform}` : '';
-        const res = await fetch(`/api/products?email=${email}${dateParams}${platformParam}`, { cache: 'no-store' });
-        const json = await res.json();
-        
-        if (json.error) {
-          console.error('Error loading products:', json.error);
-          setProducts([]);
-        } else {
-          setProducts(json.products || []);
-        }
-      } catch (e) {
-        console.error('Failed to fetch products:', e);
-        setProducts([]);
-      } finally {
-        setLoadingProducts(false);
-      }
-    }
+  const loadProducts = useCallback(async () => {
+    if (!user?.email) return;
     
+    try {
+      setLoadingProducts(true);
+      const email = encodeURIComponent(user.email);
+      
+      // Build date range parameters
+      let dateParams = '';
+      if (dateRange === 'custom') {
+        dateParams = `&start_date=${customDateRange.start}&end_date=${customDateRange.end}`;
+      } else {
+        dateParams = `&days=${dateRange}`;
+      }
+      
+      const platformParam = platform !== 'All Platforms' ? `&platform=${platform}` : '';
+      const res = await fetch(`/api/products?email=${email}${dateParams}${platformParam}`, { cache: 'no-store' });
+      const json = await res.json();
+      
+      if (json.error) {
+        console.error('Error loading products:', json.error);
+        setProducts([]);
+      } else {
+        setProducts(json.products || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch products:', e);
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, [user, dateRange, customDateRange, platform]);
+
+  useEffect(() => {
     if (user) {
       loadProducts();
     }
-  }, [user, dateRange, customDateRange, platform]);
+  }, [user, dateRange, customDateRange, platform, loadProducts]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -412,14 +412,19 @@ export default function ProductsPage() {
         throw new Error(json.error || 'Failed to update product');
       }
 
+      console.log('Product update successful:', json.product);
+      
       // Update the product in the local products list
       const updatedProduct = { ...editingProduct, ...json.product };
       setProducts(products.map(p => 
         p.product_id === editingProduct.product_id ? updatedProduct : p
       ));
+      setEditingProduct(null);
       
-      // Update the editingProduct state with the new data
-      setEditingProduct(updatedProduct);
+      // Refresh the product list to ensure all data is up to date
+      await loadProducts();
+      
+      console.log('Product list refreshed after update');
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;

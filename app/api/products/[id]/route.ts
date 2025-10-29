@@ -222,30 +222,58 @@ export async function PATCH(
     const updatedProduct = await queryOne(updateQuery, values);
 
     if (!updatedProduct) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Product not found after update' }, { status: 404 });
     }
 
     console.log('Product updated successfully:', productId);
 
-    // Map the raw database response to UI format (same logic as GET /api/products)
-    const pt = ((updatedProduct as any).product_type || '').trim();
-    const parts = pt.length
-      ? pt.split('>').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
-      : [];
-    
-    const mappedProduct = {
-      ...updatedProduct,
-      category1: (updatedProduct as any).category || null,
-      category2: (updatedProduct as any).subcategory || null,
-      category3: parts[0] || null,
-      category4: parts[1] || null,
-      category5: parts[2] || null,
-      category6: parts[3] || null,
+    // Transform the database row to match the frontend Product type
+    const apiProduct = {
+      product_id: updatedProduct.product_id,
+      sku: updatedProduct.sku,
+      name: updatedProduct.name,
+      description: updatedProduct.description,
+      highlights: updatedProduct.highlights,
+      in_box: updatedProduct.in_box,
+      brand: updatedProduct.brand,
+      category: updatedProduct.category,
+      subcategory: updatedProduct.subcategory,
+      product_type: updatedProduct.product_type,
+      category1: updatedProduct.category,
+      category2: updatedProduct.subcategory,
+      category3: typeof updatedProduct.product_type === 'string' ? updatedProduct.product_type.split(' > ')[0] || null : null,
+      category4: typeof updatedProduct.product_type === 'string' ? updatedProduct.product_type.split(' > ')[1] || null : null,
+      category5: typeof updatedProduct.product_type === 'string' ? updatedProduct.product_type.split(' > ')[2] || null : null,
+      category6: typeof updatedProduct.product_type === 'string' ? updatedProduct.product_type.split(' > ')[3] || null : null,
+      price: updatedProduct.price,
+      special_price: updatedProduct.special_price,
+      cost: updatedProduct.cost,
+      currency: updatedProduct.currency,
+      stock: updatedProduct.stock,
+      reorder_level: updatedProduct.reorder_level,
+      sales_count: updatedProduct.sales_count,
+      sales_revenue: updatedProduct.sales_revenue,
+      weight_value: updatedProduct.weight_value,
+      weight_unit: updatedProduct.weight_unit,
+      length_cm: updatedProduct.length_cm,
+      width_cm: updatedProduct.width_cm,
+      height_cm: updatedProduct.height_cm,
+      has_dangerous: updatedProduct.has_dangerous,
+      warranty_type: updatedProduct.warranty_type,
+      warranty_period: updatedProduct.warranty_period,
+      warranty_policy: updatedProduct.warranty_policy,
+      status: updatedProduct.status,
+      images: updatedProduct.images,
+      videos: updatedProduct.videos,
+      promotion_image: updatedProduct.promotion_image,
+      attributes: updatedProduct.attributes,
+      created_at: updatedProduct.created_at,
+      updated_at: updatedProduct.updated_at,
     };
 
     return NextResponse.json({ 
       success: true, 
-      product: mappedProduct,
+      product: apiProduct,
       message: 'Product updated successfully' 
     });
   } catch (e) {

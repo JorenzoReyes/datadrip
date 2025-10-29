@@ -152,12 +152,9 @@ export async function GET(req: Request) {
           ORDER BY p.product_id, (pl.listing_special_price IS NULL) ASC, COALESCE(pl.updated_at, p.updated_at) DESC`,
         platform ? [owner.user_id, platform] : [owner.user_id]
       );
-    } catch (err) {
+    } catch {
       // Fallback for databases without the new columns yet
       const selectPriceFallback = platform ? 'COALESCE(pl.listing_price, p.price)' : 'p.price';
-      const selectStockFallback = platform
-        ? '0' /* listing_stock not available in this schema */
-        : '(SELECT 0)';
       products = await query<Product>(
         `SELECT DISTINCT ON (p.product_id)
           p.product_id,
