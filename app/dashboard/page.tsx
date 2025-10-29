@@ -1083,17 +1083,18 @@ export default function DashboardPage() {
                       width={75}
                     />
                     <Tooltip 
-                      content={({ active, payload }: { active?: boolean; payload?: { name: string; value: number; dataKey: string }[] }) => {
+                      content={({ active, payload }: { active?: boolean; payload?: { payload?: { product_name?: string; stock?: number; total_quantity_sold?: number; total_revenue?: number; last_sale_date?: string | null; listed_platforms?: string }; name?: string; value?: number; dataKey?: string }[] }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           const stockBar = payload.find(p => p.dataKey === 'stock');
                           const revenueBar = payload.find(p => p.dataKey === 'total_revenue');
+                          if (!data) return null;
                           return (
                             <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg text-xs">
                               <p className="font-bold mb-2" style={{ color: '#047857' }}>{data.product_name}</p>
-                              <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2">
                                 <div style={{ width: '8px', height: '8px', backgroundColor: '#EE4D2D', borderRadius: '2px' }} />
-                                <p>Stock Level: <span className="font-semibold text-gray-900">{stockBar?.value.toLocaleString() || 0} units</span></p>
+                                <p>Stock Level: <span className="font-semibold text-gray-900">{stockBar && typeof stockBar.value === 'number' ? stockBar.value.toLocaleString() : '0'} units</span></p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <div style={{ width: '8px', height: '8px', backgroundColor: '#0F146D', borderRadius: '2px' }} />
