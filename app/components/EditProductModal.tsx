@@ -327,7 +327,7 @@ export default function EditProductModal({ product, onClose, onSave, userEmail }
     setLoading(true);
     
     // Build 3-level fields from up to 6 UI levels, enforce max depth for product_type
-    const MAX_PRODUCT_TYPE_SEGMENTS = 3; // allow up to three segments beyond subcategory (levels 3, 4, and 5)
+    const MAX_PRODUCT_TYPE_SEGMENTS = 4; // allow up to four segments beyond subcategory (levels 3, 4, 5, and 6)
     const builtCategory = category1.trim() || undefined;
     const builtSubcategory = category2.trim() || undefined;
     const deeper = [category3, category4, category5, category6]

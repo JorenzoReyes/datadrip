@@ -212,7 +212,7 @@ export default function ProductsPage() {
   const productTypes = useMemo(() => {
     const unique = new Set<string>();
     products.forEach(p => {
-      const pt = [p.category3, p.category4, p.category5].filter(Boolean).join(' > ');
+      const pt = [p.category3, p.category4, p.category5, p.category6].filter(Boolean).join(' > ');
       if (!pt) return;
       let ok = true;
       if (category !== 'All Categories') ok = ok && p.category1 === category;
@@ -231,7 +231,7 @@ export default function ProductsPage() {
                          p.sku?.toLowerCase().includes(query.toLowerCase());
       const matchCategory = category === 'All Categories' ? true : p.category1 === category;
       const matchSubcategory = subcategory === 'All Subcategories' ? true : p.category2 === subcategory;
-      const pt = [p.category3, p.category4, p.category5].filter(Boolean).join(' > ');
+      const pt = [p.category3, p.category4, p.category5, p.category6].filter(Boolean).join(' > ');
       const matchProductType = productType === 'All Product Types' ? true : pt === productType;
       return matchQuery && matchCategory && matchSubcategory && matchProductType;
     });

@@ -76,10 +76,10 @@ export async function PATCH(
     if (subcategory === null || subcategory === undefined || (typeof subcategory === 'string' && subcategory.trim() === '')) {
       body.product_type = null;
     } else if (typeof product_type === 'string' && product_type.trim()) {
-      // Enforce max three segments for product_type (levels 3,4,5)
+      // Enforce max four segments for product_type (levels 3,4,5,6)
       const segments = product_type.split('>').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
-      if (segments.length > 3) {
-        body.product_type = segments.slice(0, 3).join(' > ');
+      if (segments.length > 4) {
+        body.product_type = segments.slice(0, 4).join(' > ');
       } else {
         body.product_type = segments.join(' > ');
       }
